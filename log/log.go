@@ -8,8 +8,10 @@ import (
 	"github.com/leeif/pluto/config"
 )
 
-func NewLogger(config *config.LogConfig) log.Logger {
+func GetLogger() log.Logger {
 	var l log.Logger
+	// get log config
+	config := config.GetConfig().Log
 	if config.Format.String() == "logfmt" {
 		l = log.NewLogfmtLogger(log.NewSyncWriter(os.Stderr))
 	} else {

@@ -9,6 +9,8 @@ import (
 	kingpin "gopkg.in/alecthomas/kingpin.v2"
 )
 
+var config *Config
+
 type PlutoConfig interface {
 }
 
@@ -21,12 +23,14 @@ type Config struct {
 	ConfigFile string
 	Server     *ServerConfig `pluto_config:"server"`
 	Log        *LogConfig    `pluto_config:"log"`
+	RSA        *RSAConfig    `pluto_config:"rsa"`
 }
 
 func (c *Config) setFlag(a *kingpin.Application, args []string) error {
 	a.Flag("config.file", "configure file path").Default("./config.json").StringVar(&c.ConfigFile)
 	c.setPlutoServerFlag(a)
 	c.setLogFlag(a)
+	c.setRSAFlag(a)
 	_, err := a.Parse(args)
 	if err != nil {
 		return err
@@ -36,12 +40,29 @@ func (c *Config) setFlag(a *kingpin.Application, args []string) error {
 }
 
 func (c *Config) setPlutoServerFlag(a *kingpin.Application) {
-	a.Flag("server.port", "pluto server port").Default("8888").SetValue(c.Server.Port)
+	if c.Server.Port != nil {
+		a.Flag("server.port", "pluto server port").Default("8888").SetValue(c.Server.Port)
+	}
 }
 
 func (c *Config) setLogFlag(a *kingpin.Application) {
-	a.Flag("log.level", "log level: debug, info, warn, error").Default("info").SetValue(c.Log.Level)
-	a.Flag("log.format", "log format: json, logfmt").Default("logfmt").SetValue(c.Log.Format)
+	if c.Log.Level != nil {
+		a.Flag("log.level", "log level: debug, info, warn, error").Default("info").SetValue(c.Log.Level)
+	}
+
+	if c.Log.Format != nil {
+		a.Flag("log.format", "log format: json, logfmt").Default("logfmt").SetValue(c.Log.Format)
+	}
+}
+
+func (c *Config) setRSAFlag(a *kingpin.Application) {
+	if c.RSA.Name != nil {
+		a.Flag("rsa.name", "rsa public/private key path").Default("ids_ra").SetValue(c.RSA.Name)
+	}
+
+	if c.RSA.Path != nil {
+		a.Flag("rsa.path", "log format: json, logfmt").Default("./").SetValue(c.RSA.Path)
+	}
 }
 
 func (c *Config) loadConfigFile() error {
@@ -78,10 +99,13 @@ func (c *Config) Parse(a *kingpin.Application, args []string) {
 	mergeCommandLineWithConfigFile(c, viper.AllSettings())
 }
 
-func NewConfig() *Config {
-	c := &Config{
-		Log:    newLogConfig(),
-		Server: newServerConfig(),
+func GetConfig() *Config {
+	if config == nil {
+		config = &Config{
+			Log:    newLogConfig(),
+			Server: newServerConfig(),
+			RSA:    newRSAConfig(),
+		}
 	}
-	return c
+	return config
 }

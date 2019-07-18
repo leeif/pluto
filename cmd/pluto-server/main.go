@@ -5,10 +5,12 @@ import (
 	"os"
 	"path/filepath"
 
-	"github.com/leeif/pluto/log"
+	"github.com/leeif/pluto/config"
+
 	"github.com/leeif/pluto/server"
 
-	"github.com/leeif/pluto/config"
+	"github.com/leeif/pluto/utils/rsa"
+
 	"gopkg.in/alecthomas/kingpin.v2"
 )
 
@@ -17,12 +19,15 @@ func main() {
 	a.Version("0.0.1")
 	a.HelpFlag.Short('h')
 
-	c := config.NewConfig()
+	// Init config file from command line and config file
+	c := config.GetConfig()
 	c.Parse(a, os.Args[1:])
 
-	logger := log.NewLogger(c.Log)
+	if err := rsa.Init(); err != nil {
+		fmt.Println(err)
+	}
 
-	s := server.NewServer(c.Server, logger)
+	s := server.NewServer()
 	if err := s.RunServer(); err != nil {
 		fmt.Println(err)
 	}

@@ -9,6 +9,7 @@ import (
 	"github.com/julienschmidt/httprouter"
 	"github.com/leeif/pluto/api"
 	"github.com/leeif/pluto/config"
+	plog "github.com/leeif/pluto/log"
 	"github.com/urfave/negroni"
 )
 
@@ -37,9 +38,10 @@ func (s Server) RunServer() error {
 	return nil
 }
 
-func NewServer(config *config.ServerConfig, logger log.Logger) *Server {
+func NewServer() *Server {
+	logger := plog.GetLogger()
 	server := Server{
-		config: config,
+		config: config.GetConfig().Server,
 		logger: log.With(logger, "component", "server"),
 	}
 	return &server

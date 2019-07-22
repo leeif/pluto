@@ -6,10 +6,10 @@ import (
 	"github.com/go-kit/kit/log/level"
 
 	"github.com/go-kit/kit/log"
-	"github.com/julienschmidt/httprouter"
-	"github.com/leeif/pluto/api"
+	"github.com/gorilla/mux"
 	"github.com/leeif/pluto/config"
 	plog "github.com/leeif/pluto/log"
+	"github.com/leeif/pluto/route"
 	"github.com/urfave/negroni"
 )
 
@@ -21,11 +21,10 @@ type Server struct {
 func (s Server) RunServer() error {
 	address := ":" + s.config.Port.String()
 
-	router := httprouter.New()
-	api.AddRoute(router)
+	router := mux.NewRouter()
+	route.GetAPIRouter(router)
 
 	n := negroni.Classic()
-	n.Use(negroni.NewLogger())
 
 	n.UseHandler(router)
 

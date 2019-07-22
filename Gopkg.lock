@@ -48,6 +48,14 @@
   version = "v0.4.0"
 
 [[projects]]
+  digest = "1:cbec35fe4d5a4fba369a656a8cd65e244ea2c743007d8f6c1ccb132acf9d1296"
+  name = "github.com/gorilla/mux"
+  packages = ["."]
+  pruneopts = "UT"
+  revision = "00bdffe0f3c77e27d2cf6f5c70232a2d3e4d9c15"
+  version = "v1.7.3"
+
+[[projects]]
   digest = "1:c0d19ab64b32ce9fe5cf4ddceba78d5bc9807f0016db6b1183599da3dcc24d10"
   name = "github.com/hashicorp/hcl"
   packages = [
@@ -81,14 +89,6 @@
   pruneopts = "UT"
   revision = "f5c5f50e6090ae76a29240b61ae2a90dd810112e"
   version = "v1.0.0"
-
-[[projects]]
-  digest = "1:f97285a3b0a496dcf8801072622230d513f69175665d94de60eb042d03387f6c"
-  name = "github.com/julienschmidt/httprouter"
-  packages = ["."]
-  pruneopts = "UT"
-  revision = "348b672cd90d8190f8240323e372ecd1e66b59dc"
-  version = "v1.2.0"
 
 [[projects]]
   branch = "master"
@@ -183,6 +183,17 @@
 
 [[projects]]
   branch = "master"
+  digest = "1:39628c44b67004cdd7ff753f6490588b87defe2569413378719d7e4f92df352d"
+  name = "golang.org/x/crypto"
+  packages = [
+    "pbkdf2",
+    "scrypt",
+  ]
+  pruneopts = "UT"
+  revision = "4def268fd1a49955bfb3dda92fe3db4f924f2285"
+
+[[projects]]
+  branch = "master"
   digest = "1:5632b0c4d972da51b5914f09fc5c1a8535e9d8d5d937e95ef83c423a0dd67f13"
   name = "golang.org/x/sys"
   packages = ["unix"]
@@ -226,11 +237,12 @@
   input-imports = [
     "github.com/go-kit/kit/log",
     "github.com/go-kit/kit/log/level",
+    "github.com/gorilla/mux",
     "github.com/jinzhu/gorm",
-    "github.com/julienschmidt/httprouter",
     "github.com/pkg/errors",
     "github.com/spf13/viper",
     "github.com/urfave/negroni",
+    "golang.org/x/crypto/scrypt",
     "gopkg.in/alecthomas/kingpin.v2",
   ]
   solver-name = "gps-cdcl"

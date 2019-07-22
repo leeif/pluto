@@ -7,3 +7,7 @@ func Login() error {
 func Register() error {
 	return nil
 }
+
+func ResetPassword() error {
+	return nil
+}

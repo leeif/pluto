@@ -5,6 +5,9 @@ import (
 	"os"
 	"path/filepath"
 
+	"github.com/leeif/pluto/database"
+	"github.com/leeif/pluto/utils/migrate"
+
 	"github.com/leeif/pluto/config"
 
 	"github.com/leeif/pluto/server"
@@ -27,6 +30,20 @@ func main() {
 		fmt.Println(err)
 	}
 
+	// DB Migration
+	db, err := database.GetDatabase()
+
+	if err != nil {
+		fmt.Println(err)
+		os.Exit(1)
+	}
+
+	if err := migrate.Migrate(db); err != nil {
+		fmt.Println(err)
+		os.Exit(1)
+	}
+
+	// Start server
 	s := server.NewServer()
 	if err := s.RunServer(); err != nil {
 		fmt.Println(err)

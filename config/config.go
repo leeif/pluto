@@ -21,9 +21,10 @@ type PlutoValue interface {
 
 type Config struct {
 	ConfigFile string
-	Server     *ServerConfig `pluto_config:"server"`
-	Log        *LogConfig    `pluto_config:"log"`
-	RSA        *RSAConfig    `pluto_config:"rsa"`
+	Server     *ServerConfig   `pluto_config:"server"`
+	Log        *LogConfig      `pluto_config:"log"`
+	RSA        *RSAConfig      `pluto_config:"rsa"`
+	Database   *DatabaseConfig `pluto_config:"database"`
 }
 
 func (c *Config) setFlag(a *kingpin.Application, args []string) error {
@@ -31,6 +32,7 @@ func (c *Config) setFlag(a *kingpin.Application, args []string) error {
 	c.setPlutoServerFlag(a)
 	c.setLogFlag(a)
 	c.setRSAFlag(a)
+	c.setDatabaseFlag(a)
 	_, err := a.Parse(args)
 	if err != nil {
 		return err
@@ -62,6 +64,32 @@ func (c *Config) setRSAFlag(a *kingpin.Application) {
 
 	if c.RSA.Path != nil {
 		a.Flag("rsa.path", "log format: json, logfmt").Default("./").SetValue(c.RSA.Path)
+	}
+}
+
+func (c *Config) setDatabaseFlag(a *kingpin.Application) {
+	if c.Database.Type != nil {
+		a.Flag("database.type", "type of database").Default("mysql").SetValue(c.Database.Type)
+	}
+
+	if c.Database.Host != nil {
+		a.Flag("database.host", "host of database").Default("127.0.0.1").SetValue(c.Database.Host)
+	}
+
+	if c.Database.User != nil {
+		a.Flag("database.user", "user of database").Default("root").SetValue(c.Database.User)
+	}
+
+	if c.Database.Port != nil {
+		a.Flag("database.port", "port of database").Default("3306").SetValue(c.Database.Port)
+	}
+
+	if c.Database.Password != nil {
+		a.Flag("database.password", "password of database").Default("").SetValue(c.Database.Password)
+	}
+
+	if c.Database.DB != nil {
+		a.Flag("database.db", "db of database").Default("").SetValue(c.Database.DB)
 	}
 }
 
@@ -102,9 +130,10 @@ func (c *Config) Parse(a *kingpin.Application, args []string) {
 func GetConfig() *Config {
 	if config == nil {
 		config = &Config{
-			Log:    newLogConfig(),
-			Server: newServerConfig(),
-			RSA:    newRSAConfig(),
+			Log:      newLogConfig(),
+			Server:   newServerConfig(),
+			RSA:      newRSAConfig(),
+			Database: newDatabaseConfig(),
 		}
 	}
 	return config

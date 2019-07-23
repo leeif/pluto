@@ -73,3 +73,38 @@ func mergePlutoConfigWithMap(pc interface{}, m map[string]interface{}) error {
 	}
 	return nil
 }
+
+type BaseString struct {
+	s string
+}
+
+func (bs *BaseString) Set(s string) error {
+	bs.s = s
+	return nil
+}
+
+func (bs *BaseString) String() string {
+	return bs.s
+}
+
+type BaseInt struct {
+	i int
+}
+
+func (bi *BaseInt) Set(s string) error {
+	i, err := strconv.Atoi(s)
+	if err != nil {
+		return err
+	}
+
+	bi.i = i
+	return nil
+}
+
+func (bi *BaseInt) String() string {
+	return strconv.Itoa(bi.i)
+}
+
+func (bi *BaseInt) Int() int {
+	return bi.i
+}

@@ -7,23 +7,19 @@ import (
 	"github.com/leeif/pluto/models"
 )
 
-func Bootstrap() {
-
-}
-
 type Migrations struct {
 	name     string
 	function func(db *gorm.DB, name string) error
 }
 
-func Migrate(db *gorm.DB, migrations []Migrations) error {
+func Migrate(db *gorm.DB) error {
 
 	if err := createMigrationTable(db); err != nil {
 		return err
 	}
 
 	for _, m := range migrations {
-		if migrationExists(db, m.name) {
+		if migrationNotExists(db, m.name) == false {
 			continue
 		}
 
@@ -53,17 +49,17 @@ func createMigrationTable(db *gorm.DB) error {
 	return nil
 }
 
-func migrationExists(db *gorm.DB, name string) bool {
+func migrationNotExists(db *gorm.DB, name string) bool {
 	migration := models.Migration{}
-	found := db.Where("name = ?", name).First(migration).RecordNotFound()
-	return found
+	notFound := db.Where("name = ?", name).First(&migration).RecordNotFound()
+	return notFound
 }
 
 func saveMigration(db *gorm.DB, name string) error {
 	migration := models.Migration{}
 	migration.Name = name
 
-	if err := db.Create(migration).Error; err != nil {
+	if err := db.Create(&migration).Error; err != nil {
 		return fmt.Errorf("Error saving record to migrations table: %s", err)
 	}
 

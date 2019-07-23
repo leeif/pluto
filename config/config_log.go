@@ -5,6 +5,11 @@ import (
 	"github.com/pkg/errors"
 )
 
+type LogConfig struct {
+	Level  *AllowedLevel  `pluto_value:"level"`
+	Format *AllowedFormat `pluto_value:"format"`
+}
+
 type AllowedLevel struct {
 	s string
 	o level.Option
@@ -53,14 +58,9 @@ func (f *AllowedFormat) String() string {
 	return f.s
 }
 
-type LogConfig struct {
-	Level  *AllowedLevel  `pluto_value:"level"`
-	Format *AllowedFormat `pluto_value:"format"`
-}
-
 func newLogConfig() *LogConfig {
 	return &LogConfig{
-		Level: &AllowedLevel{},
+		Level:  &AllowedLevel{},
 		Format: &AllowedFormat{},
 	}
 }

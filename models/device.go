@@ -6,6 +6,6 @@ import (
 
 type Device struct {
 	gorm.Model
-	Identifier string `gorm:"type:varchar;unique;not null"`
-	Agent      string `gorm:"type:varchar;not null"`
+	DeviceID string `gorm:"column:device_id;type:varchar(255);not null"`
+	AppID    string `gorm:"column:app_id;type:varchar(255);not null"`
 }

@@ -1,8 +1,17 @@
 package route
 
 import (
+	"github.com/leeif/pluto/datatype"
+	"encoding/json"
 	"fmt"
+	"io/ioutil"
 	"net/http"
+	"os"
+
+	"github.com/leeif/pluto/database"
+
+	"github.com/leeif/pluto/datatype/request"
+	"github.com/leeif/pluto/manage"
 
 	"github.com/urfave/negroni"
 
@@ -15,6 +24,11 @@ func GetAPIRouter(router *mux.Router) {
 }
 
 func userRoute() http.Handler {
+	db, err := database.GetDatabase()
+	if err != nil {
+		fmt.Println(err)
+		os.Exit(1)
+	}
 	router := mux.NewRouter()
 	router.Handle("/user/register", negroni.New(
 		negroni.HandlerFunc(func(w http.ResponseWriter, r *http.Request, next http.HandlerFunc) {
@@ -23,7 +37,18 @@ func userRoute() http.Handler {
 	))
 	router.Handle("/user/login", negroni.New(
 		negroni.HandlerFunc(func(w http.ResponseWriter, r *http.Request, next http.HandlerFunc) {
-			fmt.Println("login")
+			body, _ := ioutil.ReadAll(r.Body)
+			contentType := r.Header.Get("Content-type")
+			login := request.MailLogin{}
+			if contentType == "application/json" {
+				json.Unmarshal(body, &login)
+			}
+			if jwtToken, err := manage.LoginWithEmail(db, login); err != nil {
+				response(datatype.STATUSERROR, , w)
+			} else {
+				m := make(map[string]interface{})
+				response(datatype.STATUSOK, , w)
+			}
 		}),
 	))
 	return router

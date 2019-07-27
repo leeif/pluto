@@ -8,6 +8,7 @@ import (
 type LogConfig struct {
 	Level  *AllowedLevel  `pluto_value:"level"`
 	Format *AllowedFormat `pluto_value:"format"`
+	Path   *FilePath      `pluto_value:"path"`
 }
 
 type AllowedLevel struct {

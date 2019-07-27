@@ -5,7 +5,7 @@ import (
 )
 
 type Salt struct {
-	gorm.DB
-	salt string `gorm:"type:varchar(255);size:255;not null"`
+	gorm.Model
+	UserID uint   `gorm:"column:user_id"`
+	Salt   string `gorm:"type:varchar(255);size:255;not null"`
 }
-

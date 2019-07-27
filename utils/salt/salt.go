@@ -3,27 +3,15 @@ package salt
 import (
 	"crypto/rand"
 	"encoding/base64"
+	"strings"
 
 	"golang.org/x/crypto/scrypt"
 )
 
 const DEFAULTRANDLEN = 10
 
-func SaltEncode(userID string) string {
-	id := []string{userID}
-	return encryptRandSequence(DEFAULTRANDLEN, id...)
-}
-
-func SaltDecode(salt string) (string, error) {
-	dst, err := base64.URLEncoding.DecodeString(salt)
-	if err != nil {
-		return "", err
-	}
-	return string(dst), nil
-}
-
-func PsdHandler(psd string, salts []byte) (string, error) {
-	dk, err := scrypt.Key([]byte(psd), salts, 16384, 8, 1, 32)
+func EncodePassword(password string, salt string) (string, error) {
+	dk, err := scrypt.Key([]byte(password), []byte(salt), 16384, 8, 1, 32)
 	if err != nil {
 		return "", err
 	}
@@ -31,12 +19,25 @@ func PsdHandler(psd string, salts []byte) (string, error) {
 	return dst, nil
 }
 
-func encryptRandSequence(n int, userID ...string) string {
+func RandomSalt(prefix ...string) string {
+	salts := encryptRandSequence(DEFAULTRANDLEN, prefix)
+	return salts
+}
+
+func DecodeSalt(salt string) (string, error) {
+	dst, err := base64.URLEncoding.DecodeString(salt)
+	if err != nil {
+		return "", err
+	}
+	return string(dst), nil
+}
+
+func encryptRandSequence(n int, prefix []string) string {
 	var src []byte
 	b := make([]byte, n)
 	rand.Read(b)
-	if userID != nil {
-		src = append([]byte(userID[0]+":"), b...)
+	if prefix != nil {
+		src = append([]byte(strings.Join(prefix, ".")), b...)
 	} else {
 		src = b
 	}

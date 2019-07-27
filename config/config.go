@@ -55,6 +55,10 @@ func (c *Config) setLogFlag(a *kingpin.Application) {
 	if c.Log.Format != nil {
 		a.Flag("log.format", "log format: json, logfmt").Default("logfmt").SetValue(c.Log.Format)
 	}
+
+	if c.Log.Path != nil {
+		a.Flag("log.path", "log file path").Default("").SetValue(c.Log.Path)
+	}
 }
 
 func (c *Config) setRSAFlag(a *kingpin.Application) {

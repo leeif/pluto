@@ -103,7 +103,7 @@ func (c *Config) loadConfigFile() error {
 	viper.SetConfigFile("./config.json")
 	viper.SetConfigFile(c.ConfigFile)
 	if err := viper.ReadInConfig(); err != nil {
-		if _, ok := err.(viper.ConfigFileNotFoundError); ok {
+		if _, ok := err.(viper.ConfigFileNotFoundError); !ok {
 			// Config file not found; ignore error
 		} else {
 			// Config file was found but another error was produced

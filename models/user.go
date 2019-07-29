@@ -13,6 +13,6 @@ type User struct {
 	Role     string `gorm:"type:varchar(60);size(60);not null"`
 	Gender   string `gorm:"type:varchar(10);size(10);"`
 	Password string `gorm:"type:varchar(255);not null"`
-	Birthday time.Time
+	Birthday *time.Time
 	Avatar   string `gorm:"type:varchar(255)"`
 }

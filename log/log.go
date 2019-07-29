@@ -9,10 +9,8 @@ import (
 	"github.com/leeif/pluto/config"
 )
 
-func GetLogger() log.Logger {
+func GetLogger(config *config.LogConfig) log.Logger {
 	var l log.Logger
-	// get log config
-	config := config.GetConfig().Log
 	if config.Format.String() == "logfmt" {
 		l = log.NewLogfmtLogger(log.NewSyncWriter(os.Stderr))
 	} else {
@@ -26,14 +24,8 @@ func GetLogger() log.Logger {
 	return l
 }
 
-func GetFileLogger(file io.Writer) log.Logger {
+func GetFileLogger(config *config.LogConfig, file io.Writer) log.Logger {
 	var l log.Logger
-	// get log config
-	config := config.GetConfig().Log
-	logFile := config.Path.String()
-	if logFile != "" {
-
-	}
 	if config.Format.String() == "logfmt" {
 		l = log.NewLogfmtLogger(log.NewSyncWriter(file))
 	} else {

@@ -1,12 +1,8 @@
 package request
 
-import "time"
-
 type MailRegister struct {
-	Mail     string    `json:"mail"`
-	Password string    `json:"password"`
-	Gender   string    `json:"gender"`
-	Birthday time.Time `json:"birthday"`
+	Mail     string `json:"mail"`
+	Password string `json:"password"`
 }
 
 func (mr MailRegister) Validation() bool {

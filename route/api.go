@@ -1,10 +1,7 @@
 package route
 
 import (
-	"github.com/leeif/pluto/datatype"
-	"encoding/json"
 	"fmt"
-	"io/ioutil"
 	"net/http"
 	"os"
 
@@ -18,48 +15,61 @@ import (
 	"github.com/gorilla/mux"
 )
 
-func GetAPIRouter(router *mux.Router) {
-	router.PathPrefix("/api").Handler(userRoute())
-	router.PathPrefix("/api").Handler(authRoute())
+func GetRouter() *mux.Router {
+	router := mux.NewRouter()
+	user := router.PathPrefix("/api/user").Subrouter()
+	userRoute(user)
+
+	auth := router.PathPrefix("/api/auth").Subrouter()
+	authRoute(auth)
+
+	return router
 }
 
-func userRoute() http.Handler {
+func userRoute(router *mux.Router) {
 	db, err := database.GetDatabase()
 	if err != nil {
 		fmt.Println(err)
 		os.Exit(1)
 	}
-	router := mux.NewRouter()
-	router.Handle("/user/register", negroni.New(
+	router.Handle("/register", negroni.New(
 		negroni.HandlerFunc(func(w http.ResponseWriter, r *http.Request, next http.HandlerFunc) {
-			fmt.Println("register")
-		}),
-	))
-	router.Handle("/user/login", negroni.New(
-		negroni.HandlerFunc(func(w http.ResponseWriter, r *http.Request, next http.HandlerFunc) {
-			body, _ := ioutil.ReadAll(r.Body)
-			contentType := r.Header.Get("Content-type")
-			login := request.MailLogin{}
-			if contentType == "application/json" {
-				json.Unmarshal(body, &login)
+			register := request.MailRegister{}
+
+			if err := getBody(r, &register); err != nil {
+				responseError(err, w)
 			}
-			if jwtToken, err := manage.LoginWithEmail(db, login); err != nil {
-				response(datatype.STATUSERROR, , w)
+
+			if err := manage.RegisterWithEmail(db, register); err != nil {
+				responseError(err, w)
 			} else {
-				m := make(map[string]interface{})
-				response(datatype.STATUSOK, , w)
+				respBody := make(map[string]interface{})
+				respBody["mail"] = register.Mail
+				responseOK(respBody, w)
 			}
 		}),
-	))
-	return router
+	)).Methods("POST")
+
+	router.Handle("/login", negroni.New(
+		negroni.HandlerFunc(func(w http.ResponseWriter, r *http.Request, next http.HandlerFunc) {
+			login := request.MailLogin{}
+			getBody(r, &login)
+			if jwtToken, err := manage.LoginWithEmail(db, login); err != nil {
+				fmt.Println(err.Err.Error())
+				responseError(err, w)
+			} else {
+				respBody := make(map[string]interface{})
+				respBody["jwt"] = jwtToken
+				responseOK(respBody, w)
+			}
+		}),
+	)).Methods("POST")
 }
 
-func authRoute() http.Handler {
-	router := mux.NewRouter()
-	router.Handle("/user/auth/refresh", negroni.New(
+func authRoute(router *mux.Router) {
+	router.Handle("/refresh", negroni.New(
 		negroni.HandlerFunc(func(w http.ResponseWriter, r *http.Request, next http.HandlerFunc) {
 			fmt.Println("refresh")
 		}),
 	))
-	return router
 }

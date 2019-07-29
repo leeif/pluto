@@ -3,6 +3,7 @@ package manage
 import (
 	"errors"
 
+	"github.com/leeif/pluto/datatype"
 	"github.com/leeif/pluto/models"
 
 	saltUtil "github.com/leeif/pluto/utils/salt"
@@ -14,37 +15,48 @@ import (
 	"github.com/jinzhu/gorm"
 )
 
-func LoginWithEmail(db *gorm.DB, login request.MailLogin) (string, *PlutoError) {
+func LoginWithEmail(db *gorm.DB, login request.MailLogin) (string, *datatype.PlutoError) {
 	if db == nil {
-		return "", newPlutoError(ServerError, errors.New("DB connection is empty"))
+		return "", datatype.NewPlutoError(datatype.ServerError,
+			errors.New("DB connection is empty"))
+	}
+
+	if !login.Validation() {
+		return "", datatype.NewPlutoError(datatype.ReqError,
+			errors.New("request parameters are not enough"))
 	}
 
 	tx := db.Begin()
 
 	user := models.User{}
-	if tx.Where("email = ?", login.Mail).First(&user).RecordNotFound() {
-		return "", newPlutoError(ServerError, errors.New("email is not existed"))
+	if tx.Where("mail = ?", login.Mail).First(&user).RecordNotFound() {
+		return "", datatype.NewPlutoError(datatype.ReqError,
+			errors.New("Mail is not existed"))
 	}
 
 	salt := models.Salt{}
 	if tx.Where("user_id = ?", user.ID).First(&salt).RecordNotFound() {
-		return "", newPlutoError(ServerError, errors.New("Salt is not found"))
+		return "", datatype.NewPlutoError(datatype.ServerError,
+			errors.New("Salt is not found"))
 	}
 
 	s, err := saltUtil.DecodeSalt(salt.Salt)
 
 	if err != nil {
-		return "", newPlutoError(ServerError, errors.New("Salt decoding is failed: "+err.Error()))
+		return "", datatype.NewPlutoError(datatype.ServerError,
+			errors.New("Salt decoding is failed: "+err.Error()))
 	}
 
 	encodePassword, err := saltUtil.EncodePassword(login.Password, s)
 
 	if err != nil {
-		return "", newPlutoError(ServerError, errors.New("Password encoding is failed: "+err.Error()))
+		return "", datatype.NewPlutoError(datatype.ServerError,
+			errors.New("Password encoding is failed: "+err.Error()))
 	}
 
 	if user.Password != encodePassword {
-		return "", newPlutoError(ServerError, errors.New("Password is invalid"))
+		return "", datatype.NewPlutoError(datatype.ReqError,
+			errors.New("Password is invalid"))
 	}
 
 	// insert deviceID and appID into device table
@@ -80,26 +92,30 @@ func LoginWithEmail(db *gorm.DB, login request.MailLogin) (string, *PlutoError) 
 		jwt.UserPayload{UserID: user.ID, DeviceID: device.DeviceID, AppID: device.AppID})
 
 	if err != nil {
-		return "", &PlutoError{
-			Type: ServerError,
-			Err:  errors.New("jwt token generate failed: " + err.Error()),
-		}
+		return "", datatype.NewPlutoError(datatype.ServerError,
+			errors.New("JWT token generate failed: "+err.Error()))
 	}
 
 	return jwtToken, nil
 }
 
-func RegisterWithEmail(db *gorm.DB, register request.MailRegister) *PlutoError {
+func RegisterWithEmail(db *gorm.DB, register request.MailRegister) *datatype.PlutoError {
 	if db == nil {
-		return &PlutoError{
-			Type: ServerError,
-			Err:  errors.New("DB connection is empty"),
-		}
+		return datatype.NewPlutoError(datatype.ServerError,
+			errors.New("DB connection is empty"))
 	}
 
+	if !register.Validation() {
+		return datatype.NewPlutoError(datatype.ReqError,
+			errors.New("Request parameters are not enough"))
+	}
+
+	tx := db.Begin()
+
 	user := models.User{}
-	if !db.Where("email = ?", register.Mail).First(&user).RecordNotFound() {
-		return newPlutoError(ReqError, errors.New("Email is already exists"))
+	if !tx.Where("mail = ?", register.Mail).First(&user).RecordNotFound() {
+		return datatype.NewPlutoError(datatype.ReqError,
+			errors.New("Mail is already exists"))
 	}
 
 	salt := models.Salt{}
@@ -107,10 +123,24 @@ func RegisterWithEmail(db *gorm.DB, register request.MailRegister) *PlutoError {
 
 	encodedPassword, err := saltUtil.EncodePassword(register.Password, salt.Salt)
 	if err != nil {
-		return newPlutoError(ServerError, errors.New("salt encoding is failed"))
+		return datatype.NewPlutoError(datatype.ServerError,
+			errors.New("Salt encoding is failed"))
 	}
 
+	user.Mail = register.Mail
 	user.Password = encodedPassword
+
+	if err := create(tx, &user); err != nil {
+		return err
+	}
+
+	salt.UserID = user.ID
+
+	if err := create(tx, &salt); err != nil {
+		return err
+	}
+
+	tx.Commit()
 
 	return nil
 }

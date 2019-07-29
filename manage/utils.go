@@ -2,35 +2,19 @@ package manage
 
 import (
 	"github.com/jinzhu/gorm"
+	"github.com/leeif/pluto/datatype"
 )
 
-const (
-	ServerError = iota
-	ReqError
-)
-
-type PlutoError struct {
-	Type int
-	Err  error
-}
-
-func newPlutoError(t int, err error) *PlutoError {
-	return &PlutoError{
-		Type: t,
-		Err:  err,
-	}
-}
-
-func create(db *gorm.DB, record interface{}) *PlutoError {
+func create(db *gorm.DB, record interface{}) *datatype.PlutoError {
 	if err := db.Create(record).Error; err != nil {
-		return newPlutoError(ServerError, err)
+		return datatype.NewPlutoError(datatype.ServerError, err)
 	}
 	return nil
 }
 
-func update(db *gorm.DB, record interface{}) *PlutoError {
+func update(db *gorm.DB, record interface{}) *datatype.PlutoError {
 	if err := db.Save(record).Error; err != nil {
-		return newPlutoError(ServerError, err)
+		return datatype.NewPlutoError(datatype.ServerError, err)
 	}
 	return nil
 }

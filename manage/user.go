@@ -15,47 +15,41 @@ import (
 	"github.com/jinzhu/gorm"
 )
 
-func LoginWithEmail(db *gorm.DB, login request.MailLogin) (string, *datatype.PlutoError) {
+func LoginWithEmail(db *gorm.DB, login request.MailLogin) (map[string]string, *datatype.PlutoError) {
+	res := make(map[string]string)
 	if db == nil {
-		return "", datatype.NewPlutoError(datatype.ServerError,
+		return nil, datatype.NewPlutoError(datatype.ServerError,
 			errors.New("DB connection is empty"))
 	}
 
 	if !login.Validation() {
-		return "", datatype.NewPlutoError(datatype.ReqError,
-			errors.New("request parameters are not enough"))
+		return nil, datatype.NewPlutoError(datatype.ReqError,
+			errors.New("Request parameters are not enough"))
 	}
 
 	tx := db.Begin()
 
 	user := models.User{}
 	if tx.Where("mail = ?", login.Mail).First(&user).RecordNotFound() {
-		return "", datatype.NewPlutoError(datatype.ReqError,
+		return nil, datatype.NewPlutoError(datatype.ReqError,
 			errors.New("Mail is not existed"))
 	}
 
 	salt := models.Salt{}
 	if tx.Where("user_id = ?", user.ID).First(&salt).RecordNotFound() {
-		return "", datatype.NewPlutoError(datatype.ServerError,
+		return nil, datatype.NewPlutoError(datatype.ServerError,
 			errors.New("Salt is not found"))
 	}
 
-	s, err := saltUtil.DecodeSalt(salt.Salt)
+	encodePassword, err := saltUtil.EncodePassword(login.Password, salt.Salt)
 
 	if err != nil {
-		return "", datatype.NewPlutoError(datatype.ServerError,
-			errors.New("Salt decoding is failed: "+err.Error()))
-	}
-
-	encodePassword, err := saltUtil.EncodePassword(login.Password, s)
-
-	if err != nil {
-		return "", datatype.NewPlutoError(datatype.ServerError,
+		return nil, datatype.NewPlutoError(datatype.ServerError,
 			errors.New("Password encoding is failed: "+err.Error()))
 	}
 
 	if user.Password != encodePassword {
-		return "", datatype.NewPlutoError(datatype.ReqError,
+		return nil, datatype.NewPlutoError(datatype.ReqError,
 			errors.New("Password is invalid"))
 	}
 
@@ -66,7 +60,7 @@ func LoginWithEmail(db *gorm.DB, login request.MailLogin) (string, *datatype.Plu
 		device.DeviceID = login.DeviceID
 		device.AppID = login.AppID
 		if err := create(tx, &device); err != nil {
-			return "", err
+			return nil, err
 		}
 	}
 
@@ -78,12 +72,12 @@ func LoginWithEmail(db *gorm.DB, login request.MailLogin) (string, *datatype.Plu
 	if tx.Where("device_id = ? and app_id = ?", device.DeviceID, device.AppID).First(&rt).RecordNotFound() {
 		rt.RefreshToken = refreshToken
 		if err := create(tx, &rt); err != nil {
-			return "", err
+			return nil, err
 		}
 	} else {
 		rt.RefreshToken = refreshToken
 		if err := update(tx, &device); err != nil {
-			return "", err
+			return nil, err
 		}
 	}
 
@@ -92,11 +86,14 @@ func LoginWithEmail(db *gorm.DB, login request.MailLogin) (string, *datatype.Plu
 		jwt.UserPayload{UserID: user.ID, DeviceID: device.DeviceID, AppID: device.AppID})
 
 	if err != nil {
-		return "", datatype.NewPlutoError(datatype.ServerError,
+		return nil, datatype.NewPlutoError(datatype.ServerError,
 			errors.New("JWT token generate failed: "+err.Error()))
 	}
 
-	return jwtToken, nil
+	res["jwt"] = jwtToken
+	res["refresh_token"] = rt.RefreshToken
+
+	return res, nil
 }
 
 func RegisterWithEmail(db *gorm.DB, register request.MailRegister) *datatype.PlutoError {

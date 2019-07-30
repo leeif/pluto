@@ -8,6 +8,7 @@ import (
 
 	"github.com/leeif/pluto/datatype"
 	resp "github.com/leeif/pluto/datatype/response"
+	"github.com/urfave/negroni"
 )
 
 func getBody(r *http.Request, revicer interface{}) *datatype.PlutoError {
@@ -28,10 +29,36 @@ func getBody(r *http.Request, revicer interface{}) *datatype.PlutoError {
 	return nil
 }
 
+func tokenVerifyMiddleware(handlers ...negroni.HandlerFunc) http.Handler {
+	ng := negroni.New()
+	for _, handler := range handlers {
+		ng.UseFunc(handler)
+	}
+	return ng
+}
+
+func sessionVerifyMiddleware(handlers ...negroni.HandlerFunc) http.Handler {
+	ng := negroni.New()
+	for _, handler := range handlers {
+		ng.UseFunc(handler)
+	}
+	return ng
+}
+
+func noVerifyMiddleware(handlers ...negroni.HandlerFunc) http.Handler {
+	ng := negroni.New()
+	for _, handler := range handlers {
+		ng.UseFunc(handler)
+	}
+
+	return ng
+}
+
 func responseOK(body interface{}, w http.ResponseWriter) error {
 	response := resp.ReponseOK{}
 	response.Status = resp.STATUSOK
 	response.Body = body
+	w.Header().Set("Content-type", "application/json")
 	w.WriteHeader(http.StatusOK)
 	b, err := json.Marshal(response)
 	if err != nil {
@@ -47,6 +74,7 @@ func responseOK(body interface{}, w http.ResponseWriter) error {
 func responseError(plutoError *datatype.PlutoError, w http.ResponseWriter) error {
 	response := resp.ReponseError{}
 	response.Status = resp.STATUSERROR
+	w.Header().Set("Content-type", "application/json")
 	switch plutoError.Type {
 	case datatype.ReqError:
 		response.Error = plutoError.Err.Error()

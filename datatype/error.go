@@ -1,7 +1,5 @@
 package datatype
 
-import "fmt"
-
 const (
 	ServerError = iota
 	ReqError
@@ -13,7 +11,6 @@ type PlutoError struct {
 }
 
 func NewPlutoError(t int, err error) *PlutoError {
-	fmt.Println(err)
 	return &PlutoError{
 		Type: t,
 		Err:  err,

@@ -56,8 +56,8 @@ func (c *Config) setLogFlag(a *kingpin.Application) {
 		a.Flag("log.format", "log format: json, logfmt").Default("logfmt").SetValue(c.Log.Format)
 	}
 
-	if c.Log.Path != nil {
-		a.Flag("log.path", "log file path").Default("").SetValue(c.Log.Path)
+	if c.Log.File != nil {
+		a.Flag("log.file", "log file path").Default("").SetValue(c.Log.File)
 	}
 }
 

@@ -5,8 +5,6 @@ import (
 	"os"
 	"path/filepath"
 
-	"github.com/leeif/pluto/route"
-
 	"github.com/leeif/pluto/database"
 	"github.com/leeif/pluto/utils/migrate"
 
@@ -14,7 +12,6 @@ import (
 
 	"github.com/leeif/pluto/server"
 
-	"github.com/leeif/pluto/log"
 	"github.com/leeif/pluto/utils/rsa"
 
 	"gopkg.in/alecthomas/kingpin.v2"
@@ -46,14 +43,8 @@ func main() {
 		os.Exit(1)
 	}
 
-	// Get All the Routes
-	router := route.GetRouter()
-
-	// Get Base logger
-	logger := log.GetLogger(c.Log)
-
 	// Start server
-	s := server.NewServer(router, logger, c.Server)
+	s := server.Server{}
 	if err := s.RunServer(); err != nil {
 		fmt.Println(err)
 	}

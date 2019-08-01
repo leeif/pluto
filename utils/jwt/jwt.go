@@ -4,6 +4,7 @@ import (
 	"crypto"
 	b64 "encoding/base64"
 	"encoding/json"
+	"time"
 
 	"github.com/leeif/pluto/utils/rsa"
 )
@@ -21,6 +22,7 @@ type UserPayload struct {
 	UserID   uint   `json:"userId"`
 	DeviceID string `json:"deviceId"`
 	AppID    string `json:"appId"`
+	Expire   int64  `json:"expire"`
 }
 
 func GenerateUserJWT(head Head, payload UserPayload) (string, error) {
@@ -29,6 +31,8 @@ func GenerateUserJWT(head Head, payload UserPayload) (string, error) {
 	if err != nil {
 		return "", err
 	}
+	// expire to one hour later
+	payload.Expire = time.Now().Unix() + 60*60
 	p, err := json.Marshal(payload)
 	if err != nil {
 		return "", err

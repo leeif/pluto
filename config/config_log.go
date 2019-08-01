@@ -8,7 +8,7 @@ import (
 type LogConfig struct {
 	Level  *AllowedLevel  `pluto_value:"level"`
 	Format *AllowedFormat `pluto_value:"format"`
-	Path   *FilePath      `pluto_value:"path"`
+	File   *FilePath      `pluto_value:"file"`
 }
 
 type AllowedLevel struct {
@@ -63,5 +63,6 @@ func newLogConfig() *LogConfig {
 	return &LogConfig{
 		Level:  &AllowedLevel{},
 		Format: &AllowedFormat{},
+		File:   &FilePath{},
 	}
 }

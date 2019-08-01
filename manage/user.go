@@ -56,7 +56,7 @@ func LoginWithEmail(db *gorm.DB, login request.MailLogin) (map[string]string, *d
 	// insert deviceID and appID into device table
 	device := models.Device{}
 
-	if tx.Where("device_id = ? and app_id = ?").First(&device).RecordNotFound() {
+	if tx.Where("device_id = ? and app_id = ?", login.DeviceID, login.AppID).First(&device).RecordNotFound() {
 		device.DeviceID = login.DeviceID
 		device.AppID = login.AppID
 		if err := create(tx, &device); err != nil {
@@ -67,16 +67,17 @@ func LoginWithEmail(db *gorm.DB, login request.MailLogin) (map[string]string, *d
 	// refresh token
 	rt := models.RefreshToken{}
 	refreshToken := refresh.GenerateRefreshToken(string(user.ID) + device.DeviceID + device.AppID)
+	rt.UserID = user.ID
 	rt.DeviceID = device.DeviceID
 	rt.AppID = device.AppID
-	if tx.Where("device_id = ? and app_id = ?", device.DeviceID, device.AppID).First(&rt).RecordNotFound() {
+	if tx.Where("device_id = ? and app_id = ? and user_id = ?", device.DeviceID, device.AppID, user.ID).First(&rt).RecordNotFound() {
 		rt.RefreshToken = refreshToken
 		if err := create(tx, &rt); err != nil {
 			return nil, err
 		}
 	} else {
 		rt.RefreshToken = refreshToken
-		if err := update(tx, &device); err != nil {
+		if err := update(tx, &rt); err != nil {
 			return nil, err
 		}
 	}
@@ -92,6 +93,8 @@ func LoginWithEmail(db *gorm.DB, login request.MailLogin) (map[string]string, *d
 
 	res["jwt"] = jwtToken
 	res["refresh_token"] = rt.RefreshToken
+
+	tx.Commit()
 
 	return res, nil
 }

@@ -15,7 +15,7 @@ func getBody(r *http.Request, revicer interface{}) *datatype.PlutoError {
 	body, err := ioutil.ReadAll(r.Body)
 	if err != nil {
 		return datatype.NewPlutoError(datatype.ServerError,
-			errors.New("read body failed: "+err.Error()))
+			errors.New("Read body failed: "+err.Error()))
 	}
 
 	contentType := r.Header.Get("Content-type")

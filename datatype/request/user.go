@@ -2,11 +2,12 @@ package request
 
 type MailRegister struct {
 	Mail     string `json:"mail"`
+	Name     string `json:"name"`
 	Password string `json:"password"`
 }
 
 func (mr MailRegister) Validation() bool {
-	if mr.Mail == "" || mr.Password == "" {
+	if mr.Mail == "" || mr.Password == "" || mr.Name == "" {
 		return false
 	}
 	return true

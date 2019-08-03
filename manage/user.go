@@ -48,7 +48,7 @@ func LoginWithEmail(db *gorm.DB, login request.MailLogin) (map[string]string, *d
 			errors.New("Password encoding is failed: "+err.Error()))
 	}
 
-	if user.Password != encodePassword {
+	if *user.Password != encodePassword {
 		return nil, datatype.NewPlutoError(datatype.ReqError,
 			errors.New("Password is invalid"))
 	}
@@ -127,8 +127,9 @@ func RegisterWithEmail(db *gorm.DB, register request.MailRegister) *datatype.Plu
 			errors.New("Salt encoding is failed"))
 	}
 
-	user.Mail = register.Mail
-	user.Password = encodedPassword
+	user.Mail = &register.Mail
+	user.Name = &register.Name
+	user.Password = &encodedPassword
 
 	if err := create(tx, &user); err != nil {
 		return err

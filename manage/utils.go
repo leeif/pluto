@@ -2,19 +2,19 @@ package manage
 
 import (
 	"github.com/jinzhu/gorm"
-	"github.com/leeif/pluto/datatype"
+	perror "github.com/leeif/pluto/datatype/pluto_error"
 )
 
-func create(db *gorm.DB, record interface{}) *datatype.PlutoError {
+func create(db *gorm.DB, record interface{}) *perror.PlutoError {
 	if err := db.Create(record).Error; err != nil {
-		return datatype.NewPlutoError(datatype.ServerError, err)
+		return perror.NewServerError(err)
 	}
 	return nil
 }
 
-func update(db *gorm.DB, record interface{}) *datatype.PlutoError {
+func update(db *gorm.DB, record interface{}) *perror.PlutoError {
 	if err := db.Save(record).Error; err != nil {
-		return datatype.NewPlutoError(datatype.ServerError, err)
+		return perror.NewServerError(err)
 	}
 	return nil
 }

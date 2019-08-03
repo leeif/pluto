@@ -6,24 +6,22 @@ import (
 	"io/ioutil"
 	"net/http"
 
-	"github.com/leeif/pluto/datatype"
+	perror "github.com/leeif/pluto/datatype/pluto_error"
 	resp "github.com/leeif/pluto/datatype/response"
 	"github.com/urfave/negroni"
 )
 
-func getBody(r *http.Request, revicer interface{}) *datatype.PlutoError {
+func getBody(r *http.Request, revicer interface{}) *perror.PlutoError {
 	body, err := ioutil.ReadAll(r.Body)
 	if err != nil {
-		return datatype.NewPlutoError(datatype.ServerError,
-			errors.New("Read body failed: "+err.Error()))
+		return perror.NewServerError(errors.New("Read body failed: " + err.Error()))
 	}
 
 	contentType := r.Header.Get("Content-type")
 	if contentType == "application/json" {
 		err := json.Unmarshal(body, &revicer)
 		if err != nil {
-			return datatype.NewPlutoError(datatype.ReqError,
-				errors.New("Invalid JSON"))
+			return perror.BadRequest
 		}
 	}
 	return nil
@@ -71,18 +69,16 @@ func responseOK(body interface{}, w http.ResponseWriter) error {
 	return nil
 }
 
-func responseError(plutoError *datatype.PlutoError, w http.ResponseWriter) error {
+func responseError(plutoError *perror.PlutoError, w http.ResponseWriter) error {
 	response := resp.ReponseError{}
 	response.Status = resp.STATUSERROR
 	w.Header().Set("Content-type", "application/json")
-	switch plutoError.Type {
-	case datatype.ReqError:
-		response.Error = plutoError.Err.Error()
-		w.WriteHeader(http.StatusBadRequest)
-	case datatype.ServerError:
-		response.Error = "server error"
-		w.WriteHeader(http.StatusInternalServerError)
-	}
+	w.WriteHeader(plutoError.HTTPCode)
+
+	m := make(map[string]interface{})
+	m["code"] = plutoError.PlutoCode
+	m["msg"] = plutoError.HTTPError.Error()
+	response.Error = m
 	b, err := json.Marshal(response)
 	if err != nil {
 		return err

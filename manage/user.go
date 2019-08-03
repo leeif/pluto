@@ -3,7 +3,7 @@ package manage
 import (
 	"errors"
 
-	"github.com/leeif/pluto/datatype"
+	perror "github.com/leeif/pluto/datatype/pluto_error"
 	"github.com/leeif/pluto/models"
 
 	saltUtil "github.com/leeif/pluto/utils/salt"
@@ -15,42 +15,36 @@ import (
 	"github.com/jinzhu/gorm"
 )
 
-func LoginWithEmail(db *gorm.DB, login request.MailLogin) (map[string]string, *datatype.PlutoError) {
+func LoginWithEmail(db *gorm.DB, login request.MailLogin) (map[string]string, *perror.PlutoError) {
 	res := make(map[string]string)
 	if db == nil {
-		return nil, datatype.NewPlutoError(datatype.ServerError,
-			errors.New("DB connection is empty"))
+		return nil, perror.NewServerError(errors.New("DB connection is empty"))
 	}
 
 	if !login.Validation() {
-		return nil, datatype.NewPlutoError(datatype.ReqError,
-			errors.New("Request parameters are not enough"))
+		return nil, perror.BadRequest
 	}
 
 	tx := db.Begin()
 
 	user := models.User{}
 	if tx.Where("mail = ?", login.Mail).First(&user).RecordNotFound() {
-		return nil, datatype.NewPlutoError(datatype.ReqError,
-			errors.New("Mail is not existed"))
+		return nil, perror.MailIsNotExsit
 	}
 
 	salt := models.Salt{}
 	if tx.Where("user_id = ?", user.ID).First(&salt).RecordNotFound() {
-		return nil, datatype.NewPlutoError(datatype.ServerError,
-			errors.New("Salt is not found"))
+		return nil, perror.NewServerError(errors.New("Salt is not found"))
 	}
 
 	encodePassword, err := saltUtil.EncodePassword(login.Password, salt.Salt)
 
 	if err != nil {
-		return nil, datatype.NewPlutoError(datatype.ServerError,
-			errors.New("Password encoding is failed: "+err.Error()))
+		return nil, perror.NewServerError(errors.New("Password encoding is failed: " + err.Error()))
 	}
 
 	if *user.Password != encodePassword {
-		return nil, datatype.NewPlutoError(datatype.ReqError,
-			errors.New("Password is invalid"))
+		return nil, perror.InvalidPassword
 	}
 
 	// insert deviceID and appID into device table
@@ -87,8 +81,7 @@ func LoginWithEmail(db *gorm.DB, login request.MailLogin) (map[string]string, *d
 		jwt.UserPayload{UserID: user.ID, DeviceID: device.DeviceID, AppID: device.AppID})
 
 	if err != nil {
-		return nil, datatype.NewPlutoError(datatype.ServerError,
-			errors.New("JWT token generate failed: "+err.Error()))
+		return nil, perror.NewServerError(errors.New("JWT token generate failed: " + err.Error()))
 	}
 
 	res["jwt"] = jwtToken
@@ -99,23 +92,20 @@ func LoginWithEmail(db *gorm.DB, login request.MailLogin) (map[string]string, *d
 	return res, nil
 }
 
-func RegisterWithEmail(db *gorm.DB, register request.MailRegister) *datatype.PlutoError {
+func RegisterWithEmail(db *gorm.DB, register request.MailRegister) *perror.PlutoError {
 	if db == nil {
-		return datatype.NewPlutoError(datatype.ServerError,
-			errors.New("DB connection is empty"))
+		return perror.NewServerError(errors.New("DB connection is empty"))
 	}
 
 	if !register.Validation() {
-		return datatype.NewPlutoError(datatype.ReqError,
-			errors.New("Request parameters are not enough"))
+		return perror.BadRequest
 	}
 
 	tx := db.Begin()
 
 	user := models.User{}
 	if !tx.Where("mail = ?", register.Mail).First(&user).RecordNotFound() {
-		return datatype.NewPlutoError(datatype.ReqError,
-			errors.New("Mail is already exists"))
+		return perror.MailIsAlreadyRegister
 	}
 
 	salt := models.Salt{}
@@ -123,8 +113,7 @@ func RegisterWithEmail(db *gorm.DB, register request.MailRegister) *datatype.Plu
 
 	encodedPassword, err := saltUtil.EncodePassword(register.Password, salt.Salt)
 	if err != nil {
-		return datatype.NewPlutoError(datatype.ServerError,
-			errors.New("Salt encoding is failed"))
+		return perror.NewServerError(errors.New("Salt encoding is failed"))
 	}
 
 	user.Mail = &register.Mail

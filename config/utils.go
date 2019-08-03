@@ -23,8 +23,9 @@ func mergeCommandLineWithConfigFile(cl *Config, cf map[string]interface{}) error
 			continue
 		}
 		pc := v.FieldByName(st.Name).Interface()
-		err := mergePlutoConfigWithMap(pc, m.(map[string]interface{}))
-		return err
+		if err := mergePlutoConfigWithMap(pc, m.(map[string]interface{})); err != nil {
+			return err
+		}
 	}
 	return nil
 }
@@ -67,8 +68,9 @@ func mergePlutoConfigWithMap(pc interface{}, m map[string]interface{}) error {
 			case reflect.Int64:
 				s = strconv.Itoa(int(value.(int64)))
 			}
-			err := pv.Set(s)
-			return err
+			if err := pv.Set(s); err != nil {
+				return err
+			}
 		}
 	}
 	return nil

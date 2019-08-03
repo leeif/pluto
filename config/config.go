@@ -63,11 +63,11 @@ func (c *Config) setLogFlag(a *kingpin.Application) {
 
 func (c *Config) setRSAFlag(a *kingpin.Application) {
 	if c.RSA.Name != nil {
-		a.Flag("rsa.name", "rsa public/private key path").Default("ids_ra").SetValue(c.RSA.Name)
+		a.Flag("rsa.name", "rsa public/private key name").Default("ids_ra").SetValue(c.RSA.Name)
 	}
 
 	if c.RSA.Path != nil {
-		a.Flag("rsa.path", "log format: json, logfmt").Default("./").SetValue(c.RSA.Path)
+		a.Flag("rsa.path", "rsa public/private key path").Default("./").SetValue(c.RSA.Path)
 	}
 }
 
@@ -128,7 +128,10 @@ func (c *Config) Parse(a *kingpin.Application, args []string) {
 	}
 
 	// merge command line and config file settings
-	mergeCommandLineWithConfigFile(c, viper.AllSettings())
+	if err := mergeCommandLineWithConfigFile(c, viper.AllSettings()); err != nil {
+		fmt.Fprintln(os.Stderr, errors.Wrapf(err, "Error mergin config file"))
+		os.Exit(2)
+	}
 }
 
 func GetConfig() *Config {

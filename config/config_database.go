@@ -3,9 +3,9 @@ package config
 import "errors"
 
 type DatabaseConfig struct {
-	Type     *DBType     `pluto_value:"path"`
+	Type     *DBType     `pluto_value:"type"`
 	Host     *BaseString `pluto_value:"host"`
-	User     *BaseString `pluto_value:"name"`
+	User     *BaseString `pluto_value:"user"`
 	Password *BaseString `pluto_value:"password"`
 	Port     *Port       `pluto_value:"port"`
 	DB       *BaseString `pluto_value:"db"`

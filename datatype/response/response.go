@@ -11,6 +11,6 @@ type ReponseOK struct {
 }
 
 type ReponseError struct {
-	Status string `json:"status"`
-	Error  string `json:"error"`
+	Status string      `json:"status"`
+	Error  interface{} `json:"error"`
 }

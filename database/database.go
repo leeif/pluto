@@ -31,7 +31,7 @@ func GetDatabase() (*gorm.DB, error) {
 func generateConnectionSchema(config *config.DatabaseConfig) string {
 	switch config.Type.String() {
 	case "mysql":
-		return config.User.String() + ":" + config.Password.String() + "@tcp(" + config.Host.String() + ":" + config.Port.String() + ")/" + config.DB.String() +
+		return *config.User + ":" + *config.Password + "@tcp(" + *config.Host + ":" + config.Port.String() + ")/" + *config.DB +
 			"?charset=utf8&parseTime=True&loc=Local"
 	}
 	return ""

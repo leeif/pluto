@@ -21,8 +21,8 @@ var (
 
 // Init : Init the rsa setting, generate new public private files or load from existing files
 func Init() error {
-	privateKeyPath := path.Join(config.GetConfig().RSA.Path.String(), config.GetConfig().RSA.Name.String())
-	publicKeyPath := path.Join(config.GetConfig().RSA.Path.String(), config.GetConfig().RSA.Name.String()+".pub")
+	privateKeyPath := path.Join(*config.GetConfig().RSA.Path, *config.GetConfig().RSA.Name)
+	publicKeyPath := path.Join(*config.GetConfig().RSA.Path, *config.GetConfig().RSA.Name+".pub")
 
 	_, privateKeyPathErr := os.Stat(privateKeyPath)
 

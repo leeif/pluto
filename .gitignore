@@ -1,3 +1,4 @@
 vendor/
 ids*
 config.json
+pluto.log

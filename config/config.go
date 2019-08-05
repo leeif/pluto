@@ -11,7 +11,7 @@ type PlutoValue interface {
 }
 
 type Config struct {
-	ConfigFile *string         `kiper_value:"name:config.file;default:./"`
+	ConfigFile *string         `kiper_value:"name:config.file;default:./config.json"`
 	Server     *ServerConfig   `kiper_config:"name:server"`
 	Log        *LogConfig      `kiper_config:"name:log"`
 	RSA        *RSAConfig      `kiper_config:"name:rsa"`

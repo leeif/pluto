@@ -21,6 +21,14 @@
   revision = "c3de453c63f4bdb4dadffab9805ec00426c505f7"
 
 [[projects]]
+  digest = "1:ffe9824d294da03b391f44e1ae8281281b4afc1bdaa9588c9097785e3af10cec"
+  name = "github.com/davecgh/go-spew"
+  packages = ["spew"]
+  pruneopts = "UT"
+  revision = "8991bc29aa16c548c550c7ff78260e27b9ab7c73"
+  version = "v1.1.1"
+
+[[projects]]
   digest = "1:abeb38ade3f32a92943e5be54f55ed6d6e3b6602761d74b4aab4c9dd45c18abd"
   name = "github.com/fsnotify/fsnotify"
   packages = ["."]
@@ -119,11 +127,11 @@
 
 [[projects]]
   branch = "master"
-  digest = "1:c5083ea52932d5a74f1dddc6507ddc925a7be0e244cf73ef4b7ab6987de5fccb"
+  digest = "1:1b9a2492574fb7c4069762f50afcbcc187025f164ceb89fd854782c44ced38d7"
   name = "github.com/leeif/kiper"
   packages = ["."]
   pruneopts = "UT"
-  revision = "a19cfbdd3e31f59d8af1411de02dcdfcd3b08c4a"
+  revision = "33405a707dba9c7a56093a3fbcb5306700df5884"
 
 [[projects]]
   digest = "1:5a0ef768465592efca0412f7e838cdc0826712f8447e70e6ccc52eb441e9ab13"
@@ -156,6 +164,14 @@
   pruneopts = "UT"
   revision = "ba968bfe8b2f7e042a574c888954fccecfa385b4"
   version = "v0.8.1"
+
+[[projects]]
+  digest = "1:0028cb19b2e4c3112225cd871870f2d9cf49b9b4276531f03438a88e94be86fe"
+  name = "github.com/pmezard/go-difflib"
+  packages = ["difflib"]
+  pruneopts = "UT"
+  revision = "792786c7400a136282c1664665ae0a8db921c6c2"
+  version = "v1.0.0"
 
 [[projects]]
   digest = "1:bb495ec276ab82d3dd08504bbc0594a65de8c3b22c6f2aaa92d05b73fbf3a82e"
@@ -199,6 +215,14 @@
   pruneopts = "UT"
   revision = "b5bf975e5823809fb22c7644d008757f78a4259e"
   version = "v1.4.0"
+
+[[projects]]
+  digest = "1:972c2427413d41a1e06ca4897e8528e5a1622894050e2f527b38ddf0f343f759"
+  name = "github.com/stretchr/testify"
+  packages = ["assert"]
+  pruneopts = "UT"
+  revision = "ffdc059bfe9ce6a4e144ba849dbedead332c6053"
+  version = "v1.3.0"
 
 [[projects]]
   digest = "1:d688f4ad71b5dfad95c2d74cb0feac09f8f3c32ae5cecc078230dbdeece39e53"
@@ -279,6 +303,7 @@
     "github.com/jinzhu/gorm/dialects/mysql",
     "github.com/leeif/kiper",
     "github.com/pkg/errors",
+    "github.com/stretchr/testify/assert",
     "github.com/urfave/negroni",
     "golang.org/x/crypto/scrypt",
   ]

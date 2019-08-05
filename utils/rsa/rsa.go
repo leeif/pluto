@@ -151,8 +151,8 @@ func generateKey() (*rsa.PrivateKey, *rsa.PublicKey, error) {
 	return privatekey, publickey, nil
 }
 
-// SignWithPrivteKey : Sign the src data with private key
-func SignWithPrivteKey(src []byte, hash crypto.Hash) ([]byte, error) {
+// SignWithPrivtaeKey : Sign the src data with private key
+func SignWithPrivateKey(src []byte, hash crypto.Hash) ([]byte, error) {
 	h := hash.New()
 	h.Write(src)
 	hashed := h.Sum(nil)
@@ -178,12 +178,15 @@ func VerifySignWithPublicKey(src, signed []byte, hash crypto.Hash) error {
 }
 
 // GetPublicKey : Get the public key
-func GetPublicKey() string {
-	var keybytes = x509.MarshalPKCS1PublicKey(publicKey)
+func GetPublicKey() (string, error) {
+	keybytes, err := x509.MarshalPKIXPublicKey(publicKey)
+	if err != nil {
+		return "", err
+	}
 	block := &pem.Block{
 		Type:  "PUBLIC KEY",
 		Bytes: keybytes,
 	}
 	keybuffer := pem.EncodeToMemory(block)
-	return string(keybuffer)
+	return string(keybuffer), nil
 }

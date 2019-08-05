@@ -38,7 +38,7 @@ func GenerateUserJWT(head Head, payload UserPayload) (string, error) {
 		return "", err
 	}
 
-	sig, err := rsa.SignWithPrivteKey([]byte(string(h)+string(p)), crypto.SHA256)
+	sig, err := rsa.SignWithPrivateKey([]byte(string(h)+string(p)), crypto.SHA256)
 
 	if err != nil {
 		return "", err

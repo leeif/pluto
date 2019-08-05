@@ -17,21 +17,26 @@ import (
 )
 
 func main() {
-	kiper := kiper.NewKiper(filepath.Base(os.Args[0]), "Mercury server")
+	kiper := kiper.NewKiper(filepath.Base(os.Args[0]), "Pluto server")
 	kiper.GetKingpinInstance().HelpFlag.Short('h')
 
 	// Init config file from command line and config file
 	c := config.GetConfig()
 
-	kiper.SetCommandLineFlag(c, os.Args[1:])
-
-	if err := kiper.ParseCommandLine(); err != nil {
+	if err := kiper.ParseCommandLine(c, os.Args[1:]); err != nil {
 		fmt.Println(err)
 		os.Exit(1)
 	}
 
-	kiper.SetConfigFilePath(*c.ConfigFile)
-	kiper.MergeConfigFile(c)
+	if err := kiper.ParseConfigFile(*c.ConfigFile); err != nil {
+		fmt.Println(err)
+		os.Exit(1)
+	}
+
+	if err := kiper.MergeConfigFile(c); err != nil {
+		fmt.Println(err)
+		os.Exit(1)
+	}
 
 	if err := rsa.Init(); err != nil {
 		fmt.Println(err)

@@ -1,9 +1,9 @@
 package config
 
 type MailConfig struct {
-	SMTP     *string `pluto_value:"name:smtp"`
-	User     *string `pluto_value:"name:user"`
-	Password *string `pluto_value:"name:format"`
+	SMTP     *string `kiper_value:"name:smtp"`
+	User     *string `kiper_value:"name:user"`
+	Password *string `kiper_value:"name:password"`
 }
 
 func newMailConfig() *MailConfig {

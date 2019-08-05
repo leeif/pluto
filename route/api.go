@@ -8,6 +8,7 @@ import (
 	"github.com/go-kit/kit/log"
 	"github.com/leeif/pluto/database"
 
+	perror "github.com/leeif/pluto/datatype/pluto_error"
 	"github.com/leeif/pluto/datatype/request"
 	"github.com/leeif/pluto/manage"
 	"github.com/leeif/pluto/middleware"
@@ -106,8 +107,14 @@ func (route *Route) authRoute(router *mux.Router) {
 
 	router.Handle("/publickey", route.middleware.NoVerifyMiddleware(func(w http.ResponseWriter, r *http.Request, next http.HandlerFunc) {
 		res := make(map[string]string)
-		pbkey := rsa.GetPublicKey()
-		res["public_key"] = pbkey
-		responseOK(res, w)
+		pbkey, err := rsa.GetPublicKey()
+		if err != nil {
+			perr := perror.NewServerError(err)
+			responseError(perr, w)
+		} else {
+			res["public_key"] = pbkey
+			responseOK(res, w)
+		}
+		next(w, r)
 	})).Methods("GET")
 }

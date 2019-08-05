@@ -1,7 +1,7 @@
 package config
 
 type ServerConfig struct {
-	Port *Port `pluto_value:"port"`
+	Port *Port `kiper_value:"name:port;help:server listen port;default:8010"`
 }
 
 type Port struct {

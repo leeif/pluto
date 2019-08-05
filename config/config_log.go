@@ -6,9 +6,9 @@ import (
 )
 
 type LogConfig struct {
-	Level  *AllowedLevel  `pluto_value:"level"`
-	Format *AllowedFormat `pluto_value:"format"`
-	File   *FilePath      `pluto_value:"file"`
+	Level  *AllowedLevel  `kiper_value:"name:level;help:log level = debug, info, warn, error;default:info"`
+	Format *AllowedFormat `kiper_value:"name:format;help:log format = json, logfmt;default:logfmt"`
+	File   *string        `kiper_value:"name:file;help:log file path;default:./pluto.log"`
 }
 
 type AllowedLevel struct {
@@ -63,6 +63,5 @@ func newLogConfig() *LogConfig {
 	return &LogConfig{
 		Level:  &AllowedLevel{},
 		Format: &AllowedFormat{},
-		File:   &FilePath{},
 	}
 }

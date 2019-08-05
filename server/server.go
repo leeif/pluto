@@ -23,11 +23,11 @@ func (s Server) RunServer() error {
 	// set logger
 	var logger log.Logger
 	var file *os.File
-	if config.Log.File.String() == "" {
+	if *config.Log.File == "" {
 		file = os.Stdout
 	} else {
 		var err error
-		file, err = os.OpenFile(config.Log.File.String(), os.O_CREATE|os.O_WRONLY|os.O_APPEND, 0666)
+		file, err = os.OpenFile(*config.Log.File, os.O_CREATE|os.O_WRONLY|os.O_APPEND, 0666)
 		if err != nil {
 			return err
 		}

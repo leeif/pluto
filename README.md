@@ -1,3 +1,7 @@
+# Pluto Server
+
+[![Build Status](https://travis-ci.org/MuShare/pluto.svg?branch=master)](https://travis-ci.org/MuShare/pluto)
+
 # API Document
 
 ## 1. User

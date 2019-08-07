@@ -14,6 +14,13 @@ type Migrations struct {
 
 func Migrate(db *gorm.DB) error {
 
+	// auto migrate
+	db.AutoMigrate(&models.User{})
+	db.AutoMigrate(&models.Salt{})
+	db.AutoMigrate(&models.Device{})
+	db.AutoMigrate(&models.RefreshToken{})
+	db.AutoMigrate(&models.Service{})
+
 	if err := createMigrationTable(db); err != nil {
 		return err
 	}

@@ -16,6 +16,7 @@ type Config struct {
 	Log        *LogConfig      `kiper_config:"name:log"`
 	RSA        *RSAConfig      `kiper_config:"name:rsa"`
 	Database   *DatabaseConfig `kiper_config:"name:database"`
+	Mail       *MailConfig     `kiper_config:"name:mail"`
 }
 
 func GetConfig() *Config {
@@ -25,6 +26,7 @@ func GetConfig() *Config {
 			Server:   newServerConfig(),
 			RSA:      newRSAConfig(),
 			Database: newDatabaseConfig(),
+			Mail:     newMailConfig(),
 		}
 	}
 	return config

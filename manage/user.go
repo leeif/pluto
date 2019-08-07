@@ -1,8 +1,13 @@
 package manage
 
 import (
+	"bytes"
 	"errors"
+	"fmt"
+	"os"
+	"path"
 
+	"github.com/alecthomas/template"
 	perror "github.com/leeif/pluto/datatype/pluto_error"
 	"github.com/leeif/pluto/models"
 
@@ -10,6 +15,7 @@ import (
 
 	"github.com/leeif/pluto/datatype/request"
 	"github.com/leeif/pluto/utils/jwt"
+	"github.com/leeif/pluto/utils/mail"
 	"github.com/leeif/pluto/utils/refresh"
 
 	"github.com/jinzhu/gorm"
@@ -26,10 +32,19 @@ func LoginWithEmail(db *gorm.DB, login request.MailLogin) (map[string]string, *p
 	}
 
 	tx := db.Begin()
+	defer func() {
+		if r := recover(); r != nil {
+			tx.Rollback()
+		}
+	}()
 
 	user := models.User{}
 	if tx.Where("mail = ?", login.Mail).First(&user).RecordNotFound() {
 		return nil, perror.MailIsNotExsit
+	}
+
+	if user.Verified == false {
+		return nil, perror.MailIsNotVerified
 	}
 
 	salt := models.Salt{}
@@ -78,7 +93,7 @@ func LoginWithEmail(db *gorm.DB, login request.MailLogin) (map[string]string, *p
 
 	// generate jwt token
 	jwtToken, err := jwt.GenerateUserJWT(jwt.Head{Alg: jwt.ALGRAS},
-		jwt.UserPayload{UserID: user.ID, DeviceID: device.DeviceID, AppID: device.AppID})
+		jwt.UserPayload{UserID: user.ID, DeviceID: device.DeviceID, AppID: device.AppID}, 60*60)
 
 	if err != nil {
 		return nil, perror.NewServerError(errors.New("JWT token generate failed: " + err.Error()))
@@ -102,6 +117,11 @@ func RegisterWithEmail(db *gorm.DB, register request.MailRegister) *perror.Pluto
 	}
 
 	tx := db.Begin()
+	defer func() {
+		if r := recover(); r != nil {
+			tx.Rollback()
+		}
+	}()
 
 	user := models.User{}
 	if !tx.Where("mail = ?", register.Mail).First(&user).RecordNotFound() {
@@ -128,6 +148,30 @@ func RegisterWithEmail(db *gorm.DB, register request.MailRegister) *perror.Pluto
 
 	if err := create(tx, &salt); err != nil {
 		return err
+	}
+
+	token, err := jwt.GenerateUserJWT(jwt.Head{Alg: jwt.ALGRAS}, jwt.UserPayload{UserID: user.ID}, 10*60)
+	if err != nil {
+		return perror.NewServerError(errors.New("JWT token generate failed: " + err.Error()))
+	}
+
+	// send verify mail (must)
+	if m := mail.NewMail(); m != nil {
+		dir, _ := os.Getwd()
+		t := template.Must(template.ParseFiles(path.Join(dir, "views", "mail_verify.html")))
+		var buffer bytes.Buffer
+		type Data struct {
+			Token string
+		}
+		t.Execute(&buffer, Data{Token: token})
+		fmt.Println(buffer.String())
+		if err := m.Send(register.Mail, "[MuShare]Mail Verification", "test"); err != nil {
+			tx.Rollback()
+			return perror.NewServerError(errors.New("Mail sending failed: " + err.Error()))
+		}
+	} else {
+		tx.Rollback()
+		return perror.NewServerError(errors.New("Mail sender is not defined"))
 	}
 
 	tx.Commit()

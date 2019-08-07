@@ -15,4 +15,5 @@ type User struct {
 	Password *string `gorm:"type:varchar(255);not null"`
 	Birthday *time.Time
 	Avatar   string `gorm:"type:varchar(255)"`
+	Verified bool
 }

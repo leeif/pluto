@@ -25,14 +25,14 @@ type UserPayload struct {
 	Expire   int64  `json:"expire"`
 }
 
-func GenerateUserJWT(head Head, payload UserPayload) (string, error) {
+func GenerateUserJWT(head Head, payload UserPayload, expire int64) (string, error) {
 	head.Type = "JWT"
 	h, err := json.Marshal(head)
 	if err != nil {
 		return "", err
 	}
 	// expire to one hour later
-	payload.Expire = time.Now().Unix() + 60*60
+	payload.Expire = time.Now().Unix() + expire
 	p, err := json.Marshal(payload)
 	if err != nil {
 		return "", err

@@ -105,6 +105,22 @@ func (route *Route) authRoute(router *mux.Router) {
 		next(w, r)
 	})).Methods("POST")
 
+	router.Handle("/refresh", route.middleware.NoVerifyMiddleware(func(w http.ResponseWriter, r *http.Request, next http.HandlerFunc) {
+		rat := request.RefreshAccessToken{}
+		if err := getBody(r, &rat); err != nil {
+			responseError(err, w)
+			return
+		}
+		if res, err := manage.RefreshAccessToken(db, rat); err != nil {
+			// set err to context for log
+			context.Set(r, "pluto_error", err)
+			responseError(err, w)
+		} else {
+			responseOK(res, w)
+		}
+		next(w, r)
+	})).Methods("POST")
+
 	router.Handle("/publickey", route.middleware.NoVerifyMiddleware(func(w http.ResponseWriter, r *http.Request, next http.HandlerFunc) {
 		res := make(map[string]string)
 		pbkey, err := rsa.GetPublicKey()

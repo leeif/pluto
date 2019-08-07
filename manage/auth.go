@@ -39,7 +39,7 @@ func RefreshAccessToken(db *gorm.DB, rat request.RefreshAccessToken) (map[string
 
 	// generate jwt token
 	jwtToken, err := jwt.GenerateUserJWT(jwt.Head{Alg: jwt.ALGRAS},
-		jwt.UserPayload{UserID: user.ID, DeviceID: rat.DeviceID, AppID: rat.AppID})
+		jwt.UserPayload{UserID: user.ID, DeviceID: rat.DeviceID, AppID: rat.AppID}, 60*60)
 
 	if err != nil {
 		return nil, perror.NewServerError(errors.New("JWT token generate failed: " + err.Error()))
@@ -50,3 +50,5 @@ func RefreshAccessToken(db *gorm.DB, rat request.RefreshAccessToken) (map[string
 	tx.Commit()
 	return res, nil
 }
+
+

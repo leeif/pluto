@@ -5,7 +5,10 @@ import (
 	"errors"
 	"io/ioutil"
 	"net/http"
+	"os"
+	"path"
 
+	"github.com/alecthomas/template"
 	perror "github.com/leeif/pluto/datatype/pluto_error"
 	resp "github.com/leeif/pluto/datatype/response"
 	"github.com/urfave/negroni"
@@ -77,13 +80,27 @@ func responseError(plutoError *perror.PlutoError, w http.ResponseWriter) error {
 
 	m := make(map[string]interface{})
 	m["code"] = plutoError.PlutoCode
-	m["msg"] = plutoError.HTTPError.Error()
+	m["message"] = plutoError.HTTPError.Error()
 	response.Error = m
 	b, err := json.Marshal(response)
 	if err != nil {
 		return err
 	}
 	_, err = w.Write(b)
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
+func responseHTML(file string, data interface{}, w http.ResponseWriter) error {
+	w.Header().Set("Content-type", "text/html")
+	dir, _ := os.Getwd()
+	t, err := template.ParseFiles(path.Join(dir, "views", file))
+	if err != nil {
+		return err
+	}
+	err = t.Execute(w, data)
 	if err != nil {
 		return err
 	}

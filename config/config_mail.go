@@ -1,7 +1,5 @@
 package config
 
-import "github.com/pkg/errors"
-
 type MailConfig struct {
 	SMTP     *SMTP   `kiper_value:"name:smtp"`
 	User     *string `kiper_value:"name:user"`
@@ -13,9 +11,6 @@ type SMTP struct {
 }
 
 func (smtp *SMTP) Set(s string) error {
-	if s == "" {
-		return errors.New("smtp server can not be empty")
-	}
 	smtp.s = s
 	return nil
 }

@@ -3,11 +3,15 @@ package manage
 import (
 	"bytes"
 	"errors"
-	"fmt"
 	"os"
 	"path"
 
-	"github.com/alecthomas/template"
+	"github.com/leeif/pluto/config"
+
+	"text/template"
+
+	b64 "encoding/base64"
+
 	perror "github.com/leeif/pluto/datatype/pluto_error"
 	"github.com/leeif/pluto/models"
 
@@ -33,9 +37,7 @@ func LoginWithEmail(db *gorm.DB, login request.MailLogin) (map[string]string, *p
 
 	tx := db.Begin()
 	defer func() {
-		if r := recover(); r != nil {
-			tx.Rollback()
-		}
+		tx.Rollback()
 	}()
 
 	user := models.User{}
@@ -118,9 +120,7 @@ func RegisterWithEmail(db *gorm.DB, register request.MailRegister) *perror.Pluto
 
 	tx := db.Begin()
 	defer func() {
-		if r := recover(); r != nil {
-			tx.Rollback()
-		}
+		tx.Rollback()
 	}()
 
 	user := models.User{}
@@ -158,19 +158,18 @@ func RegisterWithEmail(db *gorm.DB, register request.MailRegister) *perror.Pluto
 	// send verify mail (must)
 	if m := mail.NewMail(); m != nil {
 		dir, _ := os.Getwd()
-		t := template.Must(template.ParseFiles(path.Join(dir, "views", "mail_verify.html")))
+		t := template.Must(template.ParseFiles(path.Join(dir, "views", "register_mail.html")))
 		var buffer bytes.Buffer
 		type Data struct {
-			Token string
+			BaseURL string
+			Token   string
 		}
-		t.Execute(&buffer, Data{Token: token})
-		fmt.Println(buffer.String())
-		if err := m.Send(register.Mail, "[MuShare]Mail Verification", "test"); err != nil {
-			tx.Rollback()
+		baseURL := config.GetConfig().Server.BaseURL
+		t.Execute(&buffer, Data{Token: b64.StdEncoding.EncodeToString([]byte(token)), BaseURL: *baseURL})
+		if err := m.Send(register.Mail, "[MuShare]Mail Verification", "text/html", buffer.String()); err != nil {
 			return perror.NewServerError(errors.New("Mail sending failed: " + err.Error()))
 		}
 	} else {
-		tx.Rollback()
 		return perror.NewServerError(errors.New("Mail sender is not defined"))
 	}
 

@@ -38,6 +38,11 @@ func main() {
 		os.Exit(1)
 	}
 
+	if err := config.CheckConfig(c); err != nil {
+		fmt.Println(err)
+		os.Exit(1)
+	}
+
 	if err := rsa.Init(); err != nil {
 		fmt.Println(err)
 		os.Exit(1)

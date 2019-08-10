@@ -35,6 +35,9 @@ func (route *Route) GetRouter(logger log.Logger) *mux.Router {
 	auth := router.PathPrefix("/api/auth").Subrouter()
 	route.authRoute(auth)
 
+	web := router.PathPrefix("/").Subrouter()
+	route.webRoute(web)
+
 	return router
 }
 
@@ -88,22 +91,6 @@ func (route *Route) authRoute(router *mux.Router) {
 		fmt.Println(err)
 		os.Exit(1)
 	}
-
-	router.Handle("/refresh", route.middleware.NoVerifyMiddleware(func(w http.ResponseWriter, r *http.Request, next http.HandlerFunc) {
-		rat := request.RefreshAccessToken{}
-		if err := getBody(r, &rat); err != nil {
-			responseError(err, w)
-			return
-		}
-		if res, err := manage.RefreshAccessToken(db, rat); err != nil {
-			// set err to context for log
-			context.Set(r, "pluto_error", err)
-			responseError(err, w)
-		} else {
-			responseOK(res, w)
-		}
-		next(w, r)
-	})).Methods("POST")
 
 	router.Handle("/refresh", route.middleware.NoVerifyMiddleware(func(w http.ResponseWriter, r *http.Request, next http.HandlerFunc) {
 		rat := request.RefreshAccessToken{}

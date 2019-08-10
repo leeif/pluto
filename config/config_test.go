@@ -35,9 +35,9 @@ func TestConfigDefault(t *testing.T) {
 	kiper := kiper.NewKiper("Test", "Pluto server")
 
 	// Init config file from command line and config file
-	c := config.GetConfig()
+	c := config.NewConfig()
 
-	args := []string{}
+	args := []string{"--mail.smtp", "test.smtp.com"}
 
 	if err := kiper.ParseCommandLine(c, args); err != nil {
 		t.Fatal(err)
@@ -51,13 +51,14 @@ func TestConfigDefault(t *testing.T) {
 	assert.Equal(t, "3306", c.Database.Port.String(), "default of database port should be 3306")
 	assert.Equal(t, "", *c.Database.Password, "default of database port should be empty")
 	assert.Equal(t, "", *c.Database.DB, "default of database port should be empty")
+	assert.Equal(t, "test.smtp.com", c.Mail.SMTP.String(), "default of database port should be empty")
 }
 
 func TestConfigCustom(t *testing.T) {
 	kiper := kiper.NewKiper("Test", "Pluto server")
 
 	// Init config file from command line and config file
-	c := config.GetConfig()
+	c := config.NewConfig()
 
 	args := []string{"--config.file", "./config_test.json"}
 
@@ -85,6 +86,9 @@ func TestConfigCustom(t *testing.T) {
 			"port": "3306",
 			"password": "www",
 			"db": "pluto_server"
+		},
+		"mail": {
+			"smtp": "test.smtp.com"
 		}
 	}`); err != nil {
 		t.Fatal(err)
@@ -119,4 +123,5 @@ func TestConfigCustom(t *testing.T) {
 	assert.Equal(t, "www", *c.Database.Password, "database port should be empty")
 	assert.Equal(t, "pluto_server", *c.Database.DB, "database port should be empty")
 
+	assert.Equal(t, "test.smtp.com", c.Mail.SMTP.String(), "database port should be empty")
 }

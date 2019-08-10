@@ -16,9 +16,7 @@ type Mail struct {
 	Password string
 }
 
-func (m *Mail) Send(recv, subj, body string) error {
-
-	fmt.Println("test")
+func (m *Mail) Send(recv, subj, contentType, body string) error {
 
 	from := mail.Address{"", m.User}
 	to := mail.Address{"", recv}
@@ -34,7 +32,7 @@ func (m *Mail) Send(recv, subj, body string) error {
 	for k, v := range headers {
 		message += fmt.Sprintf("%s: %s\r\n", k, v)
 	}
-	message += "\r\n" + body
+	message += "Content-Type: " + contentType + "; charset=UTF-8\r\n" + body
 
 	// Connect to the SMTP Server
 	host, _, err := net.SplitHostPort(m.SMTP)

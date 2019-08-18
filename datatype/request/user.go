@@ -31,3 +31,40 @@ func (ml MailLogin) Validation() bool {
 
 	return true
 }
+
+type RegisterVerifyMail struct {
+	Mail string `json:"mail"`
+}
+
+func (rvm RegisterVerifyMail) Validation() bool {
+	if rvm.Mail == "" {
+		return false
+	}
+
+	return true
+}
+
+type ResetPasswordMail struct {
+	Mail string `json:"mail"`
+}
+
+func (rpm ResetPasswordMail) Validation() bool {
+	if rpm.Mail == "" {
+		return false
+	}
+
+	return true
+}
+
+type ResetPassword struct {
+	Token    string `json:"token"`
+	Password string `json:"password"`
+}
+
+func (rp ResetPassword) Validation() bool {
+	if rp.Token == "" || rp.Password == "" {
+		return false
+	}
+
+	return true
+}

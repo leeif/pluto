@@ -7,6 +7,7 @@ import (
 	"net/http"
 	"os"
 	"path"
+	"strings"
 
 	"github.com/alecthomas/template"
 	perror "github.com/leeif/pluto/datatype/pluto_error"
@@ -21,7 +22,7 @@ func getBody(r *http.Request, revicer interface{}) *perror.PlutoError {
 	}
 
 	contentType := r.Header.Get("Content-type")
-	if contentType == "application/json" {
+	if strings.Contains(contentType, "application/json") {
 		err := json.Unmarshal(body, &revicer)
 		if err != nil {
 			return perror.BadRequest
@@ -96,7 +97,7 @@ func responseError(plutoError *perror.PlutoError, w http.ResponseWriter) error {
 func responseHTML(file string, data interface{}, w http.ResponseWriter) error {
 	w.Header().Set("Content-type", "text/html")
 	dir, _ := os.Getwd()
-	t, err := template.ParseFiles(path.Join(dir, "views", file))
+	t, err := template.ParseFiles(path.Join(dir, "views", file), path.Join(dir, "views/template", "header.html"))
 	if err != nil {
 		return err
 	}

@@ -16,7 +16,7 @@ import (
 type Server struct {
 }
 
-func (s Server) RunServer() error {
+func (s Server) RunServer() (*http.Server, error) {
 	config := config.GetConfig()
 	address := ":" + config.Server.Port.String()
 
@@ -29,7 +29,7 @@ func (s Server) RunServer() error {
 		var err error
 		file, err = os.OpenFile(*config.Log.File, os.O_CREATE|os.O_WRONLY|os.O_APPEND, 0666)
 		if err != nil {
-			return err
+			return nil, err
 		}
 	}
 	defer file.Close()
@@ -44,10 +44,10 @@ func (s Server) RunServer() error {
 
 	// start server
 	level.Info(logger).Log("msg", "Start pluto server at "+address)
-	err := http.ListenAndServe(address, n)
-	if err != nil {
-		return err
+	srv := &http.Server{
+		Addr:    address,
+		Handler: n,
 	}
 
-	return nil
+	return srv, nil
 }

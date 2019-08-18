@@ -2,3 +2,4 @@ vendor/
 id*
 config.json
 pluto.log
+.vscode

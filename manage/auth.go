@@ -23,6 +23,11 @@ func RefreshAccessToken(db *gorm.DB, rat request.RefreshAccessToken) (map[string
 	}
 
 	tx := db.Begin()
+
+	defer func() {
+		tx.Rollback()
+	}()
+
 	rt := models.RefreshToken{}
 	if tx.Where("refresh_token = ?", rat.RefreshToken).First(&rt).RecordNotFound() {
 		return nil, perror.InvalidRefreshToken
@@ -38,8 +43,8 @@ func RefreshAccessToken(db *gorm.DB, rat request.RefreshAccessToken) (map[string
 	}
 
 	// generate jwt token
-	jwtToken, err := jwt.GenerateUserJWT(jwt.Head{Alg: jwt.ALGRAS},
-		jwt.UserPayload{UserID: user.ID, DeviceID: rat.DeviceID, AppID: rat.AppID})
+	jwtToken, err := jwt.GenerateJWT(jwt.Head{Type: jwt.ACCESS},
+		&jwt.UserPayload{UserID: user.ID, DeviceID: rat.DeviceID, AppID: rat.AppID}, 60*60)
 
 	if err != nil {
 		return nil, perror.NewServerError(errors.New("JWT token generate failed: " + err.Error()))

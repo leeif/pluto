@@ -1,5 +1,7 @@
 package config
 
+import "github.com/pkg/errors"
+
 var config *Config
 
 type PlutoConfig interface {
@@ -16,16 +18,30 @@ type Config struct {
 	Log        *LogConfig      `kiper_config:"name:log"`
 	RSA        *RSAConfig      `kiper_config:"name:rsa"`
 	Database   *DatabaseConfig `kiper_config:"name:database"`
+	Mail       *MailConfig     `kiper_config:"name:mail"`
+}
+
+func CheckConfig(c *Config) error {
+	if c.Mail.SMTP.String() == "" {
+		return errors.New("smtp can not be empty")
+	}
+	return nil
 }
 
 func GetConfig() *Config {
 	if config == nil {
-		config = &Config{
-			Log:      newLogConfig(),
-			Server:   newServerConfig(),
-			RSA:      newRSAConfig(),
-			Database: newDatabaseConfig(),
-		}
+		config = NewConfig()
 	}
 	return config
+}
+
+func NewConfig() *Config {
+	c := &Config{
+		Log:      newLogConfig(),
+		Server:   newServerConfig(),
+		RSA:      newRSAConfig(),
+		Database: newDatabaseConfig(),
+		Mail:     newMailConfig(),
+	}
+	return c
 }

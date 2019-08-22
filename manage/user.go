@@ -1,6 +1,7 @@
 package manage
 
 import (
+	"encoding/json"
 	"errors"
 
 	perror "github.com/leeif/pluto/datatype/pluto_error"
@@ -10,6 +11,7 @@ import (
 
 	"github.com/leeif/pluto/datatype/request"
 	"github.com/leeif/pluto/utils/jwt"
+	"github.com/leeif/pluto/utils/mail"
 	"github.com/leeif/pluto/utils/refresh"
 
 	"github.com/jinzhu/gorm"
@@ -26,10 +28,17 @@ func LoginWithEmail(db *gorm.DB, login request.MailLogin) (map[string]string, *p
 	}
 
 	tx := db.Begin()
+	defer func() {
+		tx.Rollback()
+	}()
 
 	user := models.User{}
 	if tx.Where("mail = ?", login.Mail).First(&user).RecordNotFound() {
 		return nil, perror.MailIsNotExsit
+	}
+
+	if user.Verified == false {
+		return nil, perror.MailIsNotVerified
 	}
 
 	salt := models.Salt{}
@@ -77,8 +86,8 @@ func LoginWithEmail(db *gorm.DB, login request.MailLogin) (map[string]string, *p
 	}
 
 	// generate jwt token
-	jwtToken, err := jwt.GenerateUserJWT(jwt.Head{Alg: jwt.ALGRAS},
-		jwt.UserPayload{UserID: user.ID, DeviceID: device.DeviceID, AppID: device.AppID})
+	jwtToken, err := jwt.GenerateJWT(jwt.Head{Type: jwt.ACCESS},
+		&jwt.UserPayload{UserID: user.ID, DeviceID: device.DeviceID, AppID: device.AppID}, 60*60)
 
 	if err != nil {
 		return nil, perror.NewServerError(errors.New("JWT token generate failed: " + err.Error()))
@@ -92,20 +101,23 @@ func LoginWithEmail(db *gorm.DB, login request.MailLogin) (map[string]string, *p
 	return res, nil
 }
 
-func RegisterWithEmail(db *gorm.DB, register request.MailRegister) *perror.PlutoError {
+func RegisterWithEmail(db *gorm.DB, register request.MailRegister) (uint, *perror.PlutoError) {
 	if db == nil {
-		return perror.NewServerError(errors.New("DB connection is empty"))
+		return 0, perror.NewServerError(errors.New("DB connection is empty"))
 	}
 
 	if !register.Validation() {
-		return perror.BadRequest
+		return 0, perror.BadRequest
 	}
 
 	tx := db.Begin()
+	defer func() {
+		tx.Rollback()
+	}()
 
 	user := models.User{}
 	if !tx.Where("mail = ?", register.Mail).First(&user).RecordNotFound() {
-		return perror.MailIsAlreadyRegister
+		return 0, perror.MailIsAlreadyRegister
 	}
 
 	salt := models.Salt{}
@@ -113,7 +125,7 @@ func RegisterWithEmail(db *gorm.DB, register request.MailRegister) *perror.Pluto
 
 	encodedPassword, err := saltUtil.EncodePassword(register.Password, salt.Salt)
 	if err != nil {
-		return perror.NewServerError(errors.New("Salt encoding is failed"))
+		return 0, perror.NewServerError(errors.New("Salt encoding is failed"))
 	}
 
 	user.Mail = &register.Mail
@@ -121,12 +133,88 @@ func RegisterWithEmail(db *gorm.DB, register request.MailRegister) *perror.Pluto
 	user.Password = &encodedPassword
 
 	if err := create(tx, &user); err != nil {
-		return err
+		return 0, err
 	}
 
 	salt.UserID = user.ID
 
 	if err := create(tx, &salt); err != nil {
+		return 0, err
+	}
+
+	tx.Commit()
+
+	return user.ID, nil
+}
+
+func RegisterVerifyMail(db *gorm.DB, rvm request.RegisterVerifyMail) *perror.PlutoError {
+	if db == nil {
+		return perror.NewServerError(errors.New("DB connection is empty"))
+	}
+
+	if !rvm.Validation() {
+		return perror.BadRequest
+	}
+
+	user := models.User{}
+	if db.Where("mail = ?", rvm.Mail).First(&user).RecordNotFound() {
+		return perror.MailIsNotExsit
+	}
+
+	if user.Verified == true {
+		return perror.MailAlreadyVerified
+	}
+
+	if err := mail.SendRegisterVerify(user.ID, *user.Mail); err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func RegisterVerify(db *gorm.DB, token string) *perror.PlutoError {
+
+	header, payload, perr := jwt.VerifyB64JWT(token)
+	if perr != nil {
+		return perr
+	}
+
+	head := jwt.Head{}
+	if err := json.Unmarshal(header, &head); err != nil {
+		return perror.NewServerError(errors.New("parse password reset payload failed: " + err.Error()))
+	}
+
+	if head.Type != jwt.REGISTERVERIFY {
+		return perror.InvalidJWTToekn
+	}
+
+	userPayload := jwt.UserPayload{}
+	if err := json.Unmarshal(payload, &userPayload); err != nil {
+		return perror.NewServerError(errors.New("parse user payload failed: " + err.Error()))
+	}
+
+	// currently no expired
+	// if time.Now().Unix() > userPayload.Expire {
+
+	// }
+
+	tx := db.Begin()
+	defer func() {
+		tx.Rollback()
+	}()
+
+	user := models.User{}
+	if tx.Where("id = ?", userPayload.UserID).First(&user).RecordNotFound() {
+		return perror.NewServerError(errors.New("user not found"))
+	}
+
+	if user.Verified == true {
+		return perror.MailAlreadyVerified
+	}
+
+	user.Verified = true
+
+	if err := update(tx, &user); err != nil {
 		return err
 	}
 
@@ -135,6 +223,123 @@ func RegisterWithEmail(db *gorm.DB, register request.MailRegister) *perror.Pluto
 	return nil
 }
 
-func ResetPassword() error {
+func ResetPasswordMail(db *gorm.DB, rpm request.ResetPasswordMail) *perror.PlutoError {
+	if db == nil {
+		return perror.NewServerError(errors.New("DB connection is empty"))
+	}
+
+	if !rpm.Validation() {
+		return perror.BadRequest
+	}
+
+	user := models.User{}
+	if db.Where("mail = ?", rpm.Mail).First(&user).RecordNotFound() {
+		return perror.MailIsNotExsit
+	}
+
+	if err := mail.SendResetPassword(*user.Mail); err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func ResetPasswordPage(db *gorm.DB, token string) *perror.PlutoError {
+	if db == nil {
+		return perror.NewServerError(errors.New("DB connection is empty"))
+	}
+
+	header, payload, err := jwt.VerifyB64JWT(token)
+	// token verify failed
+	if err != nil {
+		return err
+	}
+
+	head := jwt.Head{}
+	json.Unmarshal(header, &head)
+	if head.Type != jwt.PASSWORDRESET {
+		return perror.InvalidJWTToekn
+	}
+
+	prp := jwt.PasswordResetPayload{}
+	if err := json.Unmarshal(payload, &prp); err != nil {
+		return perror.NewServerError(errors.New("parse password reset payload failed: " + err.Error()))
+	}
+
+	user := models.User{}
+	if db.Where("mail = ?", prp.Mail).First(&user).RecordNotFound() {
+		return perror.NewServerError(errors.New("mail not found"))
+	}
+
+	// user is updated after password reset token is created
+	if user.UpdatedAt.Unix() > prp.Create {
+		return perror.InvalidJWTToekn
+	}
+
+	return nil
+}
+
+func ResetPassword(db *gorm.DB, rp request.ResetPassword) *perror.PlutoError {
+	if db == nil {
+		return perror.NewServerError(errors.New("DB connection is empty"))
+	}
+
+	if !rp.Validation() {
+		return perror.BadRequest
+	}
+
+	header, payload, perr := jwt.VerifyB64JWT(rp.Token)
+	if perr != nil {
+		return perr
+	}
+
+	head := jwt.Head{}
+	json.Unmarshal(header, &head)
+
+	if head.Type != jwt.PASSWORDRESET {
+		return perror.InvalidJWTToekn
+	}
+
+	prp := jwt.PasswordResetPayload{}
+	json.Unmarshal(payload, &prp)
+
+	tx := db.Begin()
+	defer func() {
+		tx.Rollback()
+	}()
+
+	user := models.User{}
+	if tx.Where("mail = ?", prp.Mail).First(&user).RecordNotFound() {
+		return perror.NewServerError(errors.New("mail not found"))
+	}
+
+	// user is updated after password reset token is created
+	if user.UpdatedAt.Unix() > prp.Create {
+		return perror.InvalidJWTToekn
+	}
+
+	salt := models.Salt{}
+	if tx.Where("user_id = ?", user.ID).First(&salt).RecordNotFound() {
+		return perror.NewServerError(errors.New("Salt is not found"))
+	}
+
+	salt.Salt = saltUtil.RandomSalt(prp.Mail)
+
+	if err := update(tx, &salt); err != nil {
+		return err
+	}
+
+	encodedPassword, err := saltUtil.EncodePassword(rp.Password, salt.Salt)
+	if err != nil {
+		return perror.NewServerError(errors.New("Salt encoding is failed"))
+	}
+
+	user.Password = &encodedPassword
+	if err := update(tx, &user); err != nil {
+		return err
+	}
+
+	tx.Commit()
+
 	return nil
 }

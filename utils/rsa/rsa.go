@@ -172,8 +172,7 @@ func VerifySignWithPublicKey(src, signed []byte, hash crypto.Hash) error {
 	err := rsa.VerifyPKCS1v15(publicKey, hash, hashed, signed)
 	if err != nil {
 		return err
-	}
-
+}
 	return nil
 }
 

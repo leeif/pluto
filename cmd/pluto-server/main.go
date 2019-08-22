@@ -1,9 +1,14 @@
 package main
 
 import (
-	"fmt"
+	"context"
+	"log"
+	"net/http"
 	"os"
+	"os/signal"
 	"path/filepath"
+	"syscall"
+	"time"
 
 	"github.com/leeif/kiper"
 	"github.com/leeif/pluto/database"
@@ -24,41 +29,70 @@ func main() {
 	c := config.GetConfig()
 
 	if err := kiper.ParseCommandLine(c, os.Args[1:]); err != nil {
-		fmt.Println(err)
+		log.Println(err)
 		os.Exit(1)
 	}
 
 	if err := kiper.ParseConfigFile(*c.ConfigFile); err != nil {
-		fmt.Println(err)
+		log.Println(err)
 		os.Exit(1)
 	}
 
 	if err := kiper.MergeConfigFile(c); err != nil {
-		fmt.Println(err)
+		log.Println(err)
+		os.Exit(1)
+	}
+
+	if err := config.CheckConfig(c); err != nil {
+		log.Println(err)
 		os.Exit(1)
 	}
 
 	if err := rsa.Init(); err != nil {
-		fmt.Println(err)
+		log.Println(err)
 		os.Exit(1)
 	}
 
 	db, err := database.GetDatabase()
 
 	if err != nil {
-		fmt.Println(err)
+		log.Println(err)
 		os.Exit(1)
 	}
 
 	// DB Migration
 	if err := migrate.Migrate(db); err != nil {
-		fmt.Println(err)
+		log.Println(err)
 		os.Exit(1)
 	}
 
 	// Start server
 	s := server.Server{}
-	if err := s.RunServer(); err != nil {
-		fmt.Println(err)
+	srv, err := s.RunServer()
+	if err != nil {
+		log.Println(err)
+		os.Exit(1)
 	}
+
+	//start server background
+	go func() {
+		if err := srv.ListenAndServe(); err != http.ErrServerClosed {
+			// Error starting or closing listener:
+			log.Println("Server closed with error:", err)
+		}
+	}()
+
+	// graceful shutdown
+	quit := make(chan os.Signal, 1)
+	signal.Notify(quit, syscall.SIGTERM, os.Interrupt)
+	log.Printf("SIGNAL %d received, then shutting down...\n", <-quit)
+
+	// timeout 60s
+	ctx, cancel := context.WithTimeout(context.Background(), 60*time.Second)
+	defer cancel()
+	if err := srv.Shutdown(ctx); err != nil {
+		// Error from closing listeners, or context timeout:
+		log.Println("Failed to gracefully shutdown:", err)
+	}
+	log.Println("Server shutdown")
 }

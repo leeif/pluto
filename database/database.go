@@ -22,7 +22,7 @@ func GetDatabase() (*gorm.DB, error) {
 			return nil, err
 		}
 		db.DB().SetMaxIdleConns(10)
-		db.LogMode(false)
+		// db.LogMode(false)
 		database = db
 	}
 	return database, nil

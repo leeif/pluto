@@ -44,7 +44,7 @@ func (avatar *Avatar) GetRandomAvatar() (*AvatarReader, error) {
 	return nil, errors.New("Not image content type")
 }
 
-func (avatar *Avatar) SaveAvatarImageInS3(reader *AvatarReader) (string, error) {
+func (avatar *Avatar) SaveAvatarImageInOSS(reader *AvatarReader) (string, error) {
 
 	client, err := oss.New(avatar.EndPoint, avatar.AccessKeyID, avatar.AccessKeySecret)
 	if err != nil {

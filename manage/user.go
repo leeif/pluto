@@ -3,6 +3,7 @@ package manage
 import (
 	"encoding/json"
 	"errors"
+	"time"
 
 	"github.com/leeif/pluto/utils/avatar"
 
@@ -374,6 +375,10 @@ func UserInfo(db *gorm.DB, token string) (*models.User, *perror.PlutoError) {
 
 	userPayload := jwt.UserPayload{}
 	json.Unmarshal(payload, &userPayload)
+
+	if time.Now().Unix() > userPayload.Expire {
+		return nil, perror.InvalidJWTToekn
+	}
 
 	user := models.User{}
 	if db.Where("id = ?", userPayload.UserID).First(&user).RecordNotFound() {

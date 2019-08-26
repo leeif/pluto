@@ -1,6 +1,7 @@
 # Pluto Server
 
 [![Build Status](https://travis-ci.org/MuShare/pluto.svg?branch=master)](https://travis-ci.org/MuShare/pluto)
+[![Go Report Card](https://goreportcard.com/badge/github.com/leeif/pluto)](https://goreportcard.com/report/github.com/leeif/pluto)
 
 # API Document
 

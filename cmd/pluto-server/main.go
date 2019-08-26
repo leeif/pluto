@@ -1,14 +1,9 @@
 package main
 
 import (
-	"context"
 	"log"
-	"net/http"
 	"os"
-	"os/signal"
 	"path/filepath"
-	"syscall"
-	"time"
 
 	"github.com/leeif/kiper"
 	"github.com/leeif/pluto/database"
@@ -68,31 +63,9 @@ func main() {
 
 	// Start server
 	s := server.Server{}
-	srv, err := s.RunServer()
+	err = s.RunServer()
 	if err != nil {
 		log.Println(err)
 		os.Exit(1)
 	}
-
-	//start server background
-	go func() {
-		if err := srv.ListenAndServe(); err != http.ErrServerClosed {
-			// Error starting or closing listener:
-			log.Println("Server closed with error:", err)
-		}
-	}()
-
-	// graceful shutdown
-	quit := make(chan os.Signal, 1)
-	signal.Notify(quit, syscall.SIGTERM, os.Interrupt)
-	log.Printf("SIGNAL %d received, then shutting down...\n", <-quit)
-
-	// timeout 60s
-	ctx, cancel := context.WithTimeout(context.Background(), 60*time.Second)
-	defer cancel()
-	if err := srv.Shutdown(ctx); err != nil {
-		// Error from closing listeners, or context timeout:
-		log.Println("Failed to gracefully shutdown:", err)
-	}
-	log.Println("Server shutdown")
 }

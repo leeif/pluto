@@ -21,6 +21,14 @@
   revision = "c3de453c63f4bdb4dadffab9805ec00426c505f7"
 
 [[projects]]
+  digest = "1:2577a4cfbce3b800588656ce069d5bc0be970b82e675a75d076a7d798d40fe35"
+  name = "github.com/aliyun/aliyun-oss-go-sdk"
+  packages = ["oss"]
+  pruneopts = "UT"
+  revision = "2cd503a98eeff1992d8d45c7f6d896c1660943fb"
+  version = "v2.0.2"
+
+[[projects]]
   digest = "1:ffe9824d294da03b391f44e1ae8281281b4afc1bdaa9588c9097785e3af10cec"
   name = "github.com/davecgh/go-spew"
   packages = ["spew"]
@@ -267,6 +275,14 @@
   version = "v0.3.2"
 
 [[projects]]
+  branch = "master"
+  digest = "1:9fdc2b55e8e0fafe4b41884091e51e77344f7dc511c5acedcfd98200003bff90"
+  name = "golang.org/x/time"
+  packages = ["rate"]
+  pruneopts = "UT"
+  revision = "9d24e82272b4f38b78bc8cff74fa936d31ccd8ef"
+
+[[projects]]
   digest = "1:c25289f43ac4a68d88b02245742347c94f1e108c534dda442188015ff80669b3"
   name = "google.golang.org/appengine"
   packages = ["cloudsql"]
@@ -295,6 +311,7 @@
   analyzer-version = 1
   input-imports = [
     "github.com/alecthomas/template",
+    "github.com/aliyun/aliyun-oss-go-sdk/oss",
     "github.com/go-kit/kit/log",
     "github.com/go-kit/kit/log/level",
     "github.com/go-sql-driver/mysql",

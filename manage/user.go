@@ -142,7 +142,7 @@ func RegisterWithEmail(db *gorm.DB, register request.MailRegister) (uint, *perro
 		return 0, perror.NewServerError(err)
 	}
 
-	avatarURL, err := a.SaveAvatarImageInS3(body)
+	avatarURL, err := a.SaveAvatarImageInOSS(body)
 	if err != nil {
 		return 0, perror.NewServerError(err)
 	}

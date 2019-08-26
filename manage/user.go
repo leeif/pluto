@@ -3,6 +3,9 @@ package manage
 import (
 	"encoding/json"
 	"errors"
+	"time"
+
+	"github.com/leeif/pluto/utils/avatar"
 
 	perror "github.com/leeif/pluto/datatype/pluto_error"
 	"github.com/leeif/pluto/models"
@@ -131,6 +134,19 @@ func RegisterWithEmail(db *gorm.DB, register request.MailRegister) (uint, *perro
 	user.Mail = &register.Mail
 	user.Name = &register.Name
 	user.Password = &encodedPassword
+
+	// get a random avatar
+	a := avatar.NewAvatar()
+	body, err := a.GetRandomAvatar()
+	if err != nil {
+		return 0, perror.NewServerError(err)
+	}
+
+	avatarURL, err := a.SaveAvatarImageInOSS(body)
+	if err != nil {
+		return 0, perror.NewServerError(err)
+	}
+	user.Avatar = avatarURL
 
 	if err := create(tx, &user); err != nil {
 		return 0, err
@@ -342,4 +358,32 @@ func ResetPassword(db *gorm.DB, rp request.ResetPassword) *perror.PlutoError {
 	tx.Commit()
 
 	return nil
+}
+
+func UserInfo(db *gorm.DB, token string) (*models.User, *perror.PlutoError) {
+	header, payload, err := jwt.VerifyB64JWT(token)
+	if err != nil {
+		return nil, err
+	}
+
+	head := jwt.Head{}
+	json.Unmarshal(header, &head)
+
+	if head.Type != jwt.ACCESS {
+		return nil, perror.InvalidJWTToekn
+	}
+
+	userPayload := jwt.UserPayload{}
+	json.Unmarshal(payload, &userPayload)
+
+	if time.Now().Unix() > userPayload.Expire {
+		return nil, perror.InvalidJWTToekn
+	}
+
+	user := models.User{}
+	if db.Where("id = ?", userPayload.UserID).First(&user).RecordNotFound() {
+		return nil, perror.NewServerError(errors.New("user not found id: " + string(userPayload.UserID)))
+	}
+
+	return &user, nil
 }

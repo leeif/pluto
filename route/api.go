@@ -56,8 +56,8 @@ func (route *Route) userRoute(router *mux.Router) {
 
 		if err := getBody(r, &register); err != nil {
 			context.Set(r, "pluto_error", err)
-			responseError(err, w)
 			next(w, r)
+			responseError(err, w)
 			return
 		}
 
@@ -65,15 +65,15 @@ func (route *Route) userRoute(router *mux.Router) {
 		if err != nil {
 			// set err to context for log
 			context.Set(r, "pluto_error", err)
-			responseError(err, w)
 			next(w, r)
+			responseError(err, w)
 			return
 		}
 
 		respBody := make(map[string]interface{})
 		respBody["mail"] = register.Mail
+		go mail.SendRegisterVerify(userID, register.Mail)
 		responseOK(respBody, w)
-		mail.SendRegisterVerify(userID, register.Mail)
 	})).Methods("POST")
 
 	router.Handle("/register/verify/mail", route.middleware.NoVerifyMiddleware(func(w http.ResponseWriter, r *http.Request, next http.HandlerFunc) {
@@ -171,6 +171,23 @@ func (route *Route) userRoute(router *mux.Router) {
 
 		responseOK(res, w)
 	})).Methods("POST")
+
+	router.Handle("/info/{token}", route.middleware.NoVerifyMiddleware(func(w http.ResponseWriter, r *http.Request, next http.HandlerFunc) {
+		vars := mux.Vars(r)
+		token := vars["token"]
+
+		res, err := manage.UserInfo(db, token)
+
+		if err != nil {
+			// set err to context for log
+			context.Set(r, "pluto_error", err)
+			responseError(err, w)
+			next(w, r)
+			return
+		}
+
+		responseOK(res, w)
+	})).Methods("GET")
 }
 
 func (route *Route) authRoute(router *mux.Router) {

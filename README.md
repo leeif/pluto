@@ -72,6 +72,28 @@ send password reset form to mail
 }
 ```
 
+(5) /api/user/info/\<token\>
+
+Get User info, token needs a base64 encoded string of jwt token
+* method: GET
+* response:
+```
+{
+  "status": "ok",
+  "body": {
+    "ID": 1,
+    "CreatedAt": "2019-08-26T13:35:32+09:00",
+    "UpdatedAt": "2019-08-26T13:35:39+09:00",
+    "DeletedAt": null,
+    "Mail": "geeklyf@hotmail.com",
+    "Name": "yifan.li",
+    "Gender": null,
+    "Birthday": null,
+    "Avatar": "https://pluto-staging.oss-cn-hongkong.aliyuncs.com/avatar/db226f6bb95c1c5e.png"
+  }
+}
+```
+
 ## 2. Auth
 (1) /api/auth/publickey
 

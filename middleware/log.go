@@ -15,9 +15,9 @@ import (
 func NewLogger(logger log.Logger) negroni.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request, next http.HandlerFunc) {
 		plutoError := context.Get(r, "pluto_error")
-		if plutoError == nil {
-			return
-		}
+		// if plutoError == nil {
+		// 	return
+		// }
 		pe := plutoError.(*perror.PlutoError)
 		if pe.LogError != nil {
 			level.Error(logger).Log("msg", pe.LogError.Error())

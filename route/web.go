@@ -33,13 +33,13 @@ func (route *Route) webRoute(router *mux.Router) {
 		if err := manage.RegisterVerify(db, token); err != nil {
 			// set err to context for log
 			context.Set(r, "pluto_error", err)
+			next(w, r)
 			data.Successed = false
 		} else {
 			data.Successed = true
 		}
 
 		responseHTML("register_verify_result.html", data, w)
-		next(w, r)
 	})).Methods("GET")
 
 	router.Handle("/password/reset/{token}", route.middleware.NoVerifyMiddleware(func(w http.ResponseWriter, r *http.Request, next http.HandlerFunc) {
@@ -47,8 +47,8 @@ func (route *Route) webRoute(router *mux.Router) {
 		token := vars["token"]
 		if err := manage.ResetPasswordPage(db, token); err != nil {
 			context.Set(r, "pluto_error", err)
-			responseHTML("error/oops.html", nil, w)
 			next(w, r)
+			responseHTML("error/oops.html", nil, w)
 			return
 		}
 
@@ -58,7 +58,6 @@ func (route *Route) webRoute(router *mux.Router) {
 		data := &Data{Token: token}
 
 		responseHTML("password_reset.html", data, w)
-		next(w, r)
 	})).Methods("GET")
 
 	router.Handle("/password/reset/result/{token}", route.middleware.NoVerifyMiddleware(func(w http.ResponseWriter, r *http.Request, next http.HandlerFunc) {
@@ -69,8 +68,8 @@ func (route *Route) webRoute(router *mux.Router) {
 		// token verify failed
 		if err != nil {
 			context.Set(r, "pluto_error", err)
-			responseHTML("error/oops.html", nil, w)
 			next(w, r)
+			responseHTML("error/oops.html", nil, w)
 			return
 		}
 
@@ -78,8 +77,8 @@ func (route *Route) webRoute(router *mux.Router) {
 		json.Unmarshal(header, &head)
 		if head.Type != jwt.PASSWORDRESETRESULT {
 			context.Set(r, "pluto_error", perror.InvalidJWTToekn)
-			responseHTML("error/oops.html", nil, w)
 			next(w, r)
+			responseHTML("error/oops.html", nil, w)
 			return
 		}
 
@@ -92,6 +91,5 @@ func (route *Route) webRoute(router *mux.Router) {
 		data := &Data{Message: prp.Message}
 
 		responseHTML("password_reset_result.html", data, w)
-		next(w, r)
 	})).Methods("GET")
 }

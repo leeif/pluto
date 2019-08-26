@@ -19,6 +19,7 @@ type Config struct {
 	RSA        *RSAConfig      `kiper_config:"name:rsa"`
 	Database   *DatabaseConfig `kiper_config:"name:database"`
 	Mail       *MailConfig     `kiper_config:"name:mail"`
+	Avatar     *AvatarConfig   `kiper_config:"name:avatar"`
 }
 
 func CheckConfig(c *Config) error {
@@ -42,6 +43,7 @@ func NewConfig() *Config {
 		RSA:      newRSAConfig(),
 		Database: newDatabaseConfig(),
 		Mail:     newMailConfig(),
+		Avatar:   newAvatarConfig(),
 	}
 	return c
 }

@@ -12,7 +12,6 @@ import (
 	"github.com/alecthomas/template"
 	perror "github.com/leeif/pluto/datatype/pluto_error"
 	resp "github.com/leeif/pluto/datatype/response"
-	"github.com/urfave/negroni"
 )
 
 func getBody(r *http.Request, revicer interface{}) *perror.PlutoError {
@@ -29,31 +28,6 @@ func getBody(r *http.Request, revicer interface{}) *perror.PlutoError {
 		}
 	}
 	return nil
-}
-
-func tokenVerifyMiddleware(handlers ...negroni.HandlerFunc) http.Handler {
-	ng := negroni.New()
-	for _, handler := range handlers {
-		ng.UseFunc(handler)
-	}
-	return ng
-}
-
-func sessionVerifyMiddleware(handlers ...negroni.HandlerFunc) http.Handler {
-	ng := negroni.New()
-	for _, handler := range handlers {
-		ng.UseFunc(handler)
-	}
-	return ng
-}
-
-func noVerifyMiddleware(handlers ...negroni.HandlerFunc) http.Handler {
-	ng := negroni.New()
-	for _, handler := range handlers {
-		ng.UseFunc(handler)
-	}
-
-	return ng
 }
 
 func responseOK(body interface{}, w http.ResponseWriter) error {

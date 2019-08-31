@@ -288,7 +288,7 @@ func ResetPasswordPage(db *gorm.DB, token string) *perror.PlutoError {
 	}
 
 	// user is updated after password reset token is created
-	if user.UpdatedAt.Unix() > prp.Create {
+	if time.Time(user.UpdatedAt).Unix() > prp.Create {
 		return perror.InvalidJWTToekn
 	}
 
@@ -330,7 +330,7 @@ func ResetPassword(db *gorm.DB, rp request.ResetPassword) *perror.PlutoError {
 	}
 
 	// user is updated after password reset token is created
-	if user.UpdatedAt.Unix() > prp.Create {
+	if time.Time(user.UpdatedAt).Unix() > prp.Create {
 		return perror.InvalidJWTToekn
 	}
 

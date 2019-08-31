@@ -204,15 +204,15 @@ func RegisterVerify(db *gorm.DB, token string) *perror.PlutoError {
 		return perror.InvalidJWTToekn
 	}
 
-	userPayload := jwt.UserPayload{}
-	if err := json.Unmarshal(payload, &userPayload); err != nil {
+	verifyPayload := jwt.RegisterVerifyPayload{}
+	if err := json.Unmarshal(payload, &verifyPayload); err != nil {
 		return perror.NewServerError(errors.New("parse user payload failed: " + err.Error()))
 	}
 
-	// currently no expired
-	// if time.Now().Unix() > userPayload.Expire {
-
-	// }
+	// expire
+	if time.Now().Unix() > verifyPayload.Expire {
+		return perror.InvalidJWTToekn
+	}
 
 	tx := db.Begin()
 	defer func() {
@@ -220,7 +220,7 @@ func RegisterVerify(db *gorm.DB, token string) *perror.PlutoError {
 	}()
 
 	user := models.User{}
-	if tx.Where("id = ?", userPayload.UserID).First(&user).RecordNotFound() {
+	if tx.Where("id = ?", verifyPayload.UserID).First(&user).RecordNotFound() {
 		return perror.NewServerError(errors.New("user not found"))
 	}
 
@@ -278,8 +278,10 @@ func ResetPasswordPage(db *gorm.DB, token string) *perror.PlutoError {
 	}
 
 	prp := jwt.PasswordResetPayload{}
-	if err := json.Unmarshal(payload, &prp); err != nil {
-		return perror.NewServerError(errors.New("parse password reset payload failed: " + err.Error()))
+	json.Unmarshal(payload, &prp)
+
+	if time.Now().Unix() > prp.Expire {
+		return perror.InvalidJWTToekn
 	}
 
 	user := models.User{}
@@ -318,6 +320,10 @@ func ResetPassword(db *gorm.DB, rp request.ResetPassword) *perror.PlutoError {
 
 	prp := jwt.PasswordResetPayload{}
 	json.Unmarshal(payload, &prp)
+
+	if time.Now().Unix() > prp.Expire {
+		return perror.InvalidJWTToekn
+	}
 
 	tx := db.Begin()
 	defer func() {

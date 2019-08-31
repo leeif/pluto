@@ -1,10 +1,6 @@
 package models
 
-import (
-	"github.com/jinzhu/gorm"
-)
-
 type Migration struct {
-	gorm.Model
+	BaseModel
 	Name string `gorm:"type:varchar(100);size:100"`
 }

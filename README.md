@@ -73,24 +73,25 @@ send password reset form to mail
 }
 ```
 
-(5) /api/user/info/\<token\>
+(5) /api/user/info/me
 
 Get User info, token needs a base64 encoded string of jwt token
 * method: GET
+* header: Authorization: jwt base64(token)
 * response:
 ```
 {
   "status": "ok",
   "body": {
-    "ID": 1,
-    "CreatedAt": "2019-08-26T13:35:32+09:00",
-    "UpdatedAt": "2019-08-26T13:35:39+09:00",
-    "DeletedAt": null,
-    "Mail": "geeklyf@hotmail.com",
-    "Name": "yifan.li",
-    "Gender": null,
-    "Birthday": null,
-    "Avatar": "https://pluto-staging.oss-cn-hongkong.aliyuncs.com/avatar/db226f6bb95c1c5e.png"
+    "id": 2,
+    "create_at": 1567236370,
+    "updated_at": 1567236410,
+    "delete_at": 0,
+    "mail": "geeklyf92610@gmail.com",
+    "name": "yifan.li",
+    "gender": null,
+    "birthday": 0,
+    "avatar": "xxxx"
   }
 }
 ```
@@ -126,6 +127,10 @@ get a new jwt access token
   }
 }
  ```
+
+## 3. Health Check
+/healthcheck
+* method: Get
 
 # Access JWT Token Example
 

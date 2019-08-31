@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"net/http"
 	"os"
+	"strings"
 
 	b64 "encoding/base64"
 
@@ -32,14 +33,22 @@ func (route *Route) GetRouter(logger log.Logger) *mux.Router {
 	route.middleware = middleware.Middleware{Logger: route.Logger}
 
 	router := mux.NewRouter()
+
+	// user router
 	user := router.PathPrefix("/api/user").Subrouter()
 	route.userRoute(user)
 
+	// auth router
 	auth := router.PathPrefix("/api/auth").Subrouter()
 	route.authRoute(auth)
 
+	// web router
 	web := router.PathPrefix("/").Subrouter()
 	route.webRoute(web)
+
+	// health check router
+	health := router.PathPrefix("/").Subrouter()
+	route.healthCheckRoute(health)
 
 	return router
 }
@@ -172,11 +181,17 @@ func (route *Route) userRoute(router *mux.Router) {
 		responseOK(res, w)
 	})).Methods("POST")
 
-	router.Handle("/info/{token}", route.middleware.NoVerifyMiddleware(func(w http.ResponseWriter, r *http.Request, next http.HandlerFunc) {
-		vars := mux.Vars(r)
-		token := vars["token"]
+	router.Handle("/info/me", route.middleware.NoVerifyMiddleware(func(w http.ResponseWriter, r *http.Request, next http.HandlerFunc) {
+		auth := strings.Fields(r.Header.Get("Authorization"))
 
-		res, err := manage.UserInfo(db, token)
+		if len(auth) < 2 && strings.ToLower(auth[0]) != "jwt" {
+			context.Set(r, "pluto_error", perror.InvalidJWTToekn)
+			responseError(perror.InvalidJWTToekn, w)
+			next(w, r)
+			return
+		}
+
+		res, err := manage.UserInfo(db, auth[1])
 
 		if err != nil {
 			// set err to context for log

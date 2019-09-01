@@ -9,6 +9,8 @@ import (
 	"path"
 	"strings"
 
+	"github.com/leeif/pluto/datatype/request"
+
 	"github.com/alecthomas/template"
 	perror "github.com/leeif/pluto/datatype/pluto_error"
 	resp "github.com/leeif/pluto/datatype/response"
@@ -17,7 +19,7 @@ import (
 func getBody(r *http.Request, revicer interface{}) *perror.PlutoError {
 	body, err := ioutil.ReadAll(r.Body)
 	if err != nil {
-		return perror.NewServerError(errors.New("Read body failed: " + err.Error()))
+		return perror.ServerError.Wrapper(errors.New("Read body failed: " + err.Error()))
 	}
 
 	contentType := r.Header.Get("Content-type")
@@ -26,6 +28,11 @@ func getBody(r *http.Request, revicer interface{}) *perror.PlutoError {
 		if err != nil {
 			return perror.BadRequest
 		}
+	}
+	pr, ok := revicer.(request.PlutoRequest)
+	// check request body validation
+	if ok && !pr.Validation() {
+		return perror.BadRequest
 	}
 	return nil
 }

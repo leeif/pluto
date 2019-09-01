@@ -8,7 +8,7 @@ import (
 func create(tx *gorm.DB, record interface{}) *perror.PlutoError {
 	if err := tx.Create(record).Error; err != nil {
 		tx.Rollback()
-		return perror.NewServerError(err)
+		return perror.ServerError.Wrapper(err)
 	}
 	return nil
 }
@@ -16,7 +16,7 @@ func create(tx *gorm.DB, record interface{}) *perror.PlutoError {
 func update(tx *gorm.DB, record interface{}) *perror.PlutoError {
 	if err := tx.Save(record).Error; err != nil {
 		tx.Rollback()
-		return perror.NewServerError(err)
+		return perror.ServerError.Wrapper(err)
 	}
 	return nil
 }

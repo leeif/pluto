@@ -5,15 +5,16 @@ import (
 	"encoding/base64"
 	"strings"
 
+	perror "github.com/leeif/pluto/datatype/pluto_error"
 	"golang.org/x/crypto/scrypt"
 )
 
 const DEFAULTRANDLEN = 10
 
-func EncodePassword(password string, salt string) (string, error) {
+func EncodePassword(password string, salt string) (string, *perror.PlutoError) {
 	dk, err := scrypt.Key([]byte(password), []byte(salt), 16384, 8, 1, 32)
 	if err != nil {
-		return "", err
+		return "", perror.ServerError.Wrapper(err)
 	}
 	dst := base64.URLEncoding.EncodeToString(dk)
 	return dst, nil
@@ -24,10 +25,10 @@ func RandomSalt(prefix ...string) string {
 	return salts
 }
 
-func DecodeSalt(salt string) (string, error) {
+func DecodeSalt(salt string) (string, *perror.PlutoError) {
 	dst, err := base64.URLEncoding.DecodeString(salt)
 	if err != nil {
-		return "", err
+		return "", perror.ServerError.Wrapper(err)
 	}
 	return string(dst), nil
 }

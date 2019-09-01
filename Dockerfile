@@ -1,4 +1,4 @@
-FROM golang:1.12
+FROM golang:1.12 as build
 
 ENV ConfigFile /etc/pluto/config.json
 
@@ -8,4 +8,8 @@ WORKDIR /go/src/pluto
 
 RUN  export GO111MODULE=on && go build -o pluto-server cmd/pluto-server/main.go
 
-CMD ./pluto-server --config.file=$ConfigFile
+FROM ubuntu:18.04
+
+COPY --from=build /go/src/pluto/pluto-server /usr/bin/
+
+CMD /usr/bin/pluto-server --config.file=$ConfigFile

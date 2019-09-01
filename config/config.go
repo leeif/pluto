@@ -13,13 +13,14 @@ type PlutoValue interface {
 }
 
 type Config struct {
-	ConfigFile *string         `kiper_value:"name:config.file;default:./config.json"`
-	Server     *ServerConfig   `kiper_config:"name:server"`
-	Log        *LogConfig      `kiper_config:"name:log"`
-	RSA        *RSAConfig      `kiper_config:"name:rsa"`
-	Database   *DatabaseConfig `kiper_config:"name:database"`
-	Mail       *MailConfig     `kiper_config:"name:mail"`
-	Avatar     *AvatarConfig   `kiper_config:"name:avatar"`
+	ConfigFile  *string            `kiper_value:"name:config.file;default:./config.json"`
+	Server      *ServerConfig      `kiper_config:"name:server"`
+	Log         *LogConfig         `kiper_config:"name:log"`
+	RSA         *RSAConfig         `kiper_config:"name:rsa"`
+	Database    *DatabaseConfig    `kiper_config:"name:database"`
+	Mail        *MailConfig        `kiper_config:"name:mail"`
+	Avatar      *AvatarConfig      `kiper_config:"name:avatar"`
+	GoogleLogin *GoogleLoginConfig `kiper_config:"name:google_login"`
 }
 
 func CheckConfig(c *Config) error {
@@ -38,12 +39,13 @@ func GetConfig() *Config {
 
 func NewConfig() *Config {
 	c := &Config{
-		Log:      newLogConfig(),
-		Server:   newServerConfig(),
-		RSA:      newRSAConfig(),
-		Database: newDatabaseConfig(),
-		Mail:     newMailConfig(),
-		Avatar:   newAvatarConfig(),
+		Log:         newLogConfig(),
+		Server:      newServerConfig(),
+		RSA:         newRSAConfig(),
+		Database:    newDatabaseConfig(),
+		Mail:        newMailConfig(),
+		Avatar:      newAvatarConfig(),
+		GoogleLogin: newGoogleLoginConfig(),
 	}
 	return c
 }

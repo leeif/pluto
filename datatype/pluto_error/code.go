@@ -3,7 +3,7 @@ package pluto_error
 import "net/http"
 
 var (
-	ServerError = 1000
+	ServerError = NewPlutoError(http.StatusInternalServerError, 1000, "Server Error", nil)
 	BadRequest  = NewPlutoError(http.StatusBadRequest, 1001, "Bad Request", nil)
 
 	MailIsAlreadyRegister = NewPlutoError(http.StatusForbidden, 2001, "Mail is already been registered", nil)
@@ -14,8 +14,5 @@ var (
 	InvalidPassword     = NewPlutoError(http.StatusForbidden, 3001, "Invalid Password", nil)
 	InvalidRefreshToken = NewPlutoError(http.StatusForbidden, 3002, "Invalid Refresh Token", nil)
 	InvalidJWTToekn     = NewPlutoError(http.StatusForbidden, 3003, "Invalid JWT Token", nil)
+	InvalidIDToken      = NewPlutoError(http.StatusForbidden, 3004, "Invalid ID Token", nil)
 )
-
-func NewServerError(err error) *PlutoError {
-	return NewPlutoError(http.StatusInternalServerError, ServerError, "Server Error", err)
-}

@@ -7,14 +7,16 @@ import (
 
 type User struct {
 	BaseModel
-	Mail     *string    `gorm:"type:varchar(255);size(60);unique;not null" json:"mail"`
-	Name     *string    `gorm:"type:varchar(60);size(60);not null" json:"name"`
-	Role     string     `gorm:"type:varchar(60);size(60)" json:"-"`
-	Gender   *string    `gorm:"type:varchar(10);size(10);" json:"gender"`
-	Password *string    `gorm:"type:varchar(255);not null" json:"-"`
-	Birthday *time.Time `json:"birthday"`
-	Avatar   string     `gorm:"type:varchar(255)" json:"avatar"`
-	Verified bool       `json:"-"`
+	Mail          *string    `gorm:"type:varchar(255);size:60" json:"mail"`
+	Name          *string    `gorm:"type:varchar(60);size:60;not null" json:"name"`
+	Role          string     `gorm:"type:varchar(60);size:60" json:"-"`
+	Gender        *string    `gorm:"type:varchar(10);size:10" json:"gender"`
+	Password      *string    `gorm:"type:varchar(255);not null" json:"-"`
+	Birthday      *time.Time `json:"birthday"`
+	Avatar        string     `gorm:"type:varchar(255)" json:"avatar"`
+	Verified      bool       `json:"-"`
+	LoginType     string     `gorm:"type:varchar(10);not null;UNIQUE_INDEX:login" json:"login_type"`
+	IdentifyToken string     `gorm:"type:varchar(255);not null;UNIQUE_INDEX:login" json:"-"`
 }
 
 func (u *User) MarshalJSON() ([]byte, error) {
@@ -28,6 +30,7 @@ func (u *User) MarshalJSON() ([]byte, error) {
 		Gender    *string `json:"gender"`
 		Birthday  int64   `json:"birthday"`
 		Avatar    string  `json:"avatar"`
+		LoginType string  `json:"login_type"`
 	}
 	s := &user{
 		ID:        u.ID,
@@ -37,6 +40,7 @@ func (u *User) MarshalJSON() ([]byte, error) {
 		Name:      u.Name,
 		Gender:    u.Gender,
 		Avatar:    u.Avatar,
+		LoginType: u.LoginType,
 	}
 	if u.Birthday != nil {
 		s.Birthday = u.Birthday.Unix()

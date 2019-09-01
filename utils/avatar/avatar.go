@@ -9,6 +9,7 @@ import (
 
 	"github.com/aliyun/aliyun-oss-go-sdk/oss"
 	"github.com/leeif/pluto/config"
+	perror "github.com/leeif/pluto/datatype/pluto_error"
 )
 
 type Avatar struct {
@@ -30,10 +31,10 @@ type AvatarReader struct {
 	Ext    string
 }
 
-func (avatar *Avatar) GetRandomAvatar() (*AvatarReader, error) {
+func (avatar *Avatar) GetRandomAvatar() (*AvatarReader, *perror.PlutoError) {
 	resp, err := http.Get("https://www.gravatar.com/avatar/" + randToken(8) + "?f=y&d=identicon")
 	if err != nil {
-		return nil, err
+		return nil, perror.ServerError.Wrapper(err)
 	}
 	contentType := resp.Header.Get("Content-type")
 	if contentType == "image/png" {
@@ -41,23 +42,30 @@ func (avatar *Avatar) GetRandomAvatar() (*AvatarReader, error) {
 	} else if contentType == "image/jpg" {
 		return &AvatarReader{resp.Body, "jpg"}, nil
 	}
-	return nil, errors.New("Not image content type")
+	return nil, perror.ServerError.Wrapper(errors.New("Not image content type"))
 }
 
-func (avatar *Avatar) SaveAvatarImageInOSS(reader *AvatarReader) (string, error) {
+func (avatar *Avatar) SaveAvatarImageInOSS(reader *AvatarReader) (string, *perror.PlutoError) {
+
+	if avatar.AccessKeyID == "" &&
+		avatar.AccessKeySecret == "" &&
+		avatar.Bucket == "" &&
+		avatar.EndPoint == "" {
+		return "", perror.ServerError.Wrapper(errors.New("aliyun oss config is not enough"))
+	}
 
 	client, err := oss.New(avatar.EndPoint, avatar.AccessKeyID, avatar.AccessKeySecret)
 	if err != nil {
-		return "", err
+		return "", perror.ServerError.Wrapper(err)
 	}
 	bucket, err := client.Bucket(avatar.Bucket)
 	if err != nil {
-		return "", err
+		return "", perror.ServerError.Wrapper(err)
 	}
 	osskey := fmt.Sprintf("avatar/%s.%s", randToken(8), reader.Ext)
 	err = bucket.PutObject(osskey, reader.Reader)
 	if err != nil {
-		return "", err
+		return "", perror.ServerError.Wrapper(err)
 	}
 	url := ""
 	if avatar.CDN == "" {

@@ -88,24 +88,24 @@ func setTimeField(payload interface{}, expire int64) (err error) {
 	return nil
 }
 
-func GenerateJWT(head Head, payload interface{}, expire int64) (string, error) {
+func GenerateJWT(head Head, payload interface{}, expire int64) (string, *perror.PlutoError) {
 	head.Alg = ALGRAS
 	h, err := json.Marshal(head)
 	if err != nil {
-		return "", err
+		return "", perror.ServerError.Wrapper(err)
 	}
 	if err := setTimeField(payload, expire); err != nil {
-		return "", err
+		return "", perror.ServerError.Wrapper(err)
 	}
 	p, err := json.Marshal(payload)
 	if err != nil {
-		return "", err
+		return "", perror.ServerError.Wrapper(err)
 	}
 
 	sig, err := rsa.SignWithPrivateKey([]byte(string(h)+string(p)), crypto.SHA256)
 
 	if err != nil {
-		return "", err
+		return "", perror.ServerError.Wrapper(err)
 	}
 
 	hB64 := b64.StdEncoding.EncodeToString(h)

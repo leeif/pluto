@@ -57,7 +57,25 @@ resend register verify mail
 }
 ```
 
-(4) /api/user/password/reset/mail
+(4) /api/user/login/google
+
+* method: POST
+* request:
+```
+{"id_token":<string>, "device_id":<string>, "app_id":<string>}
+```
+* response:
+```
+{
+  "status": "ok",
+  "body": {
+    "jwt": "",
+    "refresh_token": ""
+  }
+}
+```
+
+(5) /api/user/password/reset/mail
 
 send password reset form to mail
 * method: POST
@@ -73,7 +91,7 @@ send password reset form to mail
 }
 ```
 
-(5) /api/user/info/me
+(6) /api/user/info/me
 
 Get User info, token needs a base64 encoded string of jwt token
 * method: GET

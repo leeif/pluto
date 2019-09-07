@@ -20,9 +20,9 @@ var (
 )
 
 // Init : Init the rsa setting, generate new public private files or load from existing files
-func Init() error {
-	privateKeyPath := path.Join(*config.GetConfig().RSA.Path, *config.GetConfig().RSA.Name)
-	publicKeyPath := path.Join(*config.GetConfig().RSA.Path, *config.GetConfig().RSA.Name+".pub")
+func Init(config *config.Config) error {
+	privateKeyPath := path.Join(*config.RSA.Path, *config.RSA.Name)
+	publicKeyPath := path.Join(*config.RSA.Path, *config.RSA.Name+".pub")
 
 	_, privateKeyPathErr := os.Stat(privateKeyPath)
 
@@ -172,7 +172,7 @@ func VerifySignWithPublicKey(src, signed []byte, hash crypto.Hash) error {
 	err := rsa.VerifyPKCS1v15(publicKey, hash, hashed, signed)
 	if err != nil {
 		return err
-}
+	}
 	return nil
 }
 

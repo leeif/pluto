@@ -3,3 +3,4 @@ id*
 config.json
 pluto.log
 .vscode
+env

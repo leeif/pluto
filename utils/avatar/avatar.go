@@ -80,13 +80,13 @@ func (avatar *Avatar) SaveAvatarImageInLocal(file io.ReadCloser) (string, error)
 	return "", nil
 }
 
-func NewAvatar() *Avatar {
+func NewAvatar(config *config.Config) *Avatar {
 	avatar := &Avatar{
-		Bucket:          *config.GetConfig().Avatar.Bucket,
-		EndPoint:        *config.GetConfig().Avatar.EndPoint,
-		AccessKeyID:     *config.GetConfig().Avatar.AccessKeyID,
-		AccessKeySecret: *config.GetConfig().Avatar.AccessKeySecret,
-		CDN:             *config.GetConfig().Avatar.CDN,
+		Bucket:          *config.Avatar.Bucket,
+		EndPoint:        *config.Avatar.EndPoint,
+		AccessKeyID:     *config.Avatar.AccessKeyID,
+		AccessKeySecret: *config.Avatar.AccessKeySecret,
+		CDN:             *config.Avatar.CDN,
 	}
 	return avatar
 }

@@ -16,6 +16,8 @@ require (
 	github.com/spf13/viper v1.4.0 // indirect
 	github.com/stretchr/testify v1.4.0
 	github.com/urfave/negroni v1.0.0
+	go.uber.org/dig v1.7.0 // indirect
+	go.uber.org/fx v1.9.0
 	golang.org/x/crypto v0.0.0-20190829043050-9756ffdc2472
 	google.golang.org/api v0.3.1
 )

@@ -1,4 +1,25 @@
 
+<a name="v0.0.8"></a>
+## [v0.0.8](https://github.com/MuShare/pluto/compare/v0.0.7...v0.0.8)
+
+> 2019-09-07
+
+### Feature
+
+* **version:** show version using --version
+
+### Fix
+
+* **test:** fix config_test
+* **test:** fix config_test
+
+### Update
+
+* **changelog:** update changelog.md
+* **startup:** use DI architecture
+* **version:** Bump up version to 0.0.8
+
+
 <a name="v0.0.7"></a>
 ## [v0.0.7](https://github.com/MuShare/pluto/compare/v0.0.6...v0.0.7)
 

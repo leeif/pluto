@@ -24,6 +24,8 @@ import (
 	"github.com/leeif/pluto/utils/rsa"
 )
 
+var VERSION = ""
+
 func register(router *mux.Router, db *gorm.DB, config *config.Config, logger *plog.PlutoLog) error {
 	if err := rsa.Init(config); err != nil {
 		logger.Error(err.Error())
@@ -47,12 +49,16 @@ func main() {
 			func() []string {
 				return os.Args
 			},
+			func() string {
+				return VERSION
+			},
 			config.NewConfig,
 			database.NewDatabase,
 			plog.NewLogger,
 			server.NewMux,
 		),
 		fx.Invoke(register),
+		fx.NopLogger,
 	)
 	startCtx, cancel := context.WithTimeout(context.Background(), 15*time.Second)
 	defer cancel()

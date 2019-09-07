@@ -44,6 +44,9 @@ func main() {
 
 	app := fx.New(
 		fx.Provide(
+			func() []string {
+				return os.Args
+			},
 			config.NewConfig,
 			database.NewDatabase,
 			plog.NewLogger,

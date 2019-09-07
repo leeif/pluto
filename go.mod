@@ -5,6 +5,7 @@ go 1.12
 require (
 	github.com/alecthomas/template v0.0.0-20190718012654-fb15b899a751
 	github.com/aliyun/aliyun-oss-go-sdk v2.0.2+incompatible
+	github.com/dgrijalva/jwt-go v3.2.0+incompatible
 	github.com/go-kit/kit v0.9.0
 	github.com/go-sql-driver/mysql v1.4.1
 	github.com/gorilla/context v1.1.1
@@ -16,4 +17,5 @@ require (
 	github.com/stretchr/testify v1.4.0
 	github.com/urfave/negroni v1.0.0
 	golang.org/x/crypto v0.0.0-20190829043050-9756ffdc2472
+	google.golang.org/api v0.3.1
 )

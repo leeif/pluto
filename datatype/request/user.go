@@ -6,7 +6,7 @@ type MailRegister struct {
 	Password string `json:"password"`
 }
 
-func (mr MailRegister) Validation() bool {
+func (mr *MailRegister) Validation() bool {
 	if mr.Mail == "" || mr.Password == "" || mr.Name == "" {
 		return false
 	}
@@ -20,7 +20,7 @@ type MailLogin struct {
 	AppID    string `json:"app_id"`
 }
 
-func (ml MailLogin) Validation() bool {
+func (ml *MailLogin) Validation() bool {
 	if ml.Mail == "" || ml.Password == "" {
 		return false
 	}
@@ -32,11 +32,29 @@ func (ml MailLogin) Validation() bool {
 	return true
 }
 
+type GoogleLogin struct {
+	IDToken  string `json:"id_token"`
+	DeviceID string `json:"device_id"`
+	AppID    string `json:"app_id"`
+}
+
+func (gl *GoogleLogin) Validation() bool {
+	if gl.IDToken == "" {
+		return false
+	}
+
+	if gl.DeviceID == "" || gl.AppID == "" {
+		return false
+	}
+
+	return true
+}
+
 type RegisterVerifyMail struct {
 	Mail string `json:"mail"`
 }
 
-func (rvm RegisterVerifyMail) Validation() bool {
+func (rvm *RegisterVerifyMail) Validation() bool {
 	if rvm.Mail == "" {
 		return false
 	}
@@ -48,7 +66,7 @@ type ResetPasswordMail struct {
 	Mail string `json:"mail"`
 }
 
-func (rpm ResetPasswordMail) Validation() bool {
+func (rpm *ResetPasswordMail) Validation() bool {
 	if rpm.Mail == "" {
 		return false
 	}
@@ -61,7 +79,7 @@ type ResetPassword struct {
 	Password string `json:"password"`
 }
 
-func (rp ResetPassword) Validation() bool {
+func (rp *ResetPassword) Validation() bool {
 	if rp.Token == "" || rp.Password == "" {
 		return false
 	}

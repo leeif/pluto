@@ -7,7 +7,7 @@ type RefreshAccessToken struct {
 	AppID        string `json:"app_id"`
 }
 
-func (rat RefreshAccessToken) Validation() bool {
+func (rat *RefreshAccessToken) Validation() bool {
 	if rat.RefreshToken == "" || rat.UseID == 0 {
 		return false
 	}

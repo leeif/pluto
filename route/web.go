@@ -2,26 +2,25 @@ package route
 
 import (
 	"encoding/json"
-	"fmt"
 	"net/http"
-	"os"
 
 	"github.com/gorilla/context"
 	"github.com/gorilla/mux"
-	"github.com/leeif/pluto/database"
+	"github.com/jinzhu/gorm"
+	"github.com/leeif/pluto/config"
 	perror "github.com/leeif/pluto/datatype/pluto_error"
+	"github.com/leeif/pluto/log"
 	"github.com/leeif/pluto/manage"
+	"github.com/leeif/pluto/middleware"
 	"github.com/leeif/pluto/utils/jwt"
 )
 
-func (route *Route) webRoute(router *mux.Router) {
-	db, err := database.GetDatabase()
-	if err != nil {
-		fmt.Println(err)
-		os.Exit(1)
-	}
+func webRouter(router *mux.Router, db *gorm.DB, config *config.Config, logger *log.PlutoLog) {
 
-	router.Handle("/mail/verify/{token}", route.middleware.NoVerifyMiddleware(func(w http.ResponseWriter, r *http.Request, next http.HandlerFunc) {
+	mw := middleware.NewMiddle(logger)
+	manager := manage.NewManager(db, config, logger)
+
+	router.Handle("/mail/verify/{token}", mw.NoVerifyMiddleware(func(w http.ResponseWriter, r *http.Request, next http.HandlerFunc) {
 		vars := mux.Vars(r)
 		token := vars["token"]
 
@@ -30,7 +29,7 @@ func (route *Route) webRoute(router *mux.Router) {
 		}
 		data := &Data{}
 
-		if err := manage.RegisterVerify(db, token); err != nil {
+		if err := manager.RegisterVerify(token); err != nil {
 			// set err to context for log
 			context.Set(r, "pluto_error", err)
 			next(w, r)
@@ -42,10 +41,10 @@ func (route *Route) webRoute(router *mux.Router) {
 		responseHTML("register_verify_result.html", data, w)
 	})).Methods("GET")
 
-	router.Handle("/password/reset/{token}", route.middleware.NoVerifyMiddleware(func(w http.ResponseWriter, r *http.Request, next http.HandlerFunc) {
+	router.Handle("/password/reset/{token}", mw.NoVerifyMiddleware(func(w http.ResponseWriter, r *http.Request, next http.HandlerFunc) {
 		vars := mux.Vars(r)
 		token := vars["token"]
-		if err := manage.ResetPasswordPage(db, token); err != nil {
+		if err := manager.ResetPasswordPage(token); err != nil {
 			context.Set(r, "pluto_error", err)
 			next(w, r)
 			responseHTML("error/oops.html", nil, w)
@@ -60,7 +59,7 @@ func (route *Route) webRoute(router *mux.Router) {
 		responseHTML("password_reset.html", data, w)
 	})).Methods("GET")
 
-	router.Handle("/password/reset/result/{token}", route.middleware.NoVerifyMiddleware(func(w http.ResponseWriter, r *http.Request, next http.HandlerFunc) {
+	router.Handle("/password/reset/result/{token}", mw.NoVerifyMiddleware(func(w http.ResponseWriter, r *http.Request, next http.HandlerFunc) {
 		vars := mux.Vars(r)
 		token := vars["token"]
 

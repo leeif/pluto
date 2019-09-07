@@ -6,7 +6,6 @@ import (
 	"net/http"
 
 	gjwt "github.com/dgrijalva/jwt-go"
-	"github.com/jinzhu/gorm"
 	perror "github.com/leeif/pluto/datatype/pluto_error"
 	"github.com/leeif/pluto/datatype/request"
 	"github.com/leeif/pluto/models"
@@ -21,13 +20,10 @@ const (
 	GOOGLELOGIN = "google"
 )
 
-func LoginWithEmail(db *gorm.DB, login request.MailLogin) (map[string]string, *perror.PlutoError) {
+func (m *Manger) LoginWithEmail(login request.MailLogin) (map[string]string, *perror.PlutoError) {
 	res := make(map[string]string)
-	if db == nil {
-		return nil, perror.ServerError.Wrapper(errors.New("DB connection is empty"))
-	}
 
-	tx := db.Begin()
+	tx := m.db.Begin()
 	defer func() {
 		tx.Rollback()
 	}()
@@ -102,7 +98,7 @@ func LoginWithEmail(db *gorm.DB, login request.MailLogin) (map[string]string, *p
 	return res, nil
 }
 
-func LoginWithGoogle(db *gorm.DB, login request.GoogleLogin) (map[string]string, *perror.PlutoError) {
+func (m *Manger) LoginWithGoogle(login request.GoogleLogin) (map[string]string, *perror.PlutoError) {
 	res := make(map[string]string)
 
 	info, err := verifyGoogleIdToken(login.IDToken)
@@ -110,7 +106,7 @@ func LoginWithGoogle(db *gorm.DB, login request.GoogleLogin) (map[string]string,
 		return nil, err
 	}
 
-	tx := db.Begin()
+	tx := m.db.Begin()
 	defer func() {
 		tx.Rollback()
 	}()

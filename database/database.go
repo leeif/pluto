@@ -13,11 +13,11 @@ import (
 
 var database *gorm.DB
 
-func GetDatabase() (*gorm.DB, error) {
+func NewDatabase(config *config.Config) (*gorm.DB, error) {
 	if database == nil {
-		config := config.GetConfig().Database
-		con := generateConnectionSchema(config)
-		db, err := gorm.Open(config.Type.String(), con)
+		dbcfg := config.Database
+		con := generateConnectionSchema(dbcfg)
+		db, err := gorm.Open(dbcfg.Type.String(), con)
 		if err != nil {
 			return nil, err
 		}
@@ -28,10 +28,10 @@ func GetDatabase() (*gorm.DB, error) {
 	return database, nil
 }
 
-func generateConnectionSchema(config *config.DatabaseConfig) string {
-	switch config.Type.String() {
+func generateConnectionSchema(dbcfg *config.DatabaseConfig) string {
+	switch dbcfg.Type.String() {
 	case "mysql":
-		return *config.User + ":" + *config.Password + "@tcp(" + *config.Host + ":" + config.Port.String() + ")/" + *config.DB +
+		return *dbcfg.User + ":" + *dbcfg.Password + "@tcp(" + *dbcfg.Host + ":" + dbcfg.Port.String() + ")/" + *dbcfg.DB +
 			"?charset=utf8&parseTime=True&loc=Local"
 	}
 	return ""

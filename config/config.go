@@ -1,7 +1,6 @@
 package config
 
 import (
-	"os"
 	"path/filepath"
 
 	"github.com/leeif/kiper"
@@ -36,7 +35,7 @@ func (c *Config) checkConfig() error {
 	return nil
 }
 
-func NewConfig() (*Config, error) {
+func NewConfig(args []string) (*Config, error) {
 	c := &Config{
 		Log:         newLogConfig(),
 		Server:      newServerConfig(),
@@ -46,10 +45,10 @@ func NewConfig() (*Config, error) {
 		Avatar:      newAvatarConfig(),
 		GoogleLogin: newGoogleLoginConfig(),
 	}
-	kiper := kiper.NewKiper(filepath.Base(os.Args[0]), "Pluto server")
+	kiper := kiper.NewKiper(filepath.Base(args[0]), "Pluto server")
 	kiper.GetKingpinInstance().HelpFlag.Short('h')
 
-	if err := kiper.ParseCommandLine(c, os.Args[1:]); err != nil {
+	if err := kiper.ParseCommandLine(c, args[1:]); err != nil {
 		return nil, err
 	}
 

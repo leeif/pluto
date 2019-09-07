@@ -4,7 +4,6 @@ import (
 	"os"
 	"testing"
 
-	"github.com/leeif/kiper"
 	"github.com/leeif/pluto/config"
 	"github.com/stretchr/testify/assert"
 )
@@ -32,15 +31,12 @@ func deleteConfigFile(path string) error {
 }
 
 func TestConfigDefault(t *testing.T) {
-	kiper := kiper.NewKiper("Test", "Pluto server")
-
+	args := []string{"test", "--mail.smtp", "test.smtp.com"}
 	// Init config file from command line and config file
-	c := config.NewConfig()
+	c, err := config.NewConfig(args)
 
-	args := []string{"--mail.smtp", "test.smtp.com"}
-
-	if err := kiper.ParseCommandLine(c, args); err != nil {
-		t.Fatal(err)
+	if err != nil {
+		t.Fatalf("Expect no err, but: %v", err)
 	}
 
 	assert.Equal(t, *c.ConfigFile, "./config.json", "default of config file should be ./config.json")
@@ -55,19 +51,8 @@ func TestConfigDefault(t *testing.T) {
 }
 
 func TestConfigCustom(t *testing.T) {
-	kiper := kiper.NewKiper("Test", "Pluto server")
 
-	// Init config file from command line and config file
-	c := config.NewConfig()
-
-	args := []string{"--config.file", "./config_test.json"}
-
-	if err := kiper.ParseCommandLine(c, args); err != nil {
-		t.Fatal(err)
-		return
-	}
-
-	if err := writeConfigFile(*c.ConfigFile, `{
+	if err := writeConfigFile("./config_test.json", `{
 		"server": {
 			"port": "8080"
 		},
@@ -95,15 +80,13 @@ func TestConfigCustom(t *testing.T) {
 		return
 	}
 
-	defer deleteConfigFile(*c.ConfigFile)
+	defer deleteConfigFile("./config_test.json")
 
-	if err := kiper.ParseConfigFile(*c.ConfigFile); err != nil {
-		t.Fatal(err)
-		return
-	}
-	if err := kiper.MergeConfigFile(c); err != nil {
-		t.Fatal(err)
-		return
+	args := []string{"test", "--config.file", "./config_test.json"}
+	// Init config file from command line and config file
+	c, err := config.NewConfig(args)
+	if err != nil {
+		t.Fatalf("Expect no error, but: %v", err)
 	}
 
 	assert.Equal(t, *c.ConfigFile, "./config_test.json", "config file should be ./config.json")

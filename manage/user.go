@@ -13,34 +13,28 @@ import (
 
 	b64 "encoding/base64"
 
-	"github.com/jinzhu/gorm"
 	"github.com/leeif/pluto/datatype/request"
 	"github.com/leeif/pluto/utils/jwt"
 	"github.com/leeif/pluto/utils/mail"
 )
 
-func ResetPasswordMail(db *gorm.DB, rpm request.ResetPasswordMail) *perror.PlutoError {
-	if db == nil {
-		return perror.ServerError.Wrapper(errors.New("DB connection is empty"))
-	}
+func (m *Manger) ResetPasswordMail(rpm request.ResetPasswordMail) *perror.PlutoError {
 
 	user := models.User{}
 	identifyToken := b64.StdEncoding.EncodeToString([]byte(rpm.Mail))
-	if db.Where("login_type = ? and identify_token = ?", MAILLOGIN, identifyToken).First(&user).RecordNotFound() {
+	if m.db.Where("login_type = ? and identify_token = ?", MAILLOGIN, identifyToken).First(&user).RecordNotFound() {
 		return perror.MailIsNotExsit
 	}
 
-	if err := mail.SendResetPassword(*user.Mail); err != nil {
+	ml := mail.NewMail(m.config)
+	if err := ml.SendResetPassword(*user.Mail); err != nil {
 		return err
 	}
 
 	return nil
 }
 
-func ResetPasswordPage(db *gorm.DB, token string) *perror.PlutoError {
-	if db == nil {
-		return perror.ServerError.Wrapper(errors.New("DB connection is empty"))
-	}
+func (m *Manger) ResetPasswordPage(token string) *perror.PlutoError {
 
 	header, payload, err := jwt.VerifyB64JWT(token)
 	// token verify failed
@@ -63,7 +57,7 @@ func ResetPasswordPage(db *gorm.DB, token string) *perror.PlutoError {
 
 	user := models.User{}
 	identifyToken := b64.StdEncoding.EncodeToString([]byte(prp.Mail))
-	if db.Where("login_type = ? and identify_token = ?", MAILLOGIN, identifyToken).First(&user).RecordNotFound() {
+	if m.db.Where("login_type = ? and identify_token = ?", MAILLOGIN, identifyToken).First(&user).RecordNotFound() {
 		return perror.ServerError.Wrapper(errors.New("mail not found"))
 	}
 
@@ -75,10 +69,7 @@ func ResetPasswordPage(db *gorm.DB, token string) *perror.PlutoError {
 	return nil
 }
 
-func ResetPassword(db *gorm.DB, rp request.ResetPassword) *perror.PlutoError {
-	if db == nil {
-		return perror.ServerError.Wrapper(errors.New("DB connection is empty"))
-	}
+func (m *Manger) ResetPassword(rp request.ResetPassword) *perror.PlutoError {
 
 	header, payload, perr := jwt.VerifyB64JWT(rp.Token)
 	if perr != nil {
@@ -99,7 +90,7 @@ func ResetPassword(db *gorm.DB, rp request.ResetPassword) *perror.PlutoError {
 		return perror.InvalidJWTToekn
 	}
 
-	tx := db.Begin()
+	tx := m.db.Begin()
 	defer func() {
 		tx.Rollback()
 	}()
@@ -141,7 +132,7 @@ func ResetPassword(db *gorm.DB, rp request.ResetPassword) *perror.PlutoError {
 	return nil
 }
 
-func UserInfo(db *gorm.DB, token string) (*models.User, *perror.PlutoError) {
+func (m *Manger) UserInfo(token string) (*models.User, *perror.PlutoError) {
 	header, payload, err := jwt.VerifyB64JWT(token)
 	if err != nil {
 		return nil, err
@@ -162,21 +153,17 @@ func UserInfo(db *gorm.DB, token string) (*models.User, *perror.PlutoError) {
 	}
 
 	user := models.User{}
-	if db.Where("id = ?", userPayload.UserID).First(&user).RecordNotFound() {
+	if m.db.Where("id = ?", userPayload.UserID).First(&user).RecordNotFound() {
 		return nil, perror.ServerError.Wrapper(errors.New("user not found id: " + string(userPayload.UserID)))
 	}
 
 	return &user, nil
 }
 
-func RefreshAccessToken(db *gorm.DB, rat request.RefreshAccessToken) (map[string]string, *perror.PlutoError) {
+func (m *Manger) RefreshAccessToken(rat request.RefreshAccessToken) (map[string]string, *perror.PlutoError) {
 	res := make(map[string]string)
 
-	if db == nil {
-		return nil, perror.ServerError.Wrapper(errors.New("DB connection is empty"))
-	}
-
-	tx := db.Begin()
+	tx := m.db.Begin()
 
 	defer func() {
 		tx.Rollback()

@@ -3,77 +3,40 @@ package server
 import (
 	"context"
 	"net/http"
-	"os"
-	"os/signal"
-	"syscall"
-	"time"
 
-	"github.com/go-kit/kit/log/level"
+	"github.com/gorilla/mux"
+	"go.uber.org/fx"
 
-	"github.com/go-kit/kit/log"
 	"github.com/leeif/pluto/config"
-	plog "github.com/leeif/pluto/log"
-	"github.com/leeif/pluto/route"
-	"github.com/urfave/negroni"
+	"github.com/leeif/pluto/log"
 )
 
 type Server struct {
 }
 
-func (s Server) RunServer() error {
-	config := config.GetConfig()
+func NewMux(lc fx.Lifecycle, config *config.Config, logger *log.PlutoLog) *mux.Router {
 	address := ":" + config.Server.Port.String()
-
-	// set logger
-	var logger log.Logger
-	var file *os.File
-	if *config.Log.File == "" {
-		file = os.Stdout
-	} else {
-		var err error
-		file, err = os.OpenFile(*config.Log.File, os.O_CREATE|os.O_WRONLY|os.O_APPEND, 0666)
-		if err != nil {
-			return err
-		}
-	}
-	defer file.Close()
-	logger = plog.GetFileLogger(config.Log, file)
-
-	// get route
-	n := negroni.New()
-	r := route.Route{
-		Logger: logger,
-	}
-	n.UseHandler(r.GetRouter(logger))
-
-	// start server
-	level.Info(logger).Log("msg", "Start pluto server at "+address)
+	router := mux.NewRouter()
 	srv := &http.Server{
 		Addr:    address,
-		Handler: n,
+		Handler: router,
 	}
-
-	//start server background
-	go func() {
-		if err := srv.ListenAndServe(); err != http.ErrServerClosed {
-			// Error starting or closing listener:
-			level.Error(logger).Log("msg", "Server closed with error:"+err.Error())
-			os.Exit(1)
-		}
-	}()
-
-	// graceful shutdown
-	quit := make(chan os.Signal, 1)
-	signal.Notify(quit, syscall.SIGTERM, os.Interrupt)
-	level.Error(logger).Log("msg", "SIGNAL "+(<-quit).String()+" received, then shutting down...")
-
-	// timeout 60s
-	ctx, cancel := context.WithTimeout(context.Background(), 60*time.Second)
-	defer cancel()
-	if err := srv.Shutdown(ctx); err != nil {
-		// Error from closing listeners, or context timeout:
-		level.Error(logger).Log("msg", "Failed to gracefully shutdown:"+err.Error())
-	}
-	level.Error(logger).Log("msg", "Server shutdown")
-	return nil
+	lc.Append(fx.Hook{
+		// To mitigate the impact of deadlocks in application startup and
+		// shutdown, Fx imposes a time limit on OnStart and OnStop hooks. By
+		// default, hooks have a total of 30 seconds to complete. Timeouts are
+		// passed via Go's usual context.Context.
+		OnStart: func(context.Context) error {
+			logger.Info("Starting Pluto server at " + address)
+			// In production, we'd want to separate the Listen and Serve phases for
+			// better error-handling.
+			go srv.ListenAndServe()
+			return nil
+		},
+		OnStop: func(ctx context.Context) error {
+			logger.Info("Stopping Pluto server")
+			return srv.Shutdown(ctx)
+		},
+	})
+	return router
 }

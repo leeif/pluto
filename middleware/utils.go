@@ -3,12 +3,12 @@ package middleware
 import (
 	"net/http"
 
-	"github.com/go-kit/kit/log"
+	"github.com/leeif/pluto/log"
 	"github.com/urfave/negroni"
 )
 
 type Middleware struct {
-	Logger log.Logger
+	Logger *log.PlutoLog
 }
 
 func (middleware *Middleware) TokenVerifyMiddleware(handlers ...negroni.HandlerFunc) http.Handler {
@@ -35,4 +35,10 @@ func (middleware *Middleware) NoVerifyMiddleware(handlers ...negroni.HandlerFunc
 	}
 	ng.UseFunc(NewLogger(middleware.Logger))
 	return ng
+}
+
+func NewMiddle(logger *log.PlutoLog) *Middleware {
+	return &Middleware{
+		Logger: logger.With("componment", "middleware"),
+	}
 }

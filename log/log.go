@@ -7,34 +7,52 @@ import (
 	"github.com/go-kit/kit/log"
 	"github.com/go-kit/kit/log/level"
 	"github.com/leeif/pluto/config"
+	"go.uber.org/fx"
 )
 
-func GetLogger(config *config.LogConfig) log.Logger {
-	var l log.Logger
-	if config.Format.String() == "logfmt" {
-		l = log.NewLogfmtLogger(log.NewSyncWriter(os.Stderr))
-	} else {
-		l = log.NewJSONLogger(log.NewSyncWriter(os.Stderr))
-	}
-	l = level.NewFilter(l, config.Level.GetLevelOption())
-	l = log.With(l, "ts", log.DefaultTimestampUTC)
-	if config.Level.String() == "debug" {
-		l = log.With(l, "caller", log.DefaultCaller)
-	}
-	return l
+type PlutoLog struct {
+	logger log.Logger
 }
 
-func GetFileLogger(config *config.LogConfig, file io.Writer) log.Logger {
+func (pl *PlutoLog) Error(message string) {
+	level.Error(pl.logger).Log("error", message)
+}
+
+func (pl *PlutoLog) Info(message string) {
+	level.Info(pl.logger).Log("info", message)
+}
+
+func (pl *PlutoLog) Debug(message string) {
+	level.Debug(pl.logger).Log("debug", message)
+}
+
+func (pl *PlutoLog) With(keyvals ...interface{}) *PlutoLog {
+	l := log.With(pl.logger, keyvals...)
+	return &PlutoLog{
+		logger: l,
+	}
+}
+
+func NewLogger(lc fx.Lifecycle, config *config.Config) (*PlutoLog, error) {
 	var l log.Logger
-	if config.Format.String() == "logfmt" {
-		l = log.NewLogfmtLogger(log.NewSyncWriter(file))
+	var writer io.WriteCloser
+	var err error
+	if *config.Log.File == "" {
+		writer = os.Stdout
 	} else {
-		l = log.NewJSONLogger(log.NewSyncWriter(file))
+		writer, err = os.OpenFile(*config.Log.File, os.O_CREATE|os.O_WRONLY|os.O_APPEND, 0666)
+		if err != nil {
+			return nil, err
+		}
 	}
-	l = level.NewFilter(l, config.Level.GetLevelOption())
-	l = log.With(l, "ts", log.DefaultTimestampUTC)
-	if config.Level.String() == "debug" {
-		l = log.With(l, "caller", log.DefaultCaller)
+	if config.Log.Format.String() == "logfmt" {
+		l = log.NewLogfmtLogger(log.NewSyncWriter(writer))
+	} else {
+		l = log.NewJSONLogger(log.NewSyncWriter(writer))
 	}
-	return l
+	l = level.NewFilter(l, config.Log.Level.GetLevelOption())
+	l = log.With(l, "ts", log.DefaultTimestamp)
+	return &PlutoLog{
+		logger: l,
+	}, nil
 }

@@ -1,71 +1,70 @@
 package main
 
 import (
+	"context"
 	"log"
 	"os"
-	"path/filepath"
-
-	"github.com/leeif/kiper"
-	"github.com/leeif/pluto/database"
-	"github.com/leeif/pluto/utils/migrate"
-
-	"github.com/leeif/pluto/config"
+	"os/signal"
+	"time"
 
 	"github.com/leeif/pluto/server"
+
+	plog "github.com/leeif/pluto/log"
+	"github.com/leeif/pluto/route"
+
+	"github.com/jinzhu/gorm"
+
+	"github.com/gorilla/mux"
+	"github.com/leeif/pluto/config"
+	"go.uber.org/fx"
+
+	"github.com/leeif/pluto/database"
+	"github.com/leeif/pluto/utils/migrate"
 
 	"github.com/leeif/pluto/utils/rsa"
 )
 
-func main() {
-	kiper := kiper.NewKiper(filepath.Base(os.Args[0]), "Pluto server")
-	kiper.GetKingpinInstance().HelpFlag.Short('h')
-
-	// Init config file from command line and config file
-	c := config.GetConfig()
-
-	if err := kiper.ParseCommandLine(c, os.Args[1:]); err != nil {
-		log.Println(err)
-		os.Exit(1)
+func register(router *mux.Router, db *gorm.DB, config *config.Config, logger *plog.PlutoLog) error {
+	if err := rsa.Init(config); err != nil {
+		logger.Error(err.Error())
+		return err
 	}
-
-	if err := kiper.ParseConfigFile(*c.ConfigFile); err != nil {
-		log.Println(err)
-		os.Exit(1)
-	}
-
-	if err := kiper.MergeConfigFile(c); err != nil {
-		log.Println(err)
-		os.Exit(1)
-	}
-
-	if err := config.CheckConfig(c); err != nil {
-		log.Println(err)
-		os.Exit(1)
-	}
-
-	if err := rsa.Init(); err != nil {
-		log.Println(err)
-		os.Exit(1)
-	}
-
-	db, err := database.GetDatabase()
-
-	if err != nil {
-		log.Println(err)
-		os.Exit(1)
-	}
-
 	// DB Migration
 	if err := migrate.Migrate(db); err != nil {
-		log.Println(err)
-		os.Exit(1)
+		logger.Error(err.Error())
+		return err
 	}
 
-	// Start server
-	s := server.Server{}
-	err = s.RunServer()
-	if err != nil {
-		log.Println(err)
-		os.Exit(1)
+	// add router
+	route.Router(router, db, config, logger)
+	return nil
+}
+
+func main() {
+
+	app := fx.New(
+		fx.Provide(
+			config.NewConfig,
+			database.NewDatabase,
+			plog.NewLogger,
+			server.NewMux,
+		),
+		fx.Invoke(register),
+	)
+	startCtx, cancel := context.WithTimeout(context.Background(), 15*time.Second)
+	defer cancel()
+	if err := app.Start(startCtx); err != nil {
+		log.Fatal(err)
+	}
+
+	quit := make(chan os.Signal)
+	signal.Notify(quit, os.Interrupt)
+
+	<-quit
+
+	stopCtx, cancel := context.WithTimeout(context.Background(), 15*time.Second)
+	defer cancel()
+	if err := app.Stop(stopCtx); err != nil {
+		log.Fatal(err)
 	}
 }

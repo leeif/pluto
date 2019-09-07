@@ -17,12 +17,9 @@ import (
 	saltUtil "github.com/leeif/pluto/utils/salt"
 )
 
-func RegisterWithEmail(db *gorm.DB, register request.MailRegister) (uint, *perror.PlutoError) {
-	if db == nil {
-		return 0, perror.ServerError.Wrapper(errors.New("DB connection is empty"))
-	}
+func (m *Manger) RegisterWithEmail(register request.MailRegister) (uint, *perror.PlutoError) {
 
-	tx := db.Begin()
+	tx := m.db.Begin()
 	defer func() {
 		tx.Rollback()
 	}()
@@ -48,7 +45,7 @@ func RegisterWithEmail(db *gorm.DB, register request.MailRegister) (uint, *perro
 	user.Password = &encodedPassword
 
 	// get a random avatar
-	a := avatar.NewAvatar()
+	a := avatar.NewAvatar(m.config)
 	body, err := a.GetRandomAvatar()
 	if err != nil {
 		return 0, err
@@ -75,7 +72,7 @@ func RegisterWithEmail(db *gorm.DB, register request.MailRegister) (uint, *perro
 	return user.ID, nil
 }
 
-func RegisterVerifyMail(db *gorm.DB, rvm request.RegisterVerifyMail) *perror.PlutoError {
+func (m *Manger) RegisterVerifyMail(db *gorm.DB, rvm request.RegisterVerifyMail) *perror.PlutoError {
 	if db == nil {
 		return perror.ServerError.Wrapper(errors.New("DB connection is empty"))
 	}
@@ -90,14 +87,15 @@ func RegisterVerifyMail(db *gorm.DB, rvm request.RegisterVerifyMail) *perror.Plu
 		return perror.MailAlreadyVerified
 	}
 
-	if err := mail.SendRegisterVerify(user.ID, *user.Mail); err != nil {
+	ml := mail.NewMail(m.config)
+	if err := ml.SendRegisterVerify(user.ID, *user.Mail); err != nil {
 		return err
 	}
 
 	return nil
 }
 
-func RegisterVerify(db *gorm.DB, token string) *perror.PlutoError {
+func (m *Manger) RegisterVerify(token string) *perror.PlutoError {
 
 	header, payload, perr := jwt.VerifyB64JWT(token)
 	if perr != nil {
@@ -123,7 +121,7 @@ func RegisterVerify(db *gorm.DB, token string) *perror.PlutoError {
 		return perror.InvalidJWTToekn
 	}
 
-	tx := db.Begin()
+	tx := m.db.Begin()
 	defer func() {
 		tx.Rollback()
 	}()

@@ -1,19 +1,19 @@
 package route
 
 import (
-	"fmt"
 	"net/http"
-	"os"
 	"strings"
+
+	"github.com/jinzhu/gorm"
+	"github.com/leeif/pluto/config"
+	"github.com/leeif/pluto/middleware"
 
 	b64 "encoding/base64"
 
-	"github.com/go-kit/kit/log"
-	"github.com/leeif/pluto/database"
 	perror "github.com/leeif/pluto/datatype/pluto_error"
 	"github.com/leeif/pluto/datatype/request"
+	"github.com/leeif/pluto/log"
 	"github.com/leeif/pluto/manage"
-	"github.com/leeif/pluto/middleware"
 	"github.com/leeif/pluto/utils/jwt"
 	"github.com/leeif/pluto/utils/mail"
 	"github.com/leeif/pluto/utils/rsa"
@@ -22,45 +22,30 @@ import (
 	"github.com/gorilla/mux"
 )
 
-type Route struct {
-	Logger     log.Logger
-	middleware middleware.Middleware
-}
-
-func (route *Route) GetRouter(logger log.Logger) *mux.Router {
-
-	// new a middleware this a logger
-	route.middleware = middleware.Middleware{Logger: route.Logger}
-
-	router := mux.NewRouter()
+func Router(router *mux.Router, db *gorm.DB, config *config.Config, logger *log.PlutoLog) {
 
 	// user router
 	user := router.PathPrefix("/api/user").Subrouter()
-	route.userRoute(user)
+	userRouter(user, db, config, logger)
 
 	// auth router
 	auth := router.PathPrefix("/api/auth").Subrouter()
-	route.authRoute(auth)
+	authRouter(auth, db, config, logger)
 
 	// web router
 	web := router.PathPrefix("/").Subrouter()
-	route.webRoute(web)
+	webRouter(web, db, config, logger)
 
 	// health check router
 	health := router.PathPrefix("/").Subrouter()
-	route.healthCheckRoute(health)
-
-	return router
+	healthCheckRouter(health, logger)
 }
 
-func (route *Route) userRoute(router *mux.Router) {
-	db, err := database.GetDatabase()
-	if err != nil {
-		fmt.Println(err)
-		os.Exit(1)
-	}
+func userRouter(router *mux.Router, db *gorm.DB, config *config.Config, logger *log.PlutoLog) {
+	mw := middleware.NewMiddle(logger)
+	manager := manage.NewManager(db, config, logger)
 
-	router.Handle("/register", route.middleware.NoVerifyMiddleware(func(w http.ResponseWriter, r *http.Request, next http.HandlerFunc) {
+	router.Handle("/register", mw.NoVerifyMiddleware(func(w http.ResponseWriter, r *http.Request, next http.HandlerFunc) {
 		register := request.MailRegister{}
 
 		if err := getBody(r, &register); err != nil {
@@ -70,7 +55,7 @@ func (route *Route) userRoute(router *mux.Router) {
 			return
 		}
 
-		userID, err := manage.RegisterWithEmail(db, register)
+		userID, err := manager.RegisterWithEmail(register)
 		if err != nil {
 			// set err to context for log
 			context.Set(r, "pluto_error", err)
@@ -81,11 +66,12 @@ func (route *Route) userRoute(router *mux.Router) {
 
 		respBody := make(map[string]interface{})
 		respBody["mail"] = register.Mail
-		go mail.SendRegisterVerify(userID, register.Mail)
+		ml := mail.NewMail(config)
+		go ml.SendRegisterVerify(userID, register.Mail)
 		responseOK(respBody, w)
 	})).Methods("POST")
 
-	router.Handle("/register/verify/mail", route.middleware.NoVerifyMiddleware(func(w http.ResponseWriter, r *http.Request, next http.HandlerFunc) {
+	router.Handle("/register/verify/mail", mw.NoVerifyMiddleware(func(w http.ResponseWriter, r *http.Request, next http.HandlerFunc) {
 		rvm := request.RegisterVerifyMail{}
 
 		if err := getBody(r, &rvm); err != nil {
@@ -95,7 +81,7 @@ func (route *Route) userRoute(router *mux.Router) {
 			return
 		}
 
-		err := manage.RegisterVerifyMail(db, rvm)
+		err := manager.RegisterVerifyMail(db, rvm)
 
 		if err != nil {
 			// set err to context for log
@@ -108,7 +94,7 @@ func (route *Route) userRoute(router *mux.Router) {
 		responseOK(nil, w)
 	})).Methods("POST")
 
-	router.Handle("/password/reset/mail", route.middleware.NoVerifyMiddleware(func(w http.ResponseWriter, r *http.Request, next http.HandlerFunc) {
+	router.Handle("/password/reset/mail", mw.NoVerifyMiddleware(func(w http.ResponseWriter, r *http.Request, next http.HandlerFunc) {
 		rpm := request.ResetPasswordMail{}
 
 		if err := getBody(r, &rpm); err != nil {
@@ -118,7 +104,7 @@ func (route *Route) userRoute(router *mux.Router) {
 			return
 		}
 
-		if err := manage.ResetPasswordMail(db, rpm); err != nil {
+		if err := manager.ResetPasswordMail(rpm); err != nil {
 			context.Set(r, "pluto_error", err)
 			responseError(err, w)
 			next(w, r)
@@ -128,7 +114,7 @@ func (route *Route) userRoute(router *mux.Router) {
 		responseOK(nil, w)
 	})).Methods("POST")
 
-	router.Handle("/password/reset", route.middleware.NoVerifyMiddleware(func(w http.ResponseWriter, r *http.Request, next http.HandlerFunc) {
+	router.Handle("/password/reset", mw.NoVerifyMiddleware(func(w http.ResponseWriter, r *http.Request, next http.HandlerFunc) {
 		rp := request.ResetPassword{}
 
 		if err := getBody(r, &rp); err != nil {
@@ -137,7 +123,7 @@ func (route *Route) userRoute(router *mux.Router) {
 			next(w, r)
 			return
 		}
-		if err := manage.ResetPassword(db, rp); err != nil {
+		if err := manager.ResetPassword(rp); err != nil {
 			context.Set(r, "pluto_error", err)
 			responseError(err, w)
 			next(w, r)
@@ -158,7 +144,7 @@ func (route *Route) userRoute(router *mux.Router) {
 		responseOK(res, w)
 	})).Methods("POST")
 
-	router.Handle("/login", route.middleware.NoVerifyMiddleware(func(w http.ResponseWriter, r *http.Request, next http.HandlerFunc) {
+	router.Handle("/login", mw.NoVerifyMiddleware(func(w http.ResponseWriter, r *http.Request, next http.HandlerFunc) {
 		login := request.MailLogin{}
 
 		if err := getBody(r, &login); err != nil {
@@ -168,7 +154,7 @@ func (route *Route) userRoute(router *mux.Router) {
 			return
 		}
 
-		res, err := manage.LoginWithEmail(db, login)
+		res, err := manager.LoginWithEmail(login)
 
 		if err != nil {
 			// set err to context for log
@@ -181,7 +167,7 @@ func (route *Route) userRoute(router *mux.Router) {
 		responseOK(res, w)
 	})).Methods("POST")
 
-	router.Handle("/login/google", route.middleware.NoVerifyMiddleware(func(w http.ResponseWriter, r *http.Request, next http.HandlerFunc) {
+	router.Handle("/login/google", mw.NoVerifyMiddleware(func(w http.ResponseWriter, r *http.Request, next http.HandlerFunc) {
 		login := request.GoogleLogin{}
 
 		if err := getBody(r, &login); err != nil {
@@ -191,7 +177,7 @@ func (route *Route) userRoute(router *mux.Router) {
 			return
 		}
 
-		res, err := manage.LoginWithGoogle(db, login)
+		res, err := manager.LoginWithGoogle(login)
 
 		if err != nil {
 			// set err to context for log
@@ -204,7 +190,7 @@ func (route *Route) userRoute(router *mux.Router) {
 		responseOK(res, w)
 	})).Methods("POST")
 
-	router.Handle("/info/me", route.middleware.NoVerifyMiddleware(func(w http.ResponseWriter, r *http.Request, next http.HandlerFunc) {
+	router.Handle("/info/me", mw.NoVerifyMiddleware(func(w http.ResponseWriter, r *http.Request, next http.HandlerFunc) {
 		auth := strings.Fields(r.Header.Get("Authorization"))
 
 		if len(auth) < 2 && strings.ToLower(auth[0]) != "jwt" {
@@ -214,7 +200,7 @@ func (route *Route) userRoute(router *mux.Router) {
 			return
 		}
 
-		res, err := manage.UserInfo(db, auth[1])
+		res, err := manager.UserInfo(auth[1])
 
 		if err != nil {
 			// set err to context for log
@@ -228,14 +214,11 @@ func (route *Route) userRoute(router *mux.Router) {
 	})).Methods("GET")
 }
 
-func (route *Route) authRoute(router *mux.Router) {
-	db, err := database.GetDatabase()
-	if err != nil {
-		fmt.Println(err)
-		os.Exit(1)
-	}
+func authRouter(router *mux.Router, db *gorm.DB, config *config.Config, logger *log.PlutoLog) {
+	mw := middleware.NewMiddle(logger)
+	manager := manage.NewManager(db, config, logger)
 
-	router.Handle("/refresh", route.middleware.NoVerifyMiddleware(func(w http.ResponseWriter, r *http.Request, next http.HandlerFunc) {
+	router.Handle("/refresh", mw.NoVerifyMiddleware(func(w http.ResponseWriter, r *http.Request, next http.HandlerFunc) {
 		rat := request.RefreshAccessToken{}
 		if err := getBody(r, &rat); err != nil {
 			context.Set(r, "pluto_error", err)
@@ -244,7 +227,7 @@ func (route *Route) authRoute(router *mux.Router) {
 			return
 		}
 
-		res, err := manage.RefreshAccessToken(db, rat)
+		res, err := manager.RefreshAccessToken(rat)
 
 		if err != nil {
 			// set err to context for log
@@ -257,7 +240,7 @@ func (route *Route) authRoute(router *mux.Router) {
 		responseOK(res, w)
 	})).Methods("POST")
 
-	router.Handle("/publickey", route.middleware.NoVerifyMiddleware(func(w http.ResponseWriter, r *http.Request, next http.HandlerFunc) {
+	router.Handle("/publickey", mw.NoVerifyMiddleware(func(w http.ResponseWriter, r *http.Request, next http.HandlerFunc) {
 		res := make(map[string]string)
 		pbkey, err := rsa.GetPublicKey()
 

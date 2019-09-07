@@ -1,6 +1,12 @@
 package config
 
-import "github.com/pkg/errors"
+import (
+	"os"
+	"path/filepath"
+
+	"github.com/leeif/kiper"
+	"github.com/pkg/errors"
+)
 
 var config *Config
 
@@ -23,21 +29,14 @@ type Config struct {
 	GoogleLogin *GoogleLoginConfig `kiper_config:"name:google_login"`
 }
 
-func CheckConfig(c *Config) error {
+func (c *Config) checkConfig() error {
 	if c.Mail.SMTP.String() == "" {
 		return errors.New("smtp can not be empty")
 	}
 	return nil
 }
 
-func GetConfig() *Config {
-	if config == nil {
-		config = NewConfig()
-	}
-	return config
-}
-
-func NewConfig() *Config {
+func NewConfig() (*Config, error) {
 	c := &Config{
 		Log:         newLogConfig(),
 		Server:      newServerConfig(),
@@ -47,5 +46,23 @@ func NewConfig() *Config {
 		Avatar:      newAvatarConfig(),
 		GoogleLogin: newGoogleLoginConfig(),
 	}
-	return c
+	kiper := kiper.NewKiper(filepath.Base(os.Args[0]), "Pluto server")
+	kiper.GetKingpinInstance().HelpFlag.Short('h')
+
+	if err := kiper.ParseCommandLine(c, os.Args[1:]); err != nil {
+		return nil, err
+	}
+
+	if err := kiper.ParseConfigFile(*c.ConfigFile); err != nil {
+		return nil, err
+	}
+
+	if err := kiper.MergeConfigFile(c); err != nil {
+		return nil, err
+	}
+
+	if err := c.checkConfig(); err != nil {
+		return nil, err
+	}
+	return c, nil
 }

@@ -21,14 +21,12 @@ import (
 )
 
 type Mail struct {
-	SMTP     string
-	User     string
-	Password string
+	config *config.Config
 }
 
 func (m *Mail) Send(recv, subj, contentType, body string) error {
 
-	from := mail.Address{"", m.User}
+	from := mail.Address{"", *m.config.Mail.User}
 	to := mail.Address{"", recv}
 
 	// Setup headers
@@ -45,13 +43,13 @@ func (m *Mail) Send(recv, subj, contentType, body string) error {
 	message += "Content-Type: " + contentType + "; charset=UTF-8\r\n" + body
 
 	// Connect to the SMTP Server
-	host, _, err := net.SplitHostPort(m.SMTP)
+	host, _, err := net.SplitHostPort(m.config.Mail.SMTP.String())
 
 	if err != nil {
 		return err
 	}
 
-	auth := smtp.PlainAuth("", m.User, m.Password, host)
+	auth := smtp.PlainAuth("", *m.config.Mail.User, *m.config.Mail.Password, host)
 
 	// TLS config
 	tlsconfig := &tls.Config{
@@ -62,7 +60,7 @@ func (m *Mail) Send(recv, subj, contentType, body string) error {
 	// Here is the key, you need to call tls.Dial instead of smtp.Dial
 	// for smtp servers running on 465 that require an ssl connection
 	// from the very beginning (no starttls)
-	conn, err := tls.Dial("tcp", m.SMTP, tlsconfig)
+	conn, err := tls.Dial("tcp", m.config.Mail.SMTP.String(), tlsconfig)
 	if err != nil {
 		return err
 	}
@@ -109,67 +107,58 @@ func (m *Mail) Send(recv, subj, contentType, body string) error {
 	return nil
 }
 
-func NewMail() *Mail {
-	c := config.GetConfig().Mail
-	if c.SMTP.String() == "" {
-		return nil
-	}
-	mail := &Mail{
-		SMTP:     c.SMTP.String(),
-		User:     *c.User,
-		Password: *c.Password,
-	}
-	return mail
-}
-
-func SendRegisterVerify(userID uint, mail string) *perror.PlutoError {
+func (m *Mail) SendRegisterVerify(userID uint, address string) *perror.PlutoError {
 	// expire time 10 mins
 	token, err := jwt.GenerateJWT(jwt.Head{Type: jwt.REGISTERVERIFY}, &jwt.RegisterVerifyPayload{UserID: userID}, 10*60)
 	if err != nil {
 		return err.Wrapper(errors.New("JWT token generate failed"))
 	}
 
-	if m := NewMail(); m != nil {
-		dir, _ := os.Getwd()
-		t := template.Must(template.ParseFiles(path.Join(dir, "views", "register_verify_mail.html")))
-		var buffer bytes.Buffer
-		type Data struct {
-			BaseURL string
-			Token   string
-		}
-		baseURL := config.GetConfig().Server.BaseURL
-		t.Execute(&buffer, Data{Token: b64.StdEncoding.EncodeToString([]byte(token)), BaseURL: *baseURL})
-		if err := m.Send(mail, "[MuShare]Mail Verification", "text/html", buffer.String()); err != nil {
-			return perror.ServerError.Wrapper(errors.New("Mail sending failed: " + err.Error()))
-		}
-	} else {
-		return perror.ServerError.Wrapper(errors.New("Mail sender is not defined"))
+	dir, _ := os.Getwd()
+	t := template.Must(template.ParseFiles(path.Join(dir, "views", "register_verify_mail.html")))
+	var buffer bytes.Buffer
+	type Data struct {
+		BaseURL string
+		Token   string
 	}
+	baseURL := m.config.Server.BaseURL
+	t.Execute(&buffer, Data{Token: b64.StdEncoding.EncodeToString([]byte(token)), BaseURL: *baseURL})
+	if err := m.Send(address, "[MuShare]Mail Verification", "text/html", buffer.String()); err != nil {
+		return perror.ServerError.Wrapper(errors.New("Mail sending failed: " + err.Error()))
+	}
+
 	return nil
 }
 
-func SendResetPassword(mail string) *perror.PlutoError {
+func (m *Mail) SendResetPassword(address string) *perror.PlutoError {
 	// expire time 10 mins
-	token, err := jwt.GenerateJWT(jwt.Head{Type: jwt.PASSWORDRESET}, &jwt.PasswordResetPayload{Mail: mail}, 10*60)
+	token, err := jwt.GenerateJWT(jwt.Head{Type: jwt.PASSWORDRESET}, &jwt.PasswordResetPayload{Mail: address}, 10*60)
 	if err != nil {
 		return err.Wrapper(errors.New("JWT token generate failed"))
 	}
 
-	if m := NewMail(); m != nil {
-		dir, _ := os.Getwd()
-		t := template.Must(template.ParseFiles(path.Join(dir, "views", "password_reset_mail.html")))
-		var buffer bytes.Buffer
-		type Data struct {
-			BaseURL string
-			Token   string
-		}
-		baseURL := config.GetConfig().Server.BaseURL
-		t.Execute(&buffer, Data{Token: b64.StdEncoding.EncodeToString([]byte(token)), BaseURL: *baseURL})
-		if err := m.Send(mail, "[MuShare]Password Reset", "text/html", buffer.String()); err != nil {
-			return perror.ServerError.Wrapper(errors.New("Mail sending failed: " + err.Error()))
-		}
-	} else {
-		return perror.ServerError.Wrapper(errors.New("Mail sender is not defined"))
+	dir, _ := os.Getwd()
+	t := template.Must(template.ParseFiles(path.Join(dir, "views", "password_reset_mail.html")))
+	var buffer bytes.Buffer
+	type Data struct {
+		BaseURL string
+		Token   string
+	}
+	baseURL := m.config.Server.BaseURL
+	t.Execute(&buffer, Data{Token: b64.StdEncoding.EncodeToString([]byte(token)), BaseURL: *baseURL})
+	if err := m.Send(address, "[MuShare]Password Reset", "text/html", buffer.String()); err != nil {
+		return perror.ServerError.Wrapper(errors.New("Mail sending failed: " + err.Error()))
 	}
 	return nil
+}
+
+func NewMail(config *config.Config) *Mail {
+	c := config.Mail
+	if c.SMTP.String() == "" {
+		return nil
+	}
+	mail := &Mail{
+		config: config,
+	}
+	return mail
 }

@@ -10,12 +10,15 @@ import (
 
 func TestRandomAvatar(t *testing.T) {
 	avatar := avatar.Avatar{}
-	reader, err := avatar.GetRandomAvatar()
-	if err != nil {
-		t.Fatalf("expected to be no error, but err: %v", err)
+	reader, perr := avatar.GetRandomAvatar()
+	if perr != nil {
+		t.Fatalf("expected to be no error, but err: %v", perr)
 	}
 	file, _ := os.OpenFile("avatar.png", os.O_CREATE|os.O_RDWR, 0666)
 	b, err := io.Copy(file, reader.Reader)
+	if err != nil {
+		t.Fatalf("expected to be no error, but err: %v", err)
+	}
 	defer func() {
 		reader.Reader.Close()
 		file.Close()

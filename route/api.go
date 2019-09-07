@@ -148,7 +148,7 @@ func (route *Route) userRoute(router *mux.Router) {
 		token, err := jwt.GenerateJWT(jwt.Head{Type: jwt.PASSWORDRESETRESULT}, &jwt.PasswordResetResultPayload{Message: "Success"}, 10*60)
 		if err != nil {
 			context.Set(r, "pluto_error", err)
-			responseError(perror.NewServerError(err), w)
+			responseError(err, w)
 			next(w, r)
 			return
 		}
@@ -169,6 +169,29 @@ func (route *Route) userRoute(router *mux.Router) {
 		}
 
 		res, err := manage.LoginWithEmail(db, login)
+
+		if err != nil {
+			// set err to context for log
+			context.Set(r, "pluto_error", err)
+			responseError(err, w)
+			next(w, r)
+			return
+		}
+
+		responseOK(res, w)
+	})).Methods("POST")
+
+	router.Handle("/login/google", route.middleware.NoVerifyMiddleware(func(w http.ResponseWriter, r *http.Request, next http.HandlerFunc) {
+		login := request.GoogleLogin{}
+
+		if err := getBody(r, &login); err != nil {
+			context.Set(r, "pluto_error", err)
+			responseError(err, w)
+			next(w, r)
+			return
+		}
+
+		res, err := manage.LoginWithGoogle(db, login)
 
 		if err != nil {
 			// set err to context for log
@@ -239,7 +262,7 @@ func (route *Route) authRoute(router *mux.Router) {
 		pbkey, err := rsa.GetPublicKey()
 
 		if err != nil {
-			perr := perror.NewServerError(err)
+			perr := perror.ServerError.Wrapper(err)
 			responseError(perr, w)
 			next(w, r)
 			return

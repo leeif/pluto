@@ -33,7 +33,7 @@ func deleteConfigFile(path string) error {
 func TestConfigDefault(t *testing.T) {
 	args := []string{"test", "--mail.smtp", "test.smtp.com"}
 	// Init config file from command line and config file
-	c, err := config.NewConfig(args)
+	c, err := config.NewConfig(args, "")
 
 	if err != nil {
 		t.Fatalf("Expect no err, but: %v", err)
@@ -84,7 +84,7 @@ func TestConfigCustom(t *testing.T) {
 
 	args := []string{"test", "--config.file", "./config_test.json"}
 	// Init config file from command line and config file
-	c, err := config.NewConfig(args)
+	c, err := config.NewConfig(args, "")
 	if err != nil {
 		t.Fatalf("Expect no error, but: %v", err)
 	}

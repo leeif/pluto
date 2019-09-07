@@ -35,7 +35,7 @@ func (c *Config) checkConfig() error {
 	return nil
 }
 
-func NewConfig(args []string) (*Config, error) {
+func NewConfig(args []string, version string) (*Config, error) {
 	c := &Config{
 		Log:         newLogConfig(),
 		Server:      newServerConfig(),
@@ -46,6 +46,7 @@ func NewConfig(args []string) (*Config, error) {
 		GoogleLogin: newGoogleLoginConfig(),
 	}
 	kiper := kiper.NewKiper(filepath.Base(args[0]), "Pluto server")
+	kiper.GetKingpinInstance().Version(version)
 	kiper.GetKingpinInstance().HelpFlag.Short('h')
 
 	if err := kiper.ParseCommandLine(c, args[1:]); err != nil {

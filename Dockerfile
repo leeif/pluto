@@ -1,10 +1,12 @@
 FROM golang:1.12 as build
 
+ARG VERSION
+
 ADD . /go/src/pluto
 
 WORKDIR /go/src/pluto
 
-RUN  export GO111MODULE=on && go build -o pluto-server cmd/pluto-server/main.go
+RUN  export GO111MODULE=on && go build -ldflags="-X 'main.VERSION=${VERSION}'" -o pluto-server cmd/pluto-server/main.go
 
 FROM ubuntu:18.04
 

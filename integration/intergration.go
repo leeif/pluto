@@ -74,10 +74,10 @@ var testCases = []testCase{
 
 func testHealthCheck() error {
 	url := "http://localhost:8010/healthcheck"
-	for i := 0; i < 10; i++ {
+	for i := 0; i < 500; i++ {
 		log.Printf("try count: %v\n", i)
 		resp, err := http.Get(url)
-		time.Sleep(time.Duration(10) * time.Second)
+		time.Sleep(time.Duration(5) * time.Second)
 		if err != nil {
 			continue
 		}
@@ -94,8 +94,8 @@ func main() {
 	cmd.Start()
 	time.Sleep(time.Duration(10) * time.Second)
 	defer func() {
-		log.Println("docker-compose -f docker/docker-compose.yml down")
-		cmd := exec.Command("docker-compose", "-f", "docker/docker-compose.yml", "down")
+		log.Println("docker-compose -f docker/docker-compose.yml down --rmi all")
+		cmd := exec.Command("docker-compose", "-f", "docker/docker-compose.yml", "down", "--rmi", "all")
 		cmd.Start()
 		time.Sleep(time.Duration(10) * time.Second)
 	}()

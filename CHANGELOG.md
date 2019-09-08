@@ -1,4 +1,22 @@
 
+<a name="v0.0.9"></a>
+## [v0.0.9](https://github.com/MuShare/pluto/compare/v0.0.8...v0.0.9)
+
+> 2019-09-08
+
+### Feature
+
+* **test:** add integration test
+
+### Fix
+
+* **test:** increase integration test health check timeout
+
+### Update
+
+* **version:** Bump up version to 0.0.9
+
+
 <a name="v0.0.8"></a>
 ## [v0.0.8](https://github.com/MuShare/pluto/compare/v0.0.7...v0.0.8)
 

@@ -1,6 +1,7 @@
 vendor/
-id*
+ids_rsa*
 config.json
 pluto.log
+integration/docker/pluto.log
 .vscode
 env

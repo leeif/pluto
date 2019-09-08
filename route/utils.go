@@ -75,8 +75,24 @@ func responseError(plutoError *perror.PlutoError, w http.ResponseWriter) error {
 	return nil
 }
 
-func responseHTML(file string, data interface{}, w http.ResponseWriter) error {
+func responseHTMLOK(file string, data interface{}, w http.ResponseWriter) error {
 	w.Header().Set("Content-type", "text/html")
+	w.WriteHeader(http.StatusOK)
+	dir, _ := os.Getwd()
+	t, err := template.ParseFiles(path.Join(dir, "views", file), path.Join(dir, "views/template", "header.html"))
+	if err != nil {
+		return err
+	}
+	err = t.Execute(w, data)
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
+func responseHTMLError(file string, data interface{}, w http.ResponseWriter, status int) error {
+	w.Header().Set("Content-type", "text/html")
+	w.WriteHeader(status)
 	dir, _ := os.Getwd()
 	t, err := template.ParseFiles(path.Join(dir, "views", file), path.Join(dir, "views/template", "header.html"))
 	if err != nil {

@@ -1,0 +1,18 @@
+version: '3'
+
+services:
+  pluto:
+    build:
+      context: ../../
+    ports:
+      - 8010:8010
+    volumes:
+      - "./:/etc/pluto"
+    restart: always
+    command: dockerize -wait tcp://db:3306 -timeout 60s /usr/bin/pluto-server --config.file=/etc/pluto/config_test.json
+
+  db:
+    image: mysql:8.0.17
+    environment:
+      MYSQL_ROOT_PASSWORD: root
+      MYSQL_DATABASE: pluto_server

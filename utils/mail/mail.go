@@ -107,7 +107,7 @@ func (m *Mail) Send(recv, subj, contentType, body string) error {
 	return nil
 }
 
-func (m *Mail) SendRegisterVerify(userID uint, address string) *perror.PlutoError {
+func (m *Mail) SendRegisterVerify(userID uint, address string, domain string) *perror.PlutoError {
 	// expire time 10 mins
 	token, err := jwt.GenerateJWT(jwt.Head{Type: jwt.REGISTERVERIFY}, &jwt.RegisterVerifyPayload{UserID: userID}, 10*60)
 	if err != nil {
@@ -121,8 +121,8 @@ func (m *Mail) SendRegisterVerify(userID uint, address string) *perror.PlutoErro
 		BaseURL string
 		Token   string
 	}
-	baseURL := m.config.Server.BaseURL
-	t.Execute(&buffer, Data{Token: b64.StdEncoding.EncodeToString([]byte(token)), BaseURL: *baseURL})
+	baseURL := "https://" + domain
+	t.Execute(&buffer, Data{Token: b64.StdEncoding.EncodeToString([]byte(token)), BaseURL: baseURL})
 	if err := m.Send(address, "[MuShare]Mail Verification", "text/html", buffer.String()); err != nil {
 		return perror.ServerError.Wrapper(errors.New("Mail sending failed: " + err.Error()))
 	}
@@ -130,7 +130,7 @@ func (m *Mail) SendRegisterVerify(userID uint, address string) *perror.PlutoErro
 	return nil
 }
 
-func (m *Mail) SendResetPassword(address string) *perror.PlutoError {
+func (m *Mail) SendResetPassword(address string, domain string) *perror.PlutoError {
 	// expire time 10 mins
 	token, err := jwt.GenerateJWT(jwt.Head{Type: jwt.PASSWORDRESET}, &jwt.PasswordResetPayload{Mail: address}, 10*60)
 	if err != nil {
@@ -144,8 +144,8 @@ func (m *Mail) SendResetPassword(address string) *perror.PlutoError {
 		BaseURL string
 		Token   string
 	}
-	baseURL := m.config.Server.BaseURL
-	t.Execute(&buffer, Data{Token: b64.StdEncoding.EncodeToString([]byte(token)), BaseURL: *baseURL})
+	baseURL := "https://" + domain
+	t.Execute(&buffer, Data{Token: b64.StdEncoding.EncodeToString([]byte(token)), BaseURL: baseURL})
 	if err := m.Send(address, "[MuShare]Password Reset", "text/html", buffer.String()); err != nil {
 		return perror.ServerError.Wrapper(errors.New("Mail sending failed: " + err.Error()))
 	}

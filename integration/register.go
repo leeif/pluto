@@ -10,10 +10,7 @@ import (
 	"net/http"
 	"strings"
 
-	"github.com/leeif/pluto/config"
-
 	"github.com/leeif/pluto/utils/jwt"
-	"github.com/leeif/pluto/utils/rsa"
 
 	"github.com/leeif/pluto/datatype/request"
 )
@@ -123,15 +120,6 @@ func testMailRegisterOK() error {
 }
 
 func testRegisterVerifyOK() error {
-	cfg := config.Config{}
-	cfg.RSA = &config.RSAConfig{}
-	name := "ids_rsa_test"
-	cfg.RSA.Name = &name
-	path := "./docker"
-	cfg.RSA.Path = &path
-	if err := rsa.Init(&cfg); err != nil {
-		return fmt.Errorf("Expect no error, but %v", err)
-	}
 	token, perror := jwt.GenerateJWT(jwt.Head{Type: jwt.REGISTERVERIFY, Alg: jwt.ALGRAS},
 		&jwt.RegisterVerifyPayload{UserID: 1}, 60*60)
 

@@ -1,8 +1,7 @@
 package config
 
 type ServerConfig struct {
-	BaseURL *string `kiper_value:"name:base_url;help:base url;default:http://localhost:8010"`
-	Port    *Port   `kiper_value:"name:port;help:server listen port;default:8010"`
+	Port *Port `kiper_value:"name:port;help:server listen port;default:8010"`
 }
 
 type Port struct {

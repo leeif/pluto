@@ -89,7 +89,6 @@ func webRouter(router *mux.Router, db *gorm.DB, config *config.Config, logger *l
 			Message string
 		}
 		data := &Data{Message: prp.Message}
-
 		responseHTMLOK("password_reset_result.html", data, w)
 	})).Methods("GET")
 }

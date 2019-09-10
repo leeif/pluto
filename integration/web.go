@@ -5,9 +5,7 @@ import (
 	"fmt"
 	"net/http"
 
-	"github.com/leeif/pluto/config"
 	"github.com/leeif/pluto/utils/jwt"
-	"github.com/leeif/pluto/utils/rsa"
 )
 
 func testPasswordResetResultFail() error {
@@ -26,23 +24,15 @@ func testPasswordResetResultFail() error {
 }
 
 func testPasswordResetResultOK() error {
-	cfg := config.Config{}
-	cfg.RSA = &config.RSAConfig{}
-	name := "ids_rsa_test"
-	cfg.RSA.Name = &name
-	path := "./docker"
-	cfg.RSA.Path = &path
-	if err := rsa.Init(&cfg); err != nil {
-		return fmt.Errorf("Expect no error, but %v", err)
-	}
 	token, perror := jwt.GenerateJWT(jwt.Head{Type: jwt.PASSWORDRESETRESULT, Alg: jwt.ALGRAS},
-		&jwt.PasswordResetResultPayload{Message: "success"}, 60*60)
+		&jwt.PasswordResetResultPayload{Message: "Success"}, 10*60)
 
 	if perror != nil {
 		return fmt.Errorf("Expect no error, but %v", perror.LogError)
 	}
 
 	url := "http://localhost:8010/password/reset/result/" + base64.StdEncoding.EncodeToString([]byte(token))
+	fmt.Println(url)
 	resp, err := http.Get(url)
 
 	if err != nil {
@@ -58,7 +48,12 @@ func testPasswordResetResultOK() error {
 func testPasswordResetFail() error {
 
 	url := "http://localhost:8010/password/reset/" + "random"
-	resp, err := http.Get(url)
+	req, err := http.NewRequest("GET", url, nil)
+	if err != nil {
+		return fmt.Errorf("Expect no error, but %v", err)
+	}
+	c := http.Client{}
+	resp, err := c.Do(req)
 
 	if err != nil {
 		return fmt.Errorf("Expect no error, but %v", err)
@@ -71,15 +66,6 @@ func testPasswordResetFail() error {
 }
 
 func testPasswordResetOK() error {
-	cfg := config.Config{}
-	cfg.RSA = &config.RSAConfig{}
-	name := "ids_rsa_test"
-	cfg.RSA.Name = &name
-	path := "./docker"
-	cfg.RSA.Path = &path
-	if err := rsa.Init(&cfg); err != nil {
-		return fmt.Errorf("Expect no error, but %v", err)
-	}
 	token, perror := jwt.GenerateJWT(jwt.Head{Type: jwt.PASSWORDRESET, Alg: jwt.ALGRAS},
 		&jwt.PasswordResetPayload{Mail: "test@gmail.com"}, 60*60)
 
@@ -88,6 +74,7 @@ func testPasswordResetOK() error {
 	}
 
 	url := "http://localhost:8010/password/reset/" + base64.StdEncoding.EncodeToString([]byte(token))
+	fmt.Println(url)
 	resp, err := http.Get(url)
 
 	if err != nil {

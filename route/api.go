@@ -67,7 +67,7 @@ func userRouter(router *mux.Router, db *gorm.DB, config *config.Config, logger *
 		respBody := make(map[string]interface{})
 		respBody["mail"] = register.Mail
 		ml := mail.NewMail(config)
-		go ml.SendRegisterVerify(userID, register.Mail)
+		go ml.SendRegisterVerify(userID, register.Mail, r.Host)
 		responseOK(respBody, w)
 	})).Methods("POST")
 
@@ -81,7 +81,7 @@ func userRouter(router *mux.Router, db *gorm.DB, config *config.Config, logger *
 			return
 		}
 
-		err := manager.RegisterVerifyMail(db, rvm)
+		err := manager.RegisterVerifyMail(db, rvm, r.Host)
 
 		if err != nil {
 			// set err to context for log
@@ -104,7 +104,7 @@ func userRouter(router *mux.Router, db *gorm.DB, config *config.Config, logger *
 			return
 		}
 
-		if err := manager.ResetPasswordMail(rpm); err != nil {
+		if err := manager.ResetPasswordMail(rpm, r.Host); err != nil {
 			context.Set(r, "pluto_error", err)
 			responseError(err, w)
 			next(w, r)

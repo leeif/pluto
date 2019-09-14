@@ -2,8 +2,14 @@ package manage
 
 import (
 	b64 "encoding/base64"
+	"encoding/json"
 	"errors"
+	"fmt"
+	"io/ioutil"
 	"net/http"
+	"strings"
+
+	"github.com/leeif/pluto/config"
 
 	gjwt "github.com/dgrijalva/jwt-go"
 	perror "github.com/leeif/pluto/datatype/pluto_error"
@@ -18,9 +24,10 @@ import (
 const (
 	MAILLOGIN   = "mail"
 	GOOGLELOGIN = "google"
+	WECHATLOGIN = "wechat"
 )
 
-func (m *Manger) LoginWithEmail(login request.MailLogin) (map[string]string, *perror.PlutoError) {
+func (m *Manger) EmailLogin(login request.MailLogin) (map[string]string, *perror.PlutoError) {
 	res := make(map[string]string)
 
 	tx := m.db.Begin()
@@ -98,7 +105,7 @@ func (m *Manger) LoginWithEmail(login request.MailLogin) (map[string]string, *pe
 	return res, nil
 }
 
-func (m *Manger) LoginWithGoogle(login request.GoogleLogin) (map[string]string, *perror.PlutoError) {
+func (m *Manger) GoogleLoginMobile(login request.GoogleMobileLogin) (map[string]string, *perror.PlutoError) {
 	res := make(map[string]string)
 
 	info, err := verifyGoogleIdToken(login.IDToken)
@@ -196,18 +203,208 @@ func verifyGoogleIdToken(idToken string) (*googleIDTokenInfo, *perror.PlutoError
 	tokenInfoCall.IdToken(idToken)
 	tokenInfo, err := tokenInfoCall.Do()
 	if err != nil {
-		return nil, perror.InvalidIDToken.Wrapper(err)
+		return nil, perror.InvalidGoogleIDToken.Wrapper(err)
 	}
 	if tokenInfo.Audience != "" {
-		return nil, perror.InvalidIDToken
+		return nil, perror.InvalidGoogleIDToken
 	}
 	parser := gjwt.Parser{}
 	token, _, err := parser.ParseUnverified(idToken, &googleIDTokenInfo{})
 	if err != nil {
-		return nil, perror.InvalidIDToken.Wrapper(err)
+		return nil, perror.InvalidGoogleIDToken.Wrapper(err)
 	}
 	if info, ok := token.Claims.(*googleIDTokenInfo); ok {
 		return info, nil
 	}
-	return nil, perror.InvalidIDToken
+	return nil, perror.InvalidGoogleIDToken
+}
+
+func (m *Manger) WechatLoginMobile(login request.WechatMobileLogin) (map[string]string, *perror.PlutoError) {
+	res := make(map[string]string)
+
+	accessToken, openID, err := getWechatAccessToken(login.Code, m.config.WechatLogin)
+
+	if err != nil {
+		return nil, err
+	}
+
+	info, err := getWebchatUserInfo(accessToken, openID)
+	if err != nil {
+		return nil, err
+	}
+
+	tx := m.db.Begin()
+	defer func() {
+		tx.Rollback()
+	}()
+	user := models.User{}
+	user.IdentifyToken = info.Unionid
+	user.LoginType = WECHATLOGIN
+	user.Avatar = info.HeadimgURL
+	user.Name = &info.Nickname
+	if tx.Where("login_type = ? and identify_token = ?", user.LoginType, user.IdentifyToken).First(&user).RecordNotFound() {
+		if err := create(tx, &user); err != nil {
+			return nil, err
+		}
+	}
+
+	// insert deviceID and appID into device table
+	device := models.Device{}
+
+	if tx.Where("device_id = ? and app_id = ?", login.DeviceID, login.AppID).First(&device).RecordNotFound() {
+		device.DeviceID = login.DeviceID
+		device.AppID = login.AppID
+		if err := create(tx, &device); err != nil {
+			return nil, err
+		}
+	}
+
+	// refresh token
+	rt := models.RefreshToken{}
+	refreshToken := refresh.GenerateRefreshToken(string(user.ID) + device.DeviceID + device.AppID)
+	rt.UserID = user.ID
+	rt.DeviceID = device.DeviceID
+	rt.AppID = device.AppID
+	if tx.Where("device_id = ? and app_id = ? and user_id = ?", device.DeviceID, device.AppID, user.ID).First(&rt).RecordNotFound() {
+		rt.RefreshToken = refreshToken
+		if err := create(tx, &rt); err != nil {
+			return nil, err
+		}
+	} else {
+		rt.RefreshToken = refreshToken
+		if err := update(tx, &rt); err != nil {
+			return nil, err
+		}
+	}
+
+	// generate jwt token
+	jwtToken, err := jwt.GenerateJWT(jwt.Head{Type: jwt.ACCESS},
+		&jwt.UserPayload{UserID: user.ID, DeviceID: device.DeviceID, AppID: device.AppID}, 60*60)
+
+	if err != nil {
+		return nil, err.Wrapper(errors.New("JWT token generate failed"))
+	}
+
+	res["jwt"] = jwtToken
+	res["refresh_token"] = rt.RefreshToken
+
+	tx.Commit()
+	return res, nil
+}
+
+func getWechatAccessToken(code string, cfg *config.WechatLoginConfig) (accessToken string, openID string, pe *perror.PlutoError) {
+
+	defer func() {
+		var err error
+		if r := recover(); r != nil {
+			switch x := r.(type) {
+			case string:
+				err = errors.New(x)
+			case error:
+				err = x
+			default:
+				err = errors.New("Unknown panic")
+			}
+		}
+		pe = perror.ServerError.Wrapper(err)
+	}()
+	// get access token
+	url := fmt.Sprintf("https://api.weixin.qq.com/sns/oauth2/access_token?appid=%s&secret=%s&code=%s&grant_type=authorization_code",
+		cfg.AppID, cfg.Secret, code)
+
+	resp, err := http.Get(url)
+	if err != nil {
+		return "", "", perror.ServerError.Wrapper(err)
+	}
+
+	b, err := ioutil.ReadAll(resp.Body)
+	if err != nil {
+		return "", "", perror.ServerError.Wrapper(err)
+	}
+
+	body := make(map[string]interface{})
+	if err := json.Unmarshal(b, &body); err != nil {
+		return "", "", perror.ServerError.Wrapper(err)
+	}
+
+	if resp.StatusCode == http.StatusOK {
+		if !strings.Contains(body["scope"].(string), "snsapi_userinfo") {
+			return "", "", perror.ServerError.Wrapper(errors.New("Not contain a userinfo scope"))
+		}
+		return body["access_token"].(string), body["openid"].(string), nil
+	}
+
+	if errcode, ok := body["errcode"]; ok {
+		// invalid code
+		if int(errcode.(float64)) == 40029 {
+			return "", "", perror.InvalidWechatCode
+		}
+		return "", "", perror.ServerError.Wrapper(errors.New(body["errmsg"].(string)))
+	}
+
+	return "", "", perror.ServerError.Wrapper(errors.New("Unknow server error"))
+}
+
+type wechatUserInfo struct {
+	OpenID     string `json:"openid"`
+	Nickname   string `json:"nickname"`
+	Sex        string `json:"sex"`
+	Province   string `json:"province"`
+	City       string `json:"city"`
+	Country    string `json:"country"`
+	HeadimgURL string `json:"headimgurl"`
+	Unionid    string `json:"unionid"`
+	ErrCode    int    `json:"errcode"`
+	ErrMSG     string `json:"errmsg"`
+}
+
+func getWebchatUserInfo(accessToken string, openID string) (info *wechatUserInfo, pe *perror.PlutoError) {
+
+	defer func() {
+		var err error
+		if r := recover(); r != nil {
+			switch x := r.(type) {
+			case string:
+				err = errors.New(x)
+			case error:
+				err = x
+			default:
+				err = errors.New("Unknown panic")
+			}
+		}
+		pe = perror.ServerError.Wrapper(err)
+	}()
+	// get access token
+	url := fmt.Sprintf("https://api.weixin.qq.com/sns/userinfo?access_token=%s&openid=%s",
+		accessToken, openID)
+
+	resp, err := http.Get(url)
+	if err != nil {
+		return nil, perror.ServerError.Wrapper(err)
+	}
+
+	b, err := ioutil.ReadAll(resp.Body)
+	if err != nil {
+		return nil, perror.ServerError.Wrapper(err)
+	}
+
+	winfo := wechatUserInfo{}
+
+	if err := json.Unmarshal(b, &winfo); err != nil {
+		return nil, perror.ServerError.Wrapper(err)
+	}
+
+	if resp.StatusCode == http.StatusOK {
+		return &winfo, nil
+	}
+
+	if winfo.ErrMSG != "" {
+		// invalid code
+		if winfo.ErrCode == 40003 {
+			return nil, perror.InvalidWechatCode
+		}
+		return nil, perror.ServerError.Wrapper(errors.New(winfo.ErrMSG))
+	}
+
+	return nil, perror.ServerError.Wrapper(errors.New("Unknow server error"))
 }

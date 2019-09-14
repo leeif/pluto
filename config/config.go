@@ -26,6 +26,7 @@ type Config struct {
 	Mail        *MailConfig        `kiper_config:"name:mail"`
 	Avatar      *AvatarConfig      `kiper_config:"name:avatar"`
 	GoogleLogin *GoogleLoginConfig `kiper_config:"name:google_login"`
+	WechatLogin *WechatLoginConfig `kiper_config:"name:webchat_login"`
 }
 
 func (c *Config) checkConfig() error {
@@ -44,6 +45,7 @@ func NewConfig(args []string, version string) (*Config, error) {
 		Mail:        newMailConfig(),
 		Avatar:      newAvatarConfig(),
 		GoogleLogin: newGoogleLoginConfig(),
+		WechatLogin: newWechatLoginConfig(),
 	}
 	kiper := kiper.NewKiper(filepath.Base(args[0]), "Pluto server")
 	kiper.GetKingpinInstance().Version(version)

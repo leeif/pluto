@@ -32,18 +32,36 @@ func (ml *MailLogin) Validation() bool {
 	return true
 }
 
-type GoogleLogin struct {
+type GoogleMobileLogin struct {
 	IDToken  string `json:"id_token"`
 	DeviceID string `json:"device_id"`
 	AppID    string `json:"app_id"`
 }
 
-func (gl *GoogleLogin) Validation() bool {
-	if gl.IDToken == "" {
+func (gml *GoogleMobileLogin) Validation() bool {
+	if gml.IDToken == "" {
 		return false
 	}
 
-	if gl.DeviceID == "" || gl.AppID == "" {
+	if gml.DeviceID == "" || gml.AppID == "" {
+		return false
+	}
+
+	return true
+}
+
+type WechatMobileLogin struct {
+	Code     string `json:"code"`
+	DeviceID string `json:"device_id"`
+	AppID    string `json:"app_id"`
+}
+
+func (wml *WechatMobileLogin) Validation() bool {
+	if wml.Code == "" {
+		return false
+	}
+
+	if wml.DeviceID == "" || wml.AppID == "" {
 		return false
 	}
 

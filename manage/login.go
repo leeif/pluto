@@ -310,7 +310,7 @@ func getWechatAccessToken(code string, cfg *config.WechatLoginConfig) (accessTok
 	}()
 	// get access token
 	url := fmt.Sprintf("https://api.weixin.qq.com/sns/oauth2/access_token?appid=%s&secret=%s&code=%s&grant_type=authorization_code",
-		cfg.AppID, cfg.Secret, code)
+		*cfg.AppID, *cfg.Secret, code)
 
 	resp, err := http.Get(url)
 	if err != nil {

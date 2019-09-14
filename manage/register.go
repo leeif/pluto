@@ -48,14 +48,17 @@ func (m *Manger) RegisterWithEmail(register request.MailRegister) (uint, *perror
 	a := avatar.NewAvatar(m.config)
 	body, err := a.GetRandomAvatar()
 	if err != nil {
-		return 0, err
+		m.logger.Error(err.LogError.Error())
+		user.Avatar = ""
+	} else {
+		avatarURL, err := a.SaveAvatarImageInOSS(body)
+		if err != nil {
+			m.logger.Error(err.LogError.Error())
+			user.Avatar = body.OriginURL
+		} else {
+			user.Avatar = avatarURL
+		}
 	}
-
-	avatarURL, err := a.SaveAvatarImageInOSS(body)
-	if err != nil {
-		return 0, err
-	}
-	user.Avatar = avatarURL
 
 	if err := create(tx, &user); err != nil {
 		return 0, err

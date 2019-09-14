@@ -26,6 +26,10 @@ func (pl *PlutoLog) Debug(message string) {
 	level.Debug(pl.logger).Log("debug", message)
 }
 
+func (pl *PlutoLog) Warn(message string) {
+	level.Debug(pl.logger).Log("warning", message)
+}
+
 func (pl *PlutoLog) With(keyvals ...interface{}) *PlutoLog {
 	l := log.With(pl.logger, keyvals...)
 	return &PlutoLog{

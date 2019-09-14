@@ -27,31 +27,38 @@ func randToken(len int) string {
 }
 
 type AvatarReader struct {
-	Reader io.ReadCloser
-	Ext    string
+	Reader    io.ReadCloser
+	Ext       string
+	OriginURL string
 }
 
 func (avatar *Avatar) GetRandomAvatar() (*AvatarReader, *perror.PlutoError) {
-	resp, err := http.Get("https://www.gravatar.com/avatar/" + randToken(8) + "?f=y&d=identicon")
+	ar := &AvatarReader{}
+	url := "https://www.gravatar.com/avatar/" + randToken(8) + "?f=y&d=identicon"
+	resp, err := http.Get(url)
 	if err != nil {
 		return nil, perror.ServerError.Wrapper(err)
 	}
+	ar.Reader = resp.Body
+	ar.OriginURL = url
 	contentType := resp.Header.Get("Content-type")
 	if contentType == "image/png" {
-		return &AvatarReader{resp.Body, "png"}, nil
+		ar.Ext = "png"
+		return ar, nil
 	} else if contentType == "image/jpg" {
-		return &AvatarReader{resp.Body, "jpg"}, nil
+		ar.Ext = "jpg"
+		return ar, nil
 	}
 	return nil, perror.ServerError.Wrapper(errors.New("Not image content type"))
 }
 
 func (avatar *Avatar) SaveAvatarImageInOSS(reader *AvatarReader) (string, *perror.PlutoError) {
 
-	if avatar.AccessKeyID == "" &&
-		avatar.AccessKeySecret == "" &&
-		avatar.Bucket == "" &&
+	if avatar.AccessKeyID == "" ||
+		avatar.AccessKeySecret == "" ||
+		avatar.Bucket == "" ||
 		avatar.EndPoint == "" {
-		return "", perror.ServerError.Wrapper(errors.New("aliyun oss config is not enough"))
+		return "", perror.ServerError.Wrapper(errors.New("aliyun config is not enough"))
 	}
 
 	client, err := oss.New(avatar.EndPoint, avatar.AccessKeyID, avatar.AccessKeySecret)

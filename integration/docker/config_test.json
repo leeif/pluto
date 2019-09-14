@@ -19,12 +19,5 @@
   "rsa": {
     "path": "/etc/pluto",
     "name": "ids_rsa_test"
-  },
-  "avatar": {
-    "bucket": "pluto-staging",
-    "endpoint": "oss-cn-hongkong.aliyuncs.com",
-    "accesskeyid": "LTAIq4zL4lBCmemc",
-    "accesskeysecret": "8DU05KzVL2y4pGgwEg9SxOp2xjYLL6",
-    "cdn": ""
   }
 }

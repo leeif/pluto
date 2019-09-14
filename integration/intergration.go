@@ -19,12 +19,12 @@ type testCase struct {
 
 var testCases = []testCase{
 	{
-		Name: "initRSA",
-		Func: initRSA,
-	},
-	{
 		Name: "testHealthCheck",
 		Func: testHealthCheck,
+	},
+	{
+		Name: "initRSA",
+		Func: initRSA,
 	},
 	{
 		Name: "testMailRegisterBadRequest",

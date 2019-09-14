@@ -3,5 +3,6 @@ ids_rsa*
 config.json
 pluto.log
 integration/docker/pluto.log
+integration/docker/ids_rsa*
 .vscode
 env

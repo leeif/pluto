@@ -11,8 +11,9 @@ var (
 	MailIsNotVerified     = NewPlutoError(http.StatusForbidden, 2003, "Mail is not verified", nil)
 	MailAlreadyVerified   = NewPlutoError(http.StatusBadRequest, 2004, "Mail is already verified", nil)
 
-	InvalidPassword     = NewPlutoError(http.StatusForbidden, 3001, "Invalid Password", nil)
-	InvalidRefreshToken = NewPlutoError(http.StatusForbidden, 3002, "Invalid Refresh Token", nil)
-	InvalidJWTToekn     = NewPlutoError(http.StatusForbidden, 3003, "Invalid JWT Token", nil)
-	InvalidIDToken      = NewPlutoError(http.StatusForbidden, 3004, "Invalid ID Token", nil)
+	InvalidPassword      = NewPlutoError(http.StatusForbidden, 3001, "Invalid Password", nil)
+	InvalidRefreshToken  = NewPlutoError(http.StatusForbidden, 3002, "Invalid Refresh Token", nil)
+	InvalidJWTToekn      = NewPlutoError(http.StatusForbidden, 3003, "Invalid JWT Token", nil)
+	InvalidGoogleIDToken = NewPlutoError(http.StatusForbidden, 3004, "Invalid Google ID Token", nil)
+	InvalidWechatCode    = NewPlutoError(http.StatusForbidden, 3005, "Invalid Wechat Code", nil)
 )

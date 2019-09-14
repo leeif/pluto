@@ -3,18 +3,71 @@ package route
 import (
 	"encoding/json"
 	"errors"
+	"fmt"
 	"io/ioutil"
 	"net/http"
 	"os"
 	"path"
 	"strings"
 
+	"github.com/gorilla/mux"
+	"github.com/jinzhu/gorm"
+	"github.com/leeif/pluto/config"
 	"github.com/leeif/pluto/datatype/request"
+	"github.com/leeif/pluto/log"
 
 	"github.com/alecthomas/template"
 	perror "github.com/leeif/pluto/datatype/pluto_error"
 	resp "github.com/leeif/pluto/datatype/response"
 )
+
+type router struct {
+	Name   string
+	Prefix string
+	Func   func(router *mux.Router, db *gorm.DB, config *config.Config, logger *log.PlutoLog)
+}
+
+var routers = []router{
+	{
+		Name:   "register",
+		Prefix: "/api/user",
+		Func:   registerRouter,
+	},
+	{
+		Name:   "login",
+		Prefix: "/api/user",
+		Func:   loginRouter,
+	},
+	{
+		Name:   "user",
+		Prefix: "/api/user",
+		Func:   userRouter,
+	},
+	{
+		Name:   "auth",
+		Prefix: "/api/auth",
+		Func:   authRouter,
+	},
+	{
+		Name:   "web",
+		Prefix: "/",
+		Func:   webRouter,
+	},
+	{
+		Name:   "healthCheck",
+		Prefix: "/",
+		Func:   healthCheckRouter,
+	},
+}
+
+func Router(router *mux.Router, db *gorm.DB, config *config.Config, logger *log.PlutoLog) {
+
+	for _, r := range routers {
+		logger.Info(fmt.Sprintf("Register %s router", r.Name))
+		sub := router.PathPrefix(r.Prefix).Subrouter()
+		r.Func(sub, db, config, logger)
+	}
+}
 
 func getBody(r *http.Request, revicer interface{}) *perror.PlutoError {
 	body, err := ioutil.ReadAll(r.Body)

@@ -32,27 +32,31 @@ type AvatarReader struct {
 	OriginURL string
 }
 
-func (avatar *Avatar) GetRandomAvatar() (*AvatarReader, *perror.PlutoError) {
+func (avatar *Avatar) GetRandomAvatar() (string, *perror.PlutoError) {
 	ar := &AvatarReader{}
-	url := "https://www.gravatar.com/avatar/" + randToken(8) + "?f=y&d=identicon"
-	resp, err := http.Get(url)
+	originURL := fmt.Sprintf("https://www.gravatar.com/avatar/%s?f=y&d=identicon", randToken(8))
+	resp, err := http.Get(originURL)
 	if err != nil {
-		return nil, perror.ServerError.Wrapper(err)
+		return "", perror.ServerError.Wrapper(err)
 	}
 	ar.Reader = resp.Body
-	ar.OriginURL = url
+	ar.OriginURL = originURL
 	contentType := resp.Header.Get("Content-type")
 	if contentType == "image/png" {
 		ar.Ext = "png"
-		return ar, nil
 	} else if contentType == "image/jpg" {
 		ar.Ext = "jpg"
-		return ar, nil
+	} else {
+		return "", perror.ServerError.Wrapper(errors.New("Not support type of avatar " + contentType))
 	}
-	return nil, perror.ServerError.Wrapper(errors.New("Not image content type"))
+	ossURL, perr := avatar.saveAvatarImageInOSS(ar)
+	if perr != nil {
+		return originURL, perr
+	}
+	return ossURL, nil
 }
 
-func (avatar *Avatar) SaveAvatarImageInOSS(reader *AvatarReader) (string, *perror.PlutoError) {
+func (avatar *Avatar) saveAvatarImageInOSS(reader *AvatarReader) (string, *perror.PlutoError) {
 
 	if avatar.AccessKeyID == "" ||
 		avatar.AccessKeySecret == "" ||

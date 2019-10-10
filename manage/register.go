@@ -44,20 +44,16 @@ func (m *Manger) RegisterWithEmail(register request.MailRegister) (uint, *perror
 	user.LoginType = MAILLOGIN
 	user.Password = &encodedPassword
 
+	if m.config.Server.SkipRegisterVerifyMail {
+		user.Verified = true
+	}
+
 	// get a random avatar
 	a := avatar.NewAvatar(m.config)
-	body, err := a.GetRandomAvatar()
+	avatarURL, err := a.GetRandomAvatar()
+	user.Avatar = avatarURL
 	if err != nil {
-		m.logger.Error(err.LogError.Error())
-		user.Avatar = ""
-	} else {
-		avatarURL, err := a.SaveAvatarImageInOSS(body)
-		if err != nil {
-			m.logger.Error(err.LogError.Error())
-			user.Avatar = body.OriginURL
-		} else {
-			user.Avatar = avatarURL
-		}
+		m.logger.Warn(err.LogError)
 	}
 
 	if err := create(tx, &user); err != nil {

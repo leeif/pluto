@@ -3,7 +3,6 @@ package manage
 import (
 	"encoding/json"
 	"errors"
-	"strconv"
 	"time"
 
 	perror "github.com/leeif/pluto/datatype/pluto_error"
@@ -127,6 +126,11 @@ func (m *Manger) ResetPassword(rp request.ResetPassword) *perror.PlutoError {
 		return err
 	}
 
+	// add operation history
+	if err := historyOperation(tx, OperationResetPassword, user.ID); err != nil {
+		return err
+	}
+
 	tx.Commit()
 
 	return nil
@@ -170,25 +174,31 @@ func (m *Manger) RefreshAccessToken(rat request.RefreshAccessToken) (map[string]
 	}()
 
 	rt := models.RefreshToken{}
-	if tx.Where("refresh_token = ?", rat.RefreshToken).First(&rt).RecordNotFound() {
+	if tx.Where("user_id = ? and refresh_token = ?", rat.UseID, rat.RefreshToken).First(&rt).RecordNotFound() {
 		return nil, perror.InvalidRefreshToken
 	}
 
-	if rt.UserID != rat.UseID || rt.DeviceID != rat.DeviceID || rt.AppID != rat.AppID {
+	da := models.DeviceAPP{}
+	da.ID = rt.DeviceAPPID
+	if tx.Where("id = ?", da.ID).First(&da).RecordNotFound() {
 		return nil, perror.InvalidRefreshToken
 	}
 
-	user := models.User{}
-	if tx.Where("id = ?", rt.UserID).First(&user).RecordNotFound() {
-		return nil, perror.ServerError.Wrapper(errors.New("Refresh token is valid but user id is not existed: " + strconv.Itoa(int(rt.UserID))))
+	if rt.UserID != rat.UseID || da.DeviceID != rat.DeviceID || da.AppID != rat.AppID {
+		return nil, perror.InvalidRefreshToken
 	}
 
 	// generate jwt token
 	jwtToken, err := jwt.GenerateJWT(jwt.Head{Type: jwt.ACCESS},
-		&jwt.UserPayload{UserID: user.ID, DeviceID: rat.DeviceID, AppID: rat.AppID}, 60*60)
+		&jwt.UserPayload{UserID: rat.UseID, DeviceID: rat.DeviceID, AppID: rat.AppID}, 60*60)
 
 	if err != nil {
 		return nil, err.Wrapper(errors.New("JWT token generate failed"))
+	}
+
+	// add operation history
+	if err := historyOperation(tx, OperationRefreshToken, rat.UseID); err != nil {
+		return nil, err
 	}
 
 	res["jwt"] = jwtToken

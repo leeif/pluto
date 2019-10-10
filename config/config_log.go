@@ -1,14 +1,15 @@
 package config
 
 import (
+	"errors"
+
 	"github.com/go-kit/kit/log/level"
-	"github.com/pkg/errors"
 )
 
 type LogConfig struct {
 	Level  *AllowedLevel  `kiper_value:"name:level;help:log level = debug, info, warn, error;default:info"`
 	Format *AllowedFormat `kiper_value:"name:format;help:log format = json, logfmt;default:logfmt"`
-	File   *string        `kiper_value:"name:file;help:log file path;default:./pluto.log"`
+	File   *string        `kiper_value:"name:file;help:log file path"`
 }
 
 type AllowedLevel struct {
@@ -31,7 +32,7 @@ func (l *AllowedLevel) Set(s string) error {
 	case "error":
 		l.o = level.AllowError()
 	default:
-		return errors.Errorf("unrecognized log level %q", s)
+		return errors.New("unrecognized log level " + s)
 	}
 	l.s = s
 	return nil
@@ -50,7 +51,7 @@ func (f *AllowedFormat) Set(s string) error {
 	case "logfmt", "json":
 		f.s = s
 	default:
-		return errors.Errorf("unrecognized log format %q", s)
+		return errors.New("unrecognized log format " + s)
 	}
 	return nil
 }

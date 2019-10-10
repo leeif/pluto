@@ -11,7 +11,7 @@ type User struct {
 	Name          *string    `gorm:"type:varchar(60);size:60;not null" json:"name"`
 	Role          string     `gorm:"type:varchar(60);size:60" json:"-"`
 	Gender        *string    `gorm:"type:varchar(10);size:10" json:"gender"`
-	Password      *string    `gorm:"type:varchar(255);not null" json:"-"`
+	Password      *string    `gorm:"type:varchar(255);" json:"-"`
 	Birthday      *time.Time `json:"birthday"`
 	Avatar        string     `gorm:"type:varchar(255)" json:"avatar"`
 	Verified      bool       `json:"-"`

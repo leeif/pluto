@@ -1,9 +1,9 @@
 package config
 
 type MailConfig struct {
-	SMTP     *SMTP   `kiper_value:"name:smtp"`
-	User     *string `kiper_value:"name:user"`
-	Password *string `kiper_value:"name:password"`
+	SMTP             *SMTP   `kiper_value:"name:smtp"`
+	User             *string `kiper_value:"name:user"`
+	Password         *string `kiper_value:"name:password"`
 }
 
 type SMTP struct {

@@ -1,4 +1,7 @@
 {
+  "server": {
+    "skip_register_verify_mail": true
+  },
   "log": {
     "format": "logfmt",
     "level": "debug",
@@ -10,11 +13,6 @@
     "user": "root",
     "password": "root",
     "db": "pluto_server"
-  },
-  "mail": {
-    "smtp": "smtp.ym.163.com:465",
-    "user": "easyjapanese@mushare.cn",
-    "password": "bj6-4tp-fPi-rbX"
   },
   "rsa": {
     "path": "/etc/pluto",

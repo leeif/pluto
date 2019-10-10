@@ -1,4 +1,37 @@
 
+<a name="v0.0.10"></a>
+## [v0.0.10](https://github.com/MuShare/pluto/compare/v0.0.9...v0.0.10)
+
+> 2019-10-11
+
+### Change
+
+* **config:** remove baseURL from server config
+
+### Feature
+
+* **database:** add history table and update kiper
+* **login:** add wechat login
+* **login:** google account login
+* **test:** add integration test
+* **version:** show version using --version
+
+### Fix
+
+* **Dockerfile:** fix config file not being loaded
+* **avatar_test:** bug fix
+* **test:** increase integration test health check timeout
+* **test:** fix config_test
+* **test:** fix config_test
+
+### Update
+
+* **changelog:** update changelog.md
+* **startup:** use DI architecture
+* **version:** Bump up version to 0.0.9
+* **version:** Bump up version to 0.0.8
+
+
 <a name="v0.0.9"></a>
 ## [v0.0.9](https://github.com/MuShare/pluto/compare/v0.0.8...v0.0.9)
 

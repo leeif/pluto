@@ -39,8 +39,6 @@ func TestConfigDefault(t *testing.T) {
 		t.Fatalf("Expect no err, but: %v", err)
 	}
 
-	assert.Equal(t, *c.ConfigFile, "./config.json", "default of config file should be ./config.json")
-
 	assert.Equal(t, "mysql", c.Database.Type.String(), "default of database type should be mysql")
 	assert.Equal(t, "127.0.0.1", *c.Database.Host, "default of database host should be 127.0.0.1")
 	assert.Equal(t, "root", *c.Database.User, "default of database user should be root")
@@ -88,8 +86,6 @@ func TestConfigCustom(t *testing.T) {
 	if err != nil {
 		t.Fatalf("Expect no error, but: %v", err)
 	}
-
-	assert.Equal(t, *c.ConfigFile, "./config_test.json", "config file should be ./config.json")
 
 	assert.Equal(t, c.Server.Port.String(), "8080", "server port should be 8080")
 

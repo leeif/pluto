@@ -5,7 +5,6 @@ import (
 	"fmt"
 	"log"
 	"net/http"
-	"os/exec"
 	"time"
 
 	"github.com/leeif/pluto/config"
@@ -33,10 +32,6 @@ var testCases = []testCase{
 	{
 		Name: "testMailRegisterOK",
 		Func: testMailRegisterOK,
-	},
-	{
-		Name: "testRegisterVerifyOK",
-		Func: testRegisterVerifyOK,
 	},
 	{
 		Name: "testMailLoginOK",
@@ -110,22 +105,7 @@ func initRSA() error {
 }
 
 func main() {
-	log.Println("docker-compose -f docker/docker-compose.yml up -d")
-	cmd := exec.Command("docker-compose", "-f", "docker/docker-compose.yml", "up", "-d")
-	err := cmd.Run()
-	if err != nil {
-		log.Panicf("Error: %v", err)
-	}
-	time.Sleep(time.Duration(5) * time.Second)
-	defer func() {
-		time.Sleep(time.Duration(5) * time.Second)
-		log.Println("docker-compose -f docker/docker-compose.yml down --rmi all")
-		cmd := exec.Command("docker-compose", "-f", "docker/docker-compose.yml", "down", "--rmi", "all")
-		err := cmd.Run()
-		if err != nil {
-			log.Printf("Error: %v", err)
-		}
-	}()
+	// test cases
 	for _, tc := range testCases {
 		log.Printf("====== start %v ======\n", tc.Name)
 		err := tc.Func()

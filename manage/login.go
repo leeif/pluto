@@ -61,26 +61,25 @@ func (m *Manger) EmailLogin(login request.MailLogin) (map[string]string, *perror
 	}
 
 	// insert deviceID and appID into device table
-	device := models.Device{}
+	deviceAPP := models.DeviceAPP{}
 
-	if tx.Where("device_id = ? and app_id = ?", login.DeviceID, login.AppID).First(&device).RecordNotFound() {
-		device.DeviceID = login.DeviceID
-		device.AppID = login.AppID
-		if err := create(tx, &device); err != nil {
-			return nil, err
+	if tx.Where("device_id = ? and app_id = ?", login.DeviceID, login.AppID).First(&deviceAPP).RecordNotFound() {
+		deviceAPP.DeviceID = login.DeviceID
+		deviceAPP.AppID = login.AppID
+		if err := create(tx, &deviceAPP); err != nil {
+			return nil, err.Wrapper(errors.New("table device_apps"))
 		}
 	}
 
 	// refresh token
 	rt := models.RefreshToken{}
-	refreshToken := refresh.GenerateRefreshToken(string(user.ID) + device.DeviceID + device.AppID)
+	refreshToken := refresh.GenerateRefreshToken(string(user.ID) + deviceAPP.DeviceID + deviceAPP.AppID)
 	rt.UserID = user.ID
-	rt.DeviceID = device.DeviceID
-	rt.AppID = device.AppID
-	if tx.Where("device_id = ? and app_id = ? and user_id = ?", device.DeviceID, device.AppID, user.ID).First(&rt).RecordNotFound() {
+	rt.DeviceAPPID = deviceAPP.ID
+	if tx.Where("device_app_id = ? and user_id = ?", deviceAPP.ID, user.ID).First(&rt).RecordNotFound() {
 		rt.RefreshToken = refreshToken
 		if err := create(tx, &rt); err != nil {
-			return nil, err
+			return nil, err.Wrapper(errors.New("table refresh_tokens"))
 		}
 	} else {
 		rt.RefreshToken = refreshToken
@@ -91,10 +90,15 @@ func (m *Manger) EmailLogin(login request.MailLogin) (map[string]string, *perror
 
 	// generate jwt token
 	jwtToken, err := jwt.GenerateJWT(jwt.Head{Type: jwt.ACCESS},
-		&jwt.UserPayload{UserID: user.ID, DeviceID: device.DeviceID, AppID: device.AppID}, 60*60)
+		&jwt.UserPayload{UserID: user.ID, DeviceID: deviceAPP.DeviceID, AppID: deviceAPP.AppID}, 60*60)
 
 	if err != nil {
 		return nil, err.Wrapper(errors.New("JWT token generate failed"))
+	}
+
+	// add operation history
+	if err := historyOperation(tx, OperationMailLogin, user.ID); err != nil {
+		return nil, err
 	}
 
 	res["jwt"] = jwtToken
@@ -130,23 +134,22 @@ func (m *Manger) GoogleLoginMobile(login request.GoogleMobileLogin) (map[string]
 	}
 
 	// insert deviceID and appID into device table
-	device := models.Device{}
+	deviceAPP := models.DeviceAPP{}
 
-	if tx.Where("device_id = ? and app_id = ?", login.DeviceID, login.AppID).First(&device).RecordNotFound() {
-		device.DeviceID = login.DeviceID
-		device.AppID = login.AppID
-		if err := create(tx, &device); err != nil {
+	if tx.Where("device_id = ? and app_id = ?", login.DeviceID, login.AppID).First(&deviceAPP).RecordNotFound() {
+		deviceAPP.DeviceID = login.DeviceID
+		deviceAPP.AppID = login.AppID
+		if err := create(tx, &deviceAPP); err != nil {
 			return nil, err
 		}
 	}
 
 	// refresh token
 	rt := models.RefreshToken{}
-	refreshToken := refresh.GenerateRefreshToken(string(user.ID) + device.DeviceID + device.AppID)
+	refreshToken := refresh.GenerateRefreshToken(string(user.ID) + deviceAPP.DeviceID + deviceAPP.AppID)
 	rt.UserID = user.ID
-	rt.DeviceID = device.DeviceID
-	rt.AppID = device.AppID
-	if tx.Where("device_id = ? and app_id = ? and user_id = ?", device.DeviceID, device.AppID, user.ID).First(&rt).RecordNotFound() {
+	rt.DeviceAPPID = deviceAPP.ID
+	if tx.Where("device_app_id = ? and user_id = ?", deviceAPP.ID, user.ID).First(&rt).RecordNotFound() {
 		rt.RefreshToken = refreshToken
 		if err := create(tx, &rt); err != nil {
 			return nil, err
@@ -160,7 +163,7 @@ func (m *Manger) GoogleLoginMobile(login request.GoogleMobileLogin) (map[string]
 
 	// generate jwt token
 	jwtToken, err := jwt.GenerateJWT(jwt.Head{Type: jwt.ACCESS},
-		&jwt.UserPayload{UserID: user.ID, DeviceID: device.DeviceID, AppID: device.AppID}, 60*60)
+		&jwt.UserPayload{UserID: user.ID, DeviceID: deviceAPP.DeviceID, AppID: deviceAPP.AppID}, 60*60)
 
 	if err != nil {
 		return nil, err.Wrapper(errors.New("JWT token generate failed"))
@@ -168,6 +171,11 @@ func (m *Manger) GoogleLoginMobile(login request.GoogleMobileLogin) (map[string]
 
 	res["jwt"] = jwtToken
 	res["refresh_token"] = rt.RefreshToken
+
+	// add operation history
+	if err := historyOperation(tx, OperationGoogleLogin, user.ID); err != nil {
+		return nil, err
+	}
 
 	tx.Commit()
 	return res, nil
@@ -249,23 +257,22 @@ func (m *Manger) WechatLoginMobile(login request.WechatMobileLogin) (map[string]
 	}
 
 	// insert deviceID and appID into device table
-	device := models.Device{}
+	deviceAPP := models.DeviceAPP{}
 
-	if tx.Where("device_id = ? and app_id = ?", login.DeviceID, login.AppID).First(&device).RecordNotFound() {
-		device.DeviceID = login.DeviceID
-		device.AppID = login.AppID
-		if err := create(tx, &device); err != nil {
+	if tx.Where("device_id = ? and app_id = ?", login.DeviceID, login.AppID).First(&deviceAPP).RecordNotFound() {
+		deviceAPP.DeviceID = login.DeviceID
+		deviceAPP.AppID = login.AppID
+		if err := create(tx, &deviceAPP); err != nil {
 			return nil, err
 		}
 	}
 
 	// refresh token
 	rt := models.RefreshToken{}
-	refreshToken := refresh.GenerateRefreshToken(string(user.ID) + device.DeviceID + device.AppID)
+	refreshToken := refresh.GenerateRefreshToken(string(user.ID) + deviceAPP.DeviceID + deviceAPP.AppID)
 	rt.UserID = user.ID
-	rt.DeviceID = device.DeviceID
-	rt.AppID = device.AppID
-	if tx.Where("device_id = ? and app_id = ? and user_id = ?", device.DeviceID, device.AppID, user.ID).First(&rt).RecordNotFound() {
+	rt.DeviceAPPID = deviceAPP.ID
+	if tx.Where("device_app_id = ? and user_id = ?", deviceAPP.ID, user.ID).First(&rt).RecordNotFound() {
 		rt.RefreshToken = refreshToken
 		if err := create(tx, &rt); err != nil {
 			return nil, err
@@ -279,7 +286,7 @@ func (m *Manger) WechatLoginMobile(login request.WechatMobileLogin) (map[string]
 
 	// generate jwt token
 	jwtToken, err := jwt.GenerateJWT(jwt.Head{Type: jwt.ACCESS},
-		&jwt.UserPayload{UserID: user.ID, DeviceID: device.DeviceID, AppID: device.AppID}, 60*60)
+		&jwt.UserPayload{UserID: user.ID, DeviceID: deviceAPP.DeviceID, AppID: deviceAPP.AppID}, 60*60)
 
 	if err != nil {
 		return nil, err.Wrapper(errors.New("JWT token generate failed"))
@@ -287,6 +294,11 @@ func (m *Manger) WechatLoginMobile(login request.WechatMobileLogin) (map[string]
 
 	res["jwt"] = jwtToken
 	res["refresh_token"] = rt.RefreshToken
+
+	// add operation history
+	if err := historyOperation(tx, OperationWechatLogin, user.ID); err != nil {
+		return nil, err
+	}
 
 	tx.Commit()
 	return res, nil

@@ -14,19 +14,19 @@ type PlutoLog struct {
 	logger log.Logger
 }
 
-func (pl *PlutoLog) Error(message string) {
+func (pl *PlutoLog) Error(message interface{}) {
 	level.Error(pl.logger).Log("error", message)
 }
 
-func (pl *PlutoLog) Info(message string) {
+func (pl *PlutoLog) Info(message interface{}) {
 	level.Info(pl.logger).Log("info", message)
 }
 
-func (pl *PlutoLog) Debug(message string) {
+func (pl *PlutoLog) Debug(message interface{}) {
 	level.Debug(pl.logger).Log("debug", message)
 }
 
-func (pl *PlutoLog) Warn(message string) {
+func (pl *PlutoLog) Warn(message interface{}) {
 	level.Debug(pl.logger).Log("warning", message)
 }
 

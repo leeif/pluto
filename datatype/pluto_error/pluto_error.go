@@ -17,8 +17,9 @@ func (pe *PlutoError) Wrapper(err error) *PlutoError {
 	if err != nil {
 		str += err.Error() + "\n"
 	}
-	pe.LogError = errors.New(str)
-	return pe
+	newPE := PlutoError(*pe)
+	newPE.LogError = errors.New(str)
+	return &newPE
 }
 
 func NewPlutoError(httpCode int, plutoCode int, httpError string, logError error) *PlutoError {

@@ -17,9 +17,10 @@ func Migrate(db *gorm.DB) error {
 	// auto migrate
 	db.AutoMigrate(&models.User{})
 	db.AutoMigrate(&models.Salt{})
-	db.AutoMigrate(&models.Device{})
+	db.AutoMigrate(&models.DeviceAPP{})
 	db.AutoMigrate(&models.RefreshToken{})
-	db.AutoMigrate(&models.Service{})
+	db.AutoMigrate(&models.Applictaion{})
+	db.AutoMigrate(&models.HistoryOperation{})
 
 	if err := createMigrationTable(db); err != nil {
 		return err

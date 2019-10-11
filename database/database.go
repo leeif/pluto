@@ -32,7 +32,7 @@ func generateConnectionSchema(dbcfg *config.DatabaseConfig) string {
 	switch dbcfg.Type.String() {
 	case "mysql":
 		return *dbcfg.User + ":" + *dbcfg.Password + "@tcp(" + *dbcfg.Host + ":" + dbcfg.Port.String() + ")/" + *dbcfg.DB +
-			"?charset=utf8&parseTime=True&loc=Local"
+			"?charset=utf8mb4&parseTime=True&loc=Local"
 	}
 	return ""
 }

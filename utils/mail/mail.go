@@ -109,7 +109,7 @@ func (m *Mail) Send(recv, subj, contentType, body string) error {
 
 func (m *Mail) SendRegisterVerify(userID uint, address string, domain string) *perror.PlutoError {
 	// expire time 10 mins
-	token, err := jwt.GenerateJWT(jwt.Head{Type: jwt.REGISTERVERIFY}, &jwt.RegisterVerifyPayload{UserID: userID}, 10*60)
+	token, err := jwt.GenerateJWT(jwt.Head{Type: jwt.REGISTERVERIFY}, &jwt.RegisterVerifyPayload{UserID: userID}, m.config.JWT.RegisterVerifyTokenExpire)
 	if err != nil {
 		return err.Wrapper(errors.New("JWT token generate failed"))
 	}
@@ -132,7 +132,7 @@ func (m *Mail) SendRegisterVerify(userID uint, address string, domain string) *p
 
 func (m *Mail) SendResetPassword(address string, domain string) *perror.PlutoError {
 	// expire time 10 mins
-	token, err := jwt.GenerateJWT(jwt.Head{Type: jwt.PASSWORDRESET}, &jwt.PasswordResetPayload{Mail: address}, 10*60)
+	token, err := jwt.GenerateJWT(jwt.Head{Type: jwt.PASSWORDRESET}, &jwt.PasswordResetPayload{Mail: address}, m.config.JWT.ResetPasswordTokenExpire)
 	if err != nil {
 		return err.Wrapper(errors.New("JWT token generate failed"))
 	}

@@ -8,7 +8,6 @@ docker build --build-arg VERSION=$version -t pluto-server:latest .
 docker tag pluto-server:latest registry.cn-hongkong.aliyuncs.com/mushare/pluto-server:latest
 docker tag pluto-server:latest registry.cn-hongkong.aliyuncs.com/mushare/pluto-server:${version}
 
-
 docker push registry.cn-hongkong.aliyuncs.com/mushare/pluto-server:latest
 docker push registry.cn-hongkong.aliyuncs.com/mushare/pluto-server:${version}
 

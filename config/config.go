@@ -25,6 +25,7 @@ type Config struct {
 	Avatar      *AvatarConfig      `kiper_config:"name:avatar"`
 	GoogleLogin *GoogleLoginConfig `kiper_config:"name:google_login"`
 	WechatLogin *WechatLoginConfig `kiper_config:"name:webchat_login"`
+	JWT         *JWTConfig         `kiper_config:"name:jwt"`
 }
 
 func NewConfig(args []string, version string) (*Config, error) {
@@ -37,6 +38,7 @@ func NewConfig(args []string, version string) (*Config, error) {
 		Avatar:      newAvatarConfig(),
 		GoogleLogin: newGoogleLoginConfig(),
 		WechatLogin: newWechatLoginConfig(),
+		JWT:         newJWTConfig(),
 	}
 	kiper := kiper.NewKiper(filepath.Base(args[0]), "Pluto server")
 	kiper.Kingpin.Version(version)

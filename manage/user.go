@@ -190,7 +190,7 @@ func (m *Manger) RefreshAccessToken(rat request.RefreshAccessToken) (map[string]
 
 	// generate jwt token
 	jwtToken, err := jwt.GenerateJWT(jwt.Head{Type: jwt.ACCESS},
-		&jwt.UserPayload{UserID: rat.UseID, DeviceID: rat.DeviceID, AppID: rat.AppID}, 60*60)
+		&jwt.UserPayload{UserID: rat.UseID, DeviceID: rat.DeviceID, AppID: rat.AppID}, m.config.JWT.AccessTokenExpire)
 
 	if err != nil {
 		return nil, err.Wrapper(errors.New("JWT token generate failed"))

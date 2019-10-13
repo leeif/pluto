@@ -40,11 +40,11 @@ func TestConfigDefault(t *testing.T) {
 	}
 
 	assert.Equal(t, "mysql", c.Database.Type.String(), "default of database type should be mysql")
-	assert.Equal(t, "127.0.0.1", *c.Database.Host, "default of database host should be 127.0.0.1")
-	assert.Equal(t, "root", *c.Database.User, "default of database user should be root")
+	assert.Equal(t, "127.0.0.1", c.Database.Host, "default of database host should be 127.0.0.1")
+	assert.Equal(t, "root", c.Database.User, "default of database user should be root")
 	assert.Equal(t, "3306", c.Database.Port.String(), "default of database port should be 3306")
-	assert.Equal(t, "", *c.Database.Password, "default of database port should be empty")
-	assert.Equal(t, "", *c.Database.DB, "default of database port should be empty")
+	assert.Equal(t, "", c.Database.Password, "default of database port should be empty")
+	assert.Equal(t, "", c.Database.DB, "default of database port should be empty")
 	assert.Equal(t, "test.smtp.com", c.Mail.SMTP.String(), "default of database port should be empty")
 }
 
@@ -96,11 +96,11 @@ func TestConfigCustom(t *testing.T) {
 	assert.Equal(t, *c.RSA.Path, "/tmp", "server port should be /tmp")
 
 	assert.Equal(t, "mysql", c.Database.Type.String(), "database type should be mysql")
-	assert.Equal(t, "192.168.1.1", *c.Database.Host, "database host should be 127.0.0.1")
-	assert.Equal(t, "www", *c.Database.User, "database user should be root")
+	assert.Equal(t, "192.168.1.1", c.Database.Host, "database host should be 127.0.0.1")
+	assert.Equal(t, "www", c.Database.User, "database user should be root")
 	assert.Equal(t, "3306", c.Database.Port.String(), "database port should be 3306")
-	assert.Equal(t, "www", *c.Database.Password, "database port should be empty")
-	assert.Equal(t, "pluto_server", *c.Database.DB, "database port should be empty")
+	assert.Equal(t, "www", c.Database.Password, "database port should be empty")
+	assert.Equal(t, "pluto_server", c.Database.DB, "database port should be empty")
 
 	assert.Equal(t, "test.smtp.com", c.Mail.SMTP.String(), "database port should be empty")
 }

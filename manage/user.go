@@ -17,7 +17,7 @@ import (
 	"github.com/leeif/pluto/utils/mail"
 )
 
-func (m *Manger) ResetPasswordMail(rpm request.ResetPasswordMail, domain string) *perror.PlutoError {
+func (m *Manger) ResetPasswordMail(rpm request.ResetPasswordMail, baseURL string) *perror.PlutoError {
 
 	user := models.User{}
 	identifyToken := b64.StdEncoding.EncodeToString([]byte(rpm.Mail))
@@ -25,8 +25,12 @@ func (m *Manger) ResetPasswordMail(rpm request.ResetPasswordMail, domain string)
 		return perror.MailIsNotExsit
 	}
 
-	ml := mail.NewMail(m.config)
-	if err := ml.SendResetPassword(*user.Mail, domain); err != nil {
+	ml, err := mail.NewMail(m.config)
+	if err != nil {
+		return err
+	}
+
+	if err := ml.SendResetPassword(*user.Mail, baseURL); err != nil {
 		return err
 	}
 

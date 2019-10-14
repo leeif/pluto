@@ -152,7 +152,19 @@ func generateKey() (*rsa.PrivateKey, *rsa.PublicKey, error) {
 }
 
 // SignWithPrivtaeKey : Sign the src data with private key
-func SignWithPrivateKey(src []byte, hash crypto.Hash) ([]byte, error) {
+func SignWithPrivateKey(src []byte, hash crypto.Hash) (signed []byte, e error) {
+	defer func() {
+		if r := recover(); r != nil {
+			switch x := r.(type) {
+			case string:
+				e = errors.New(x)
+			case error:
+				e = x
+			default:
+				e = errors.New("Unknown panic")
+			}
+		}
+	}()
 	h := hash.New()
 	h.Write(src)
 	hashed := h.Sum(nil)
@@ -165,7 +177,19 @@ func SignWithPrivateKey(src []byte, hash crypto.Hash) ([]byte, error) {
 }
 
 // VerifySignWithPublicKey : verify the signed data with public key
-func VerifySignWithPublicKey(src, signed []byte, hash crypto.Hash) error {
+func VerifySignWithPublicKey(src, signed []byte, hash crypto.Hash) (e error) {
+	defer func() {
+		if r := recover(); r != nil {
+			switch x := r.(type) {
+			case string:
+				e = errors.New(x)
+			case error:
+				e = x
+			default:
+				e = errors.New("Unknown panic")
+			}
+		}
+	}()
 	h := hash.New()
 	h.Write(src)
 	hashed := h.Sum(nil)

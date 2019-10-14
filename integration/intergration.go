@@ -94,7 +94,7 @@ func testHealthCheck() error {
 func initRSA() error {
 	cfg := config.Config{}
 	cfg.RSA = &config.RSAConfig{}
-	name := "ids_rsa_test"
+	name := "id_rsa_test"
 	cfg.RSA.Name = &name
 	path := "./docker"
 	cfg.RSA.Path = &path

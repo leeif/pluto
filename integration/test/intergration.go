@@ -105,7 +105,7 @@ func initRSA() error {
 	rsaDir = path.Join(filepath.Dir(filename), "./docker")
 	fmt.Println(rsaDir)
 	cfg.RSA.Path = &rsaDir
-	if err := rsa.Init(&cfg); err != nil {
+	if err := rsa.Init(&cfg, nil); err != nil {
 		return fmt.Errorf("Expect no error, but %v", err)
 	}
 	return nil

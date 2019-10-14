@@ -38,7 +38,7 @@ func register(router *mux.Router, db *gorm.DB, config *config.Config, logger *pl
 
 	printConfig(config, logger)
 
-	if err := rsa.Init(config); err != nil {
+	if err := rsa.Init(config, logger); err != nil {
 		logger.Error(err.Error())
 		return err
 	}

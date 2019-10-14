@@ -1,10 +1,13 @@
-package main
+package test
 
 import (
 	"errors"
 	"fmt"
 	"log"
 	"net/http"
+	"path"
+	"path/filepath"
+	"runtime"
 	"time"
 
 	"github.com/leeif/pluto/config"
@@ -91,20 +94,24 @@ func testHealthCheck() error {
 	return errors.New("Healthcheck failed")
 }
 
+var rsaDir string
+
 func initRSA() error {
 	cfg := config.Config{}
 	cfg.RSA = &config.RSAConfig{}
 	name := "id_rsa_test"
 	cfg.RSA.Name = &name
-	path := "./docker"
-	cfg.RSA.Path = &path
+	_, filename, _, _ := runtime.Caller(2)
+	rsaDir = path.Join(filepath.Dir(filename), "./docker")
+	fmt.Println(rsaDir)
+	cfg.RSA.Path = &rsaDir
 	if err := rsa.Init(&cfg); err != nil {
 		return fmt.Errorf("Expect no error, but %v", err)
 	}
 	return nil
 }
 
-func main() {
+func Integration() {
 	// test cases
 	for _, tc := range testCases {
 		log.Printf("====== start %v ======\n", tc.Name)

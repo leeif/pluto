@@ -7,6 +7,7 @@ import (
 	"crypto/x509"
 	"encoding/pem"
 	"errors"
+	"fmt"
 	"io/ioutil"
 	"os"
 	"path"
@@ -29,8 +30,11 @@ func Init(config *config.Config) error {
 	_, publicKeyPathErr := os.Stat(publicKeyPath)
 
 	if os.IsNotExist(privateKeyPathErr) && os.IsNotExist(publicKeyPathErr) {
+		fmt.Println("generate " + privateKeyPath)
+		fmt.Println("generate " + publicKeyPath)
 		// generate private and public key
-		privateKey, publicKey, err := generateKey()
+		var err error
+		privateKey, publicKey, err = generateKey()
 		if err != nil {
 			return err
 		}
@@ -46,6 +50,8 @@ func Init(config *config.Config) error {
 	}
 
 	if !os.IsNotExist(privateKeyPathErr) && !os.IsNotExist(publicKeyPathErr) {
+		fmt.Println("load " + privateKeyPath)
+		fmt.Println("load " + publicKeyPath)
 		// load private and public key from file
 		var err error
 		publicKey, err = loadPublicKeyFromFile(publicKeyPath)

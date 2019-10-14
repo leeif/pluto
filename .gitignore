@@ -1,9 +1,9 @@
 vendor/
-ids_rsa*
+id_rsa*
 config.json
 config.yaml
 pluto.log
 integration/docker/pluto.log
-integration/docker/ids_rsa*
+integration/docker/id_rsa*
 .vscode
 env

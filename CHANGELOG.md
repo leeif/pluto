@@ -1,4 +1,23 @@
 
+<a name="v0.0.11"></a>
+## [v0.0.11](https://github.com/MuShare/pluto/compare/v0.0.10...v0.0.11)
+
+> 2019-10-15
+
+### Feature
+
+* **config:** add token config
+
+### Fix
+
+* **mail:** fix only https scheme for base url
+* **rsa:** key not be loaded when new generated
+
+### Update
+
+* **database:** update table index
+
+
 <a name="v0.0.10"></a>
 ## [v0.0.10](https://github.com/MuShare/pluto/compare/v0.0.9...v0.0.10)
 

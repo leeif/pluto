@@ -69,6 +69,14 @@ func Router(router *mux.Router, db *gorm.DB, config *config.Config, logger *log.
 	}
 }
 
+func getBasURL(r *http.Request) string {
+	scheme := "http"
+	if r.TLS != nil {
+		scheme = "https"
+	}
+	return fmt.Sprintf("%s://%s", scheme, r.Host)
+}
+
 func getBody(r *http.Request, revicer interface{}) *perror.PlutoError {
 	body, err := ioutil.ReadAll(r.Body)
 	if err != nil {

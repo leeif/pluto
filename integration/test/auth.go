@@ -1,4 +1,4 @@
-package main
+package test
 
 import (
 	"bytes"
@@ -7,6 +7,7 @@ import (
 	"io/ioutil"
 	"net/http"
 	"os"
+	"path"
 
 	"github.com/leeif/pluto/datatype/request"
 )
@@ -31,7 +32,7 @@ func testGetPublicKey() error {
 		return fmt.Errorf("Expect no error, but %v", err)
 	}
 	publicKey := origin.Body["public_key"]
-	f, err := os.Open("./docker/ids_rsa_test.pub")
+	f, err := os.Open(path.Join(rsaDir, "id_rsa_test.pub"))
 	if err != nil {
 		return fmt.Errorf("Expect no error, but %v", err)
 	}

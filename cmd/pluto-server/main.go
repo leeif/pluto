@@ -2,6 +2,7 @@ package main
 
 import (
 	"context"
+	"fmt"
 	"log"
 	"os"
 	"os/signal"
@@ -26,8 +27,18 @@ import (
 
 var VERSION = ""
 
+func printConfig(config *config.Config, logger *plog.PlutoLog) {
+	logger.Info(fmt.Sprintf("AccessTokenExpire: %d", config.JWT.AccessTokenExpire))
+	logger.Info(fmt.Sprintf("RegisterVerifyTokenExpire: %d", config.JWT.RegisterVerifyTokenExpire))
+	logger.Info(fmt.Sprintf("ResetPasswordResultTokenExpire: %d", config.JWT.ResetPasswordResultTokenExpire))
+	logger.Info(fmt.Sprintf("ResetPasswordTokenExpire: %d", config.JWT.ResetPasswordTokenExpire))
+}
+
 func register(router *mux.Router, db *gorm.DB, config *config.Config, logger *plog.PlutoLog) error {
-	if err := rsa.Init(config); err != nil {
+
+	printConfig(config, logger)
+
+	if err := rsa.Init(config, logger); err != nil {
 		logger.Error(err.Error())
 		return err
 	}

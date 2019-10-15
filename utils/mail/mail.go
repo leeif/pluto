@@ -107,9 +107,9 @@ func (m *Mail) Send(recv, subj, contentType, body string) error {
 	return nil
 }
 
-func (m *Mail) SendRegisterVerify(userID uint, address string, domain string) *perror.PlutoError {
+func (m *Mail) SendRegisterVerify(userID uint, address string, baseURL string) *perror.PlutoError {
 	// expire time 10 mins
-	token, err := jwt.GenerateJWT(jwt.Head{Type: jwt.REGISTERVERIFY}, &jwt.RegisterVerifyPayload{UserID: userID}, 10*60)
+	token, err := jwt.GenerateJWT(jwt.Head{Type: jwt.REGISTERVERIFY}, &jwt.RegisterVerifyPayload{UserID: userID}, m.config.JWT.RegisterVerifyTokenExpire)
 	if err != nil {
 		return err.Wrapper(errors.New("JWT token generate failed"))
 	}
@@ -121,7 +121,6 @@ func (m *Mail) SendRegisterVerify(userID uint, address string, domain string) *p
 		BaseURL string
 		Token   string
 	}
-	baseURL := "https://" + domain
 	t.Execute(&buffer, Data{Token: b64.StdEncoding.EncodeToString([]byte(token)), BaseURL: baseURL})
 	if err := m.Send(address, "[MuShare]Mail Verification", "text/html", buffer.String()); err != nil {
 		return perror.ServerError.Wrapper(errors.New("Mail sending failed: " + err.Error()))
@@ -130,9 +129,9 @@ func (m *Mail) SendRegisterVerify(userID uint, address string, domain string) *p
 	return nil
 }
 
-func (m *Mail) SendResetPassword(address string, domain string) *perror.PlutoError {
+func (m *Mail) SendResetPassword(address string, baseURL string) *perror.PlutoError {
 	// expire time 10 mins
-	token, err := jwt.GenerateJWT(jwt.Head{Type: jwt.PASSWORDRESET}, &jwt.PasswordResetPayload{Mail: address}, 10*60)
+	token, err := jwt.GenerateJWT(jwt.Head{Type: jwt.PASSWORDRESET}, &jwt.PasswordResetPayload{Mail: address}, m.config.JWT.ResetPasswordTokenExpire)
 	if err != nil {
 		return err.Wrapper(errors.New("JWT token generate failed"))
 	}
@@ -144,7 +143,6 @@ func (m *Mail) SendResetPassword(address string, domain string) *perror.PlutoErr
 		BaseURL string
 		Token   string
 	}
-	baseURL := "https://" + domain
 	t.Execute(&buffer, Data{Token: b64.StdEncoding.EncodeToString([]byte(token)), BaseURL: baseURL})
 	if err := m.Send(address, "[MuShare]Password Reset", "text/html", buffer.String()); err != nil {
 		return perror.ServerError.Wrapper(errors.New("Mail sending failed: " + err.Error()))
@@ -152,13 +150,13 @@ func (m *Mail) SendResetPassword(address string, domain string) *perror.PlutoErr
 	return nil
 }
 
-func NewMail(config *config.Config) *Mail {
+func NewMail(config *config.Config) (*Mail, *perror.PlutoError) {
 	c := config.Mail
 	if c.SMTP.String() == "" {
-		return nil
+		return nil, perror.ServerError.Wrapper(errors.New("smtp server is not set"))
 	}
 	mail := &Mail{
 		config: config,
 	}
-	return mail
+	return mail, nil
 }

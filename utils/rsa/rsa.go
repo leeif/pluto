@@ -12,6 +12,7 @@ import (
 	"path"
 
 	"github.com/leeif/pluto/config"
+	plog "github.com/leeif/pluto/log"
 )
 
 var (
@@ -20,7 +21,7 @@ var (
 )
 
 // Init : Init the rsa setting, generate new public private files or load from existing files
-func Init(config *config.Config) error {
+func Init(config *config.Config, logger *plog.PlutoLog) error {
 	privateKeyPath := path.Join(*config.RSA.Path, *config.RSA.Name)
 	publicKeyPath := path.Join(*config.RSA.Path, *config.RSA.Name+".pub")
 
@@ -29,8 +30,13 @@ func Init(config *config.Config) error {
 	_, publicKeyPathErr := os.Stat(publicKeyPath)
 
 	if os.IsNotExist(privateKeyPathErr) && os.IsNotExist(publicKeyPathErr) {
+		if logger != nil {
+			logger.Info("generate " + privateKeyPath)
+			logger.Info("generate " + publicKeyPath)
+		}
 		// generate private and public key
-		privateKey, publicKey, err := generateKey()
+		var err error
+		privateKey, publicKey, err = generateKey()
 		if err != nil {
 			return err
 		}
@@ -46,6 +52,10 @@ func Init(config *config.Config) error {
 	}
 
 	if !os.IsNotExist(privateKeyPathErr) && !os.IsNotExist(publicKeyPathErr) {
+		if logger != nil {
+			logger.Info("load " + privateKeyPath)
+			logger.Info("load " + publicKeyPath)
+		}
 		// load private and public key from file
 		var err error
 		publicKey, err = loadPublicKeyFromFile(publicKeyPath)
@@ -152,7 +162,19 @@ func generateKey() (*rsa.PrivateKey, *rsa.PublicKey, error) {
 }
 
 // SignWithPrivtaeKey : Sign the src data with private key
-func SignWithPrivateKey(src []byte, hash crypto.Hash) ([]byte, error) {
+func SignWithPrivateKey(src []byte, hash crypto.Hash) (signed []byte, e error) {
+	defer func() {
+		if r := recover(); r != nil {
+			switch x := r.(type) {
+			case string:
+				e = errors.New(x)
+			case error:
+				e = x
+			default:
+				e = errors.New("Unknown panic")
+			}
+		}
+	}()
 	h := hash.New()
 	h.Write(src)
 	hashed := h.Sum(nil)
@@ -165,7 +187,19 @@ func SignWithPrivateKey(src []byte, hash crypto.Hash) ([]byte, error) {
 }
 
 // VerifySignWithPublicKey : verify the signed data with public key
-func VerifySignWithPublicKey(src, signed []byte, hash crypto.Hash) error {
+func VerifySignWithPublicKey(src, signed []byte, hash crypto.Hash) (e error) {
+	defer func() {
+		if r := recover(); r != nil {
+			switch x := r.(type) {
+			case string:
+				e = errors.New(x)
+			case error:
+				e = x
+			default:
+				e = errors.New("Unknown panic")
+			}
+		}
+	}()
 	h := hash.New()
 	h.Write(src)
 	hashed := h.Sum(nil)

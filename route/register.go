@@ -41,11 +41,14 @@ func registerRouter(router *mux.Router, db *gorm.DB, config *config.Config, logg
 
 		respBody := make(map[string]interface{})
 		respBody["mail"] = register.Mail
-		ml := mail.NewMail(config)
 		go func() {
 			if config.Server.SkipRegisterVerifyMail {
 				logger.Info("skip sending register mail")
 				return
+			}
+			ml, err := mail.NewMail(config)
+			if err != nil {
+				logger.Error(err.LogError.Error())
 			}
 			if err := ml.SendRegisterVerify(userID, register.Mail, r.Host); err != nil {
 				logger.Error(err.LogError.Error())
@@ -64,7 +67,7 @@ func registerRouter(router *mux.Router, db *gorm.DB, config *config.Config, logg
 			return
 		}
 
-		err := manager.RegisterVerifyMail(db, rvm, r.Host)
+		err := manager.RegisterVerifyMail(db, rvm, getBasURL(r))
 
 		if err != nil {
 			// set err to context for log

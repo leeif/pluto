@@ -71,7 +71,7 @@ func (m *Manger) RegisterWithEmail(register request.MailRegister) (uint, *perror
 	return user.ID, nil
 }
 
-func (m *Manger) RegisterVerifyMail(db *gorm.DB, rvm request.RegisterVerifyMail, domain string) *perror.PlutoError {
+func (m *Manger) RegisterVerifyMail(db *gorm.DB, rvm request.RegisterVerifyMail, baseURL string) *perror.PlutoError {
 	if db == nil {
 		return perror.ServerError.Wrapper(errors.New("DB connection is empty"))
 	}
@@ -86,8 +86,11 @@ func (m *Manger) RegisterVerifyMail(db *gorm.DB, rvm request.RegisterVerifyMail,
 		return perror.MailAlreadyVerified
 	}
 
-	ml := mail.NewMail(m.config)
-	if err := ml.SendRegisterVerify(user.ID, *user.Mail, domain); err != nil {
+	ml, err := mail.NewMail(m.config)
+	if err != nil {
+		return err
+	}
+	if err := ml.SendRegisterVerify(user.ID, *user.Mail, baseURL); err != nil {
 		return err
 	}
 

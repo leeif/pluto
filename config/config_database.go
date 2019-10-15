@@ -4,11 +4,11 @@ import "errors"
 
 type DatabaseConfig struct {
 	Type     *DBType `kiper_value:"name:type;help:database type;default:mysql"`
-	Host     *string `kiper_value:"name:host;help:database host;default:127.0.0.1"`
-	User     *string `kiper_value:"name:user;help:database user;default:root"`
-	Password *string `kiper_value:"name:password;help:database password"`
+	Host     string  `kiper_value:"name:host;help:database host;default:127.0.0.1"`
+	User     string  `kiper_value:"name:user;help:database user;default:root"`
+	Password string  `kiper_value:"name:password;help:database password"`
 	Port     *Port   `kiper_value:"name:port;help:database port;default:3306"`
-	DB       *string `kiper_value:"name:db;help:db name"`
+	DB       string  `kiper_value:"name:db;help:db name"`
 }
 
 type DBType struct {

@@ -4,8 +4,7 @@
   },
   "log": {
     "format": "logfmt",
-    "level": "debug",
-    "file": "/etc/pluto/pluto.log"
+    "level": "debug"
   },
   "database": {
     "host": "pluto-it-db",
@@ -16,6 +15,6 @@
   },
   "rsa": {
     "path": "/etc/pluto",
-    "name": "ids_rsa_test"
+    "name": "id_rsa_test"
   }
 }

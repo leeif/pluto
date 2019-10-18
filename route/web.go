@@ -64,7 +64,7 @@ func webRouter(router *mux.Router, db *gorm.DB, config *config.Config, logger *l
 		vars := mux.Vars(r)
 		token := vars["token"]
 
-		header, payload, err := jwt.VerifyB64JWT(token)
+		jwtToken, err := jwt.VerifyB64JWT(token)
 		// token verify failed
 		if err != nil {
 			context.Set(r, "pluto_error", err)
@@ -74,7 +74,7 @@ func webRouter(router *mux.Router, db *gorm.DB, config *config.Config, logger *l
 		}
 
 		head := jwt.Head{}
-		json.Unmarshal(header, &head)
+		json.Unmarshal(jwtToken.Head, &head)
 		if head.Type != jwt.PASSWORDRESETRESULT {
 			context.Set(r, "pluto_error", perror.InvalidJWTToekn)
 			next(w, r)
@@ -83,7 +83,7 @@ func webRouter(router *mux.Router, db *gorm.DB, config *config.Config, logger *l
 		}
 
 		prp := jwt.PasswordResetResultPayload{}
-		json.Unmarshal(payload, &prp)
+		json.Unmarshal(jwtToken.Payload, &prp)
 
 		type Data struct {
 			Message string

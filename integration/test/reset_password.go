@@ -2,7 +2,6 @@ package test
 
 import (
 	"bytes"
-	"encoding/base64"
 	"encoding/json"
 	"fmt"
 	"net/http"
@@ -22,7 +21,7 @@ func testResetPassword() error {
 
 	url := "http://localhost:8010/api/user/password/reset"
 	payload := request.ResetPassword{
-		Token:    base64.StdEncoding.EncodeToString([]byte(token)),
+		Token:    token.B64String(),
 		Password: "test_new",
 	}
 	b, err := json.Marshal(payload)

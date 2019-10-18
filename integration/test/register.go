@@ -127,7 +127,7 @@ func testRegisterVerifyOK() error {
 		return fmt.Errorf("Expect no error, but %v", perror.LogError)
 	}
 
-	url := "http://localhost:8010/mail/verify/" + base64.StdEncoding.EncodeToString([]byte(token))
+	url := "http://localhost:8010/mail/verify/" + token.B64String()
 	resp, err := http.Get(url)
 
 	if err != nil {

@@ -39,20 +39,20 @@ func (m *Manger) ResetPasswordMail(rpm request.ResetPasswordMail, baseURL string
 
 func (m *Manger) ResetPasswordPage(token string) *perror.PlutoError {
 
-	header, payload, err := jwt.VerifyB64JWT(token)
+	jwtToken, err := jwt.VerifyB64JWT(token)
 	// token verify failed
 	if err != nil {
 		return err
 	}
 
 	head := jwt.Head{}
-	json.Unmarshal(header, &head)
+	json.Unmarshal(jwtToken.Head, &head)
 	if head.Type != jwt.PASSWORDRESET {
 		return perror.InvalidJWTToekn
 	}
 
 	prp := jwt.PasswordResetPayload{}
-	json.Unmarshal(payload, &prp)
+	json.Unmarshal(jwtToken.Payload, &prp)
 
 	if time.Now().Unix() > prp.Expire {
 		return perror.InvalidJWTToekn
@@ -74,20 +74,20 @@ func (m *Manger) ResetPasswordPage(token string) *perror.PlutoError {
 
 func (m *Manger) ResetPassword(rp request.ResetPassword) *perror.PlutoError {
 
-	header, payload, perr := jwt.VerifyB64JWT(rp.Token)
+	jwtToken, perr := jwt.VerifyB64JWT(rp.Token)
 	if perr != nil {
 		return perr
 	}
 
 	head := jwt.Head{}
-	json.Unmarshal(header, &head)
+	json.Unmarshal(jwtToken.Head, &head)
 
 	if head.Type != jwt.PASSWORDRESET {
 		return perror.InvalidJWTToekn
 	}
 
 	prp := jwt.PasswordResetPayload{}
-	json.Unmarshal(payload, &prp)
+	json.Unmarshal(jwtToken.Payload, &prp)
 
 	if time.Now().Unix() > prp.Expire {
 		return perror.InvalidJWTToekn
@@ -141,20 +141,20 @@ func (m *Manger) ResetPassword(rp request.ResetPassword) *perror.PlutoError {
 }
 
 func (m *Manger) UserInfo(token string) (*models.User, *perror.PlutoError) {
-	header, payload, err := jwt.VerifyB64JWT(token)
+	jwtToken, err := jwt.VerifyB64JWT(token)
 	if err != nil {
 		return nil, err
 	}
 
 	head := jwt.Head{}
-	json.Unmarshal(header, &head)
+	json.Unmarshal(jwtToken.Head, &head)
 
 	if head.Type != jwt.ACCESS {
 		return nil, perror.InvalidJWTToekn
 	}
 
 	userPayload := jwt.UserPayload{}
-	json.Unmarshal(payload, &userPayload)
+	json.Unmarshal(jwtToken.Payload, &userPayload)
 
 	if time.Now().Unix() > userPayload.Expire {
 		return nil, perror.InvalidJWTToekn
@@ -193,7 +193,7 @@ func (m *Manger) RefreshAccessToken(rat request.RefreshAccessToken) (map[string]
 	}
 
 	// generate jwt token
-	jwtToken, err := jwt.GenerateJWT(jwt.Head{Type: jwt.ACCESS},
+	token, err := jwt.GenerateJWT(jwt.Head{Type: jwt.ACCESS},
 		&jwt.UserPayload{UserID: rat.UseID, DeviceID: rat.DeviceID, AppID: rat.AppID}, m.config.JWT.AccessTokenExpire)
 
 	if err != nil {
@@ -205,7 +205,7 @@ func (m *Manger) RefreshAccessToken(rat request.RefreshAccessToken) (map[string]
 		return nil, err
 	}
 
-	res["jwt"] = jwtToken
+	res["jwt"] = token.String()
 
 	tx.Commit()
 	return res, nil

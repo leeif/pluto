@@ -11,8 +11,6 @@ import (
 	"os"
 	"path"
 
-	b64 "encoding/base64"
-
 	"github.com/alecthomas/template"
 	"github.com/leeif/pluto/config"
 	"github.com/leeif/pluto/utils/jwt"
@@ -121,7 +119,7 @@ func (m *Mail) SendRegisterVerify(userID uint, address string, baseURL string) *
 		BaseURL string
 		Token   string
 	}
-	t.Execute(&buffer, Data{Token: b64.StdEncoding.EncodeToString([]byte(token)), BaseURL: baseURL})
+	t.Execute(&buffer, Data{Token: token.B64String(), BaseURL: baseURL})
 	if err := m.Send(address, "[MuShare]Mail Verification", "text/html", buffer.String()); err != nil {
 		return perror.ServerError.Wrapper(errors.New("Mail sending failed: " + err.Error()))
 	}
@@ -143,7 +141,7 @@ func (m *Mail) SendResetPassword(address string, baseURL string) *perror.PlutoEr
 		BaseURL string
 		Token   string
 	}
-	t.Execute(&buffer, Data{Token: b64.StdEncoding.EncodeToString([]byte(token)), BaseURL: baseURL})
+	t.Execute(&buffer, Data{Token: token.B64String(), BaseURL: baseURL})
 	if err := m.Send(address, "[MuShare]Password Reset", "text/html", buffer.String()); err != nil {
 		return perror.ServerError.Wrapper(errors.New("Mail sending failed: " + err.Error()))
 	}

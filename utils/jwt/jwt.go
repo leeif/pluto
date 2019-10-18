@@ -153,17 +153,23 @@ func VerifyB64JWT(b64JWTToken string) (*JWT, *perror.PlutoError) {
 		return nil, perror.InvalidJWTToekn
 	}
 
+	jwt.Head = head
+
 	payload, err := b64.StdEncoding.DecodeString(parts[1])
 	if err != nil {
 		return nil, perror.InvalidJWTToekn
 	}
 
-	signed, err := b64.StdEncoding.DecodeString(parts[2])
+	jwt.Payload = payload
+
+	sign, err := b64.StdEncoding.DecodeString(parts[2])
 	if err != nil {
 		return nil, perror.InvalidJWTToekn
 	}
 
-	if err := rsa.VerifySignWithPublicKey(append(head, payload...), signed, crypto.SHA256); err != nil {
+	jwt.Sign = sign
+
+	if err := rsa.VerifySignWithPublicKey(append(head, payload...), sign, crypto.SHA256); err != nil {
 		return nil, perror.InvalidJWTToekn
 	}
 	return jwt, nil

@@ -1,7 +1,6 @@
 package test
 
 import (
-	"encoding/base64"
 	"fmt"
 	"net/http"
 
@@ -31,7 +30,7 @@ func testPasswordResetResultOK() error {
 		return fmt.Errorf("Expect no error, but %v", perror.LogError)
 	}
 
-	url := "http://localhost:8010/password/reset/result/" + base64.StdEncoding.EncodeToString([]byte(token))
+	url := "http://localhost:8010/password/reset/result/" + token.B64String()
 	fmt.Println(url)
 	resp, err := http.Get(url)
 
@@ -73,7 +72,7 @@ func testPasswordResetOK() error {
 		return fmt.Errorf("Expect no error, but %v", perror.LogError)
 	}
 
-	url := "http://localhost:8010/password/reset/" + base64.StdEncoding.EncodeToString([]byte(token))
+	url := "http://localhost:8010/password/reset/" + token.B64String()
 	fmt.Println(url)
 	resp, err := http.Get(url)
 

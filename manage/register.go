@@ -99,13 +99,13 @@ func (m *Manger) RegisterVerifyMail(db *gorm.DB, rvm request.RegisterVerifyMail,
 
 func (m *Manger) RegisterVerify(token string) *perror.PlutoError {
 
-	header, payload, perr := jwt.VerifyB64JWT(token)
+	jwtToken, perr := jwt.VerifyB64JWT(token)
 	if perr != nil {
 		return perr
 	}
 
 	head := jwt.Head{}
-	if err := json.Unmarshal(header, &head); err != nil {
+	if err := json.Unmarshal(jwtToken.Head, &head); err != nil {
 		return perror.ServerError.Wrapper(errors.New("parse password reset payload failed")).Wrapper(err)
 	}
 
@@ -114,7 +114,7 @@ func (m *Manger) RegisterVerify(token string) *perror.PlutoError {
 	}
 
 	verifyPayload := jwt.RegisterVerifyPayload{}
-	if err := json.Unmarshal(payload, &verifyPayload); err != nil {
+	if err := json.Unmarshal(jwtToken.Payload, &verifyPayload); err != nil {
 		return perror.ServerError.Wrapper(errors.New("parse user payload failed")).Wrapper(err)
 	}
 

@@ -8,8 +8,6 @@ import (
 	"github.com/leeif/pluto/config"
 	"github.com/leeif/pluto/middleware"
 
-	b64 "encoding/base64"
-
 	perror "github.com/leeif/pluto/datatype/pluto_error"
 	"github.com/leeif/pluto/datatype/request"
 	"github.com/leeif/pluto/log"
@@ -69,7 +67,7 @@ func userRouter(router *mux.Router, db *gorm.DB, config *config.Config, logger *
 			return
 		}
 		res := make(map[string]string)
-		res["redirect"] = "/password/reset/result/" + b64.StdEncoding.EncodeToString([]byte(token))
+		res["redirect"] = "/password/reset/result/" + token.B64String()
 
 		responseOK(res, w)
 	})).Methods("POST")

@@ -2,8 +2,9 @@ package config
 
 type ServerConfig struct {
 	// skip sending verify mail when mail register
-	SkipRegisterVerifyMail bool  `kiper_value:"name:skip_register_verify_mail;default:false"`
-	Port                   *Port `kiper_value:"name:port;help:server listen port;default:8010"`
+	SkipRegisterVerifyMail bool `kiper_value:"name:skip_register_verify_mail;default:false"`
+
+	Port *Port `kiper_value:"name:port;help:server listen port;default:8010"`
 }
 
 type Port struct {

@@ -305,7 +305,6 @@ func (m *Manger) WechatLoginMobile(login request.WechatMobileLogin) (map[string]
 }
 
 func getWechatAccessToken(code string, cfg *config.WechatLoginConfig) (accessToken string, openID string, pe *perror.PlutoError) {
-
 	defer func() {
 		var err error
 		if r := recover(); r != nil {

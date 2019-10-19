@@ -6,8 +6,6 @@ import (
 	"fmt"
 	"io/ioutil"
 	"net/http"
-	"os"
-	"path"
 	"strings"
 
 	"github.com/gorilla/mux"
@@ -15,8 +13,8 @@ import (
 	"github.com/leeif/pluto/config"
 	"github.com/leeif/pluto/datatype/request"
 	"github.com/leeif/pluto/log"
+	"github.com/leeif/pluto/utils/view"
 
-	"github.com/alecthomas/template"
 	perror "github.com/leeif/pluto/datatype/pluto_error"
 	resp "github.com/leeif/pluto/datatype/response"
 )
@@ -69,7 +67,7 @@ func Router(router *mux.Router, db *gorm.DB, config *config.Config, logger *log.
 	}
 }
 
-func getBasURL(r *http.Request) string {
+func getBaseURL(r *http.Request) string {
 	scheme := "http"
 	if r.TLS != nil {
 		scheme = "https"
@@ -139,8 +137,7 @@ func responseError(plutoError *perror.PlutoError, w http.ResponseWriter) error {
 func responseHTMLOK(file string, data interface{}, w http.ResponseWriter) error {
 	w.Header().Set("Content-type", "text/html")
 	w.WriteHeader(http.StatusOK)
-	dir, _ := os.Getwd()
-	t, err := template.ParseFiles(path.Join(dir, "views", file), path.Join(dir, "views/template", "header.html"))
+	t, err := view.Parse(file)
 	if err != nil {
 		return err
 	}
@@ -154,8 +151,10 @@ func responseHTMLOK(file string, data interface{}, w http.ResponseWriter) error 
 func responseHTMLError(file string, data interface{}, w http.ResponseWriter, status int) error {
 	w.Header().Set("Content-type", "text/html")
 	w.WriteHeader(status)
-	dir, _ := os.Getwd()
-	t, err := template.ParseFiles(path.Join(dir, "views", file), path.Join(dir, "views/template", "header.html"))
+	t, err := view.Parse(file)
+	if err != nil {
+		return err
+	}
 	if err != nil {
 		return err
 	}

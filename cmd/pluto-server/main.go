@@ -23,6 +23,7 @@ import (
 	"github.com/leeif/pluto/utils/migrate"
 
 	"github.com/leeif/pluto/utils/rsa"
+	"github.com/leeif/pluto/utils/view"
 )
 
 var VERSION = ""
@@ -42,6 +43,12 @@ func register(router *mux.Router, db *gorm.DB, config *config.Config, logger *pl
 		logger.Error(err.Error())
 		return err
 	}
+
+	if err := view.Init(config, logger); err != nil {
+		logger.Error(err.Error())
+		return err
+	}
+
 	// DB Migration
 	if err := migrate.Migrate(db); err != nil {
 		logger.Error(err.Error())

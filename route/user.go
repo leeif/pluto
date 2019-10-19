@@ -32,7 +32,7 @@ func userRouter(router *mux.Router, db *gorm.DB, config *config.Config, logger *
 			return
 		}
 
-		if err := manager.ResetPasswordMail(rpm, getBasURL(r)); err != nil {
+		if err := manager.ResetPasswordMail(rpm, getBaseURL(r)); err != nil {
 			context.Set(r, "pluto_error", err)
 			responseError(err, w)
 			next(w, r)

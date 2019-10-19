@@ -8,10 +8,9 @@ import (
 	"net"
 	"net/mail"
 	"net/smtp"
-	"os"
-	"path"
 
-	"github.com/alecthomas/template"
+	"github.com/leeif/pluto/utils/view"
+
 	"github.com/leeif/pluto/config"
 	"github.com/leeif/pluto/utils/jwt"
 
@@ -107,13 +106,15 @@ func (m *Mail) Send(recv, subj, contentType, body string) error {
 
 func (m *Mail) SendRegisterVerify(userID uint, address string, baseURL string) *perror.PlutoError {
 	// expire time 10 mins
-	token, err := jwt.GenerateJWT(jwt.Head{Type: jwt.REGISTERVERIFY}, &jwt.RegisterVerifyPayload{UserID: userID}, m.config.JWT.RegisterVerifyTokenExpire)
-	if err != nil {
-		return err.Wrapper(errors.New("JWT token generate failed"))
+	token, perr := jwt.GenerateJWT(jwt.Head{Type: jwt.REGISTERVERIFY}, &jwt.RegisterVerifyPayload{UserID: userID}, m.config.JWT.RegisterVerifyTokenExpire)
+	if perr != nil {
+		return perr.Wrapper(errors.New("JWT token generate failed"))
 	}
 
-	dir, _ := os.Getwd()
-	t := template.Must(template.ParseFiles(path.Join(dir, "views", "register_verify_mail.html")))
+	t, err := view.Parse("register_verify_mail.html")
+	if err != nil {
+		return perror.ServerError.Wrapper(err)
+	}
 	var buffer bytes.Buffer
 	type Data struct {
 		BaseURL string
@@ -129,13 +130,16 @@ func (m *Mail) SendRegisterVerify(userID uint, address string, baseURL string) *
 
 func (m *Mail) SendResetPassword(address string, baseURL string) *perror.PlutoError {
 	// expire time 10 mins
-	token, err := jwt.GenerateJWT(jwt.Head{Type: jwt.PASSWORDRESET}, &jwt.PasswordResetPayload{Mail: address}, m.config.JWT.ResetPasswordTokenExpire)
-	if err != nil {
-		return err.Wrapper(errors.New("JWT token generate failed"))
+	token, perr := jwt.GenerateJWT(jwt.Head{Type: jwt.PASSWORDRESET}, &jwt.PasswordResetPayload{Mail: address}, m.config.JWT.ResetPasswordTokenExpire)
+	if perr != nil {
+		return perr.Wrapper(errors.New("JWT token generate failed"))
 	}
 
-	dir, _ := os.Getwd()
-	t := template.Must(template.ParseFiles(path.Join(dir, "views", "password_reset_mail.html")))
+	t, err := view.Parse("password_reset_mail.html")
+	if err != nil {
+		return perror.ServerError.Wrapper(err)
+	}
+
 	var buffer bytes.Buffer
 	type Data struct {
 		BaseURL string

@@ -1,4 +1,14 @@
 
+<a name="v0.0.12"></a>
+## [v0.0.12](https://github.com/MuShare/pluto/compare/v0.0.11...v0.0.12)
+
+> 2019-10-19
+
+### Change
+
+* **jwt:** reconstruct jwt generation and parse
+
+
 <a name="v0.0.11"></a>
 ## [v0.0.11](https://github.com/MuShare/pluto/compare/v0.0.10...v0.0.11)
 

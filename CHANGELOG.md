@@ -1,4 +1,18 @@
 
+<a name="v0.0.13"></a>
+## [v0.0.13](https://github.com/MuShare/pluto/compare/v0.0.12...v0.0.13)
+
+> 2019-10-20
+
+### Change
+
+* **view:** change data send into password_reset_result.html
+
+### Feature
+
+* **view:** enable view path from configuration
+
+
 <a name="v0.0.12"></a>
 ## [v0.0.12](https://github.com/MuShare/pluto/compare/v0.0.11...v0.0.12)
 

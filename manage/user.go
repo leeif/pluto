@@ -45,14 +45,12 @@ func (m *Manger) ResetPasswordPage(token string) *perror.PlutoError {
 		return err
 	}
 
-	head := jwt.Head{}
-	json.Unmarshal(jwtToken.Head, &head)
-	if head.Type != jwt.PASSWORDRESET {
-		return perror.InvalidJWTToekn
-	}
-
 	prp := jwt.PasswordResetPayload{}
 	json.Unmarshal(jwtToken.Payload, &prp)
+
+	if prp.Type != jwt.PASSWORDRESET {
+		return perror.InvalidJWTToekn
+	}
 
 	if time.Now().Unix() > prp.Expire {
 		return perror.InvalidJWTToekn
@@ -79,15 +77,12 @@ func (m *Manger) ResetPassword(rp request.ResetPassword) *perror.PlutoError {
 		return perr
 	}
 
-	head := jwt.Head{}
-	json.Unmarshal(jwtToken.Head, &head)
-
-	if head.Type != jwt.PASSWORDRESET {
-		return perror.InvalidJWTToekn
-	}
-
 	prp := jwt.PasswordResetPayload{}
 	json.Unmarshal(jwtToken.Payload, &prp)
+
+	if prp.Type != jwt.PASSWORDRESET {
+		return perror.InvalidJWTToekn
+	}
 
 	if time.Now().Unix() > prp.Expire {
 		return perror.InvalidJWTToekn
@@ -146,15 +141,12 @@ func (m *Manger) UserInfo(token string) (*models.User, *perror.PlutoError) {
 		return nil, err
 	}
 
-	head := jwt.Head{}
-	json.Unmarshal(jwtToken.Head, &head)
-
-	if head.Type != jwt.ACCESS {
-		return nil, perror.InvalidJWTToekn
-	}
-
 	userPayload := jwt.UserPayload{}
 	json.Unmarshal(jwtToken.Payload, &userPayload)
+
+	if userPayload.Type != jwt.ACCESS {
+		return nil, perror.InvalidJWTToekn
+	}
 
 	if time.Now().Unix() > userPayload.Expire {
 		return nil, perror.InvalidJWTToekn
@@ -193,8 +185,8 @@ func (m *Manger) RefreshAccessToken(rat request.RefreshAccessToken) (map[string]
 	}
 
 	// generate jwt token
-	token, err := jwt.GenerateJWT(jwt.Head{Type: jwt.ACCESS},
-		&jwt.UserPayload{UserID: rat.UseID, DeviceID: rat.DeviceID, AppID: rat.AppID}, m.config.JWT.AccessTokenExpire)
+	up := jwt.NewUserPayload(rat.UseID, rat.DeviceID, rat.AppID, m.config.JWT.AccessTokenExpire)
+	token, err := jwt.GenerateRSAJWT(up)
 
 	if err != nil {
 		return nil, err.Wrapper(errors.New("JWT token generate failed"))

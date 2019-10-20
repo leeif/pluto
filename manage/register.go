@@ -104,18 +104,13 @@ func (m *Manger) RegisterVerify(token string) *perror.PlutoError {
 		return perr
 	}
 
-	head := jwt.Head{}
-	if err := json.Unmarshal(jwtToken.Head, &head); err != nil {
-		return perror.ServerError.Wrapper(errors.New("parse password reset payload failed")).Wrapper(err)
-	}
-
-	if head.Type != jwt.REGISTERVERIFY {
-		return perror.InvalidJWTToekn
-	}
-
 	verifyPayload := jwt.RegisterVerifyPayload{}
 	if err := json.Unmarshal(jwtToken.Payload, &verifyPayload); err != nil {
 		return perror.ServerError.Wrapper(errors.New("parse user payload failed")).Wrapper(err)
+	}
+
+	if verifyPayload.Type != jwt.REGISTERVERIFY {
+		return perror.InvalidJWTToekn
 	}
 
 	// expire

@@ -4,9 +4,7 @@ import (
 	"crypto"
 	b64 "encoding/base64"
 	"encoding/json"
-	"errors"
 	"fmt"
-	"reflect"
 	"strings"
 	"time"
 
@@ -50,8 +48,9 @@ type Head struct {
 }
 
 type Payload struct {
-	Create int64 `json:"create_time"`
-	Expire int64 `json:"expire_time"`
+	Type   string `json:"type"`
+	Create int64  `json:"create_time"`
+	Expire int64  `json:"expire_time"`
 }
 
 type UserPayload struct {
@@ -61,9 +60,31 @@ type UserPayload struct {
 	AppID    string `json:"appId"`
 }
 
+func NewUserPayload(userID uint, deviceID, appID string, expire int64) *UserPayload {
+	up := &UserPayload{}
+	up.UserID = userID
+	up.DeviceID = deviceID
+	up.AppID = appID
+
+	up.Payload.Type = ACCESS
+	up.Payload.Create = time.Now().Unix()
+	up.Payload.Expire = time.Now().Unix() + expire
+	return up
+}
+
 type RegisterVerifyPayload struct {
 	Payload
 	UserID uint `json:"userId"`
+}
+
+func NewRegisterVerifyPayload(userID uint, expire int64) *RegisterVerifyPayload {
+	rvp := &RegisterVerifyPayload{}
+	rvp.UserID = userID
+
+	rvp.Payload.Type = REGISTERVERIFY
+	rvp.Payload.Create = time.Now().Unix()
+	rvp.Payload.Expire = time.Now().Unix() + expire
+	return rvp
 }
 
 type PasswordResetPayload struct {
@@ -71,48 +92,36 @@ type PasswordResetPayload struct {
 	Mail string `json:"mail"`
 }
 
+func NewPasswordResetPayload(mail string, expire int64) *PasswordResetPayload {
+	rrp := &PasswordResetPayload{}
+	rrp.Mail = mail
+
+	rrp.Payload.Type = PASSWORDRESET
+	rrp.Payload.Create = time.Now().Unix()
+	rrp.Payload.Expire = time.Now().Unix() + expire
+	return rrp
+}
+
 type PasswordResetResultPayload struct {
 	Payload
 	Successed bool `json:"successed"`
 }
 
-func setTimeField(payload interface{}, expire int64) (err error) {
-	defer func() {
-		if r := recover(); r != nil {
-			switch x := r.(type) {
-			case string:
-				err = errors.New(x)
-			case error:
-				err = x
-			default:
-				err = errors.New("Unknown panic")
-			}
-		}
-	}()
-	v := reflect.ValueOf(payload)
-	t := reflect.TypeOf(payload)
-	if t.Kind() == reflect.Ptr {
-		v = v.Elem()
-		t = t.Elem()
-	} else {
-		return errors.New("Not pointer type")
-	}
-	create := v.FieldByName("Create")
-	if !create.IsValid() {
-		return errors.New("Create field is not valid")
-	}
-	create.SetInt(time.Now().Unix())
-	exp := v.FieldByName("Expire")
-	if !exp.IsValid() {
-		return errors.New("Expire field is not valid")
-	}
-	exp.SetInt(time.Now().Unix() + expire)
-	return nil
+func NewPasswordResetResultPayload(successed bool, expire int64) *PasswordResetResultPayload {
+	rrrp := &PasswordResetResultPayload{}
+	rrrp.Successed = successed
+
+	rrrp.Payload.Type = PASSWORDRESETRESULT
+	rrrp.Payload.Create = time.Now().Unix()
+	rrrp.Payload.Expire = time.Now().Unix() + expire
+	return rrrp
 }
 
-func GenerateJWT(head Head, payload interface{}, expire int64) (*JWT, *perror.PlutoError) {
+func GenerateRSAJWT(payload interface{}) (*JWT, *perror.PlutoError) {
 	jwt := &JWT{}
+	head := Head{}
 	head.Alg = ALGRAS
+	head.Type = "jwt"
 	h, err := json.Marshal(head)
 	if err != nil {
 		return nil, perror.ServerError.Wrapper(err)
@@ -120,9 +129,6 @@ func GenerateJWT(head Head, payload interface{}, expire int64) (*JWT, *perror.Pl
 
 	jwt.Head = h
 
-	if err := setTimeField(payload, expire); err != nil {
-		return nil, perror.ServerError.Wrapper(err)
-	}
 	p, err := json.Marshal(payload)
 	if err != nil {
 		return nil, perror.ServerError.Wrapper(err)

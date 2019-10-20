@@ -12,8 +12,8 @@ import (
 )
 
 func testResetPassword() error {
-	token, perror := jwt.GenerateJWT(jwt.Head{Type: jwt.PASSWORDRESET, Alg: jwt.ALGRAS},
-		&jwt.PasswordResetPayload{Mail: "test@gmail.com"}, 60*60)
+	prp := jwt.NewPasswordResetPayload("test@gmail.com", 60*60)
+	token, perror := jwt.GenerateRSAJWT(prp)
 
 	if perror != nil {
 		return fmt.Errorf("Expect no error, but %v", perror.LogError)

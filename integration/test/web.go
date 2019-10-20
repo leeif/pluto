@@ -24,7 +24,7 @@ func testPasswordResetResultFail() error {
 
 func testPasswordResetResultOK() error {
 	token, perror := jwt.GenerateJWT(jwt.Head{Type: jwt.PASSWORDRESETRESULT, Alg: jwt.ALGRAS},
-		&jwt.PasswordResetResultPayload{Message: "Success"}, 10*60)
+		&jwt.PasswordResetResultPayload{Successed: true}, 10*60)
 
 	if perror != nil {
 		return fmt.Errorf("Expect no error, but %v", perror.LogError)

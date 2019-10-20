@@ -50,7 +50,7 @@ func registerRouter(router *mux.Router, db *gorm.DB, config *config.Config, logg
 			if err != nil {
 				logger.Error(err.LogError.Error())
 			}
-			if err := ml.SendRegisterVerify(userID, register.Mail, r.Host); err != nil {
+			if err := ml.SendRegisterVerify(userID, register.Mail, getBaseURL(r)); err != nil {
 				logger.Error(err.LogError.Error())
 			}
 		}()
@@ -67,7 +67,7 @@ func registerRouter(router *mux.Router, db *gorm.DB, config *config.Config, logg
 			return
 		}
 
-		err := manager.RegisterVerifyMail(db, rvm, getBasURL(r))
+		err := manager.RegisterVerifyMail(db, rvm, getBaseURL(r))
 
 		if err != nil {
 			// set err to context for log

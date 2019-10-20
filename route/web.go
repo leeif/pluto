@@ -48,7 +48,7 @@ func webRouter(router *mux.Router, db *gorm.DB, config *config.Config, logger *l
 		if err := manager.ResetPasswordPage(token); err != nil {
 			context.Set(r, "pluto_error", err)
 			next(w, r)
-			responseHTMLError("error/oops.html", nil, w, http.StatusInternalServerError)
+			responseHTMLError("error.html", nil, w, http.StatusInternalServerError)
 			return
 		}
 
@@ -69,7 +69,7 @@ func webRouter(router *mux.Router, db *gorm.DB, config *config.Config, logger *l
 		if err != nil {
 			context.Set(r, "pluto_error", err)
 			next(w, r)
-			responseHTMLError("error/oops.html", nil, w, http.StatusInternalServerError)
+			responseHTMLError("error.html", nil, w, http.StatusInternalServerError)
 			return
 		}
 
@@ -78,7 +78,7 @@ func webRouter(router *mux.Router, db *gorm.DB, config *config.Config, logger *l
 		if head.Type != jwt.PASSWORDRESETRESULT {
 			context.Set(r, "pluto_error", perror.InvalidJWTToekn)
 			next(w, r)
-			responseHTMLError("error/oops.html", nil, w, http.StatusInternalServerError)
+			responseHTMLError("error.html", nil, w, http.StatusInternalServerError)
 			return
 		}
 
@@ -86,9 +86,9 @@ func webRouter(router *mux.Router, db *gorm.DB, config *config.Config, logger *l
 		json.Unmarshal(jwtToken.Payload, &prp)
 
 		type Data struct {
-			Message string
+			Successed bool
 		}
-		data := &Data{Message: prp.Message}
+		data := &Data{Successed: prp.Successed}
 		responseHTMLOK("password_reset_result.html", data, w)
 	})).Methods("GET")
 }

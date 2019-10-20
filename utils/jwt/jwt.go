@@ -73,7 +73,7 @@ type PasswordResetPayload struct {
 
 type PasswordResetResultPayload struct {
 	Payload
-	Message string `json:"message"`
+	Successed bool `json:"successed"`
 }
 
 func setTimeField(payload interface{}, expire int64) (err error) {

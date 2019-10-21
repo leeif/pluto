@@ -1,4 +1,14 @@
 
+<a name="v0.0.14"></a>
+## [v0.0.14](https://github.com/MuShare/pluto/compare/v0.0.13...v0.0.14)
+
+> 2019-10-21
+
+### Change
+
+* **jwt:** add type field in payload
+
+
 <a name="v0.0.13"></a>
 ## [v0.0.13](https://github.com/MuShare/pluto/compare/v0.0.12...v0.0.13)
 

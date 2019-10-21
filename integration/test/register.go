@@ -120,8 +120,8 @@ func testMailRegisterOK() error {
 }
 
 func testRegisterVerifyOK() error {
-	token, perror := jwt.GenerateJWT(jwt.Head{Type: jwt.REGISTERVERIFY, Alg: jwt.ALGRAS},
-		&jwt.RegisterVerifyPayload{UserID: 1}, 60*60)
+	rvp := jwt.NewRegisterVerifyPayload(1, 60*60)
+	token, perror := jwt.GenerateRSAJWT(rvp)
 
 	if perror != nil {
 		return fmt.Errorf("Expect no error, but %v", perror.LogError)

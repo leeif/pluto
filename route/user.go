@@ -59,7 +59,8 @@ func userRouter(router *mux.Router, db *gorm.DB, config *config.Config, logger *
 		}
 
 		// generate JWT for password reset result page only when successed
-		token, err := jwt.GenerateJWT(jwt.Head{Type: jwt.PASSWORDRESETRESULT}, &jwt.PasswordResetResultPayload{Successed: true}, config.JWT.ResetPasswordResultTokenExpire)
+		prrp := jwt.NewPasswordResetResultPayload(true, config.JWT.ResetPasswordResultTokenExpire)
+		token, err := jwt.GenerateRSAJWT(prrp)
 		if err != nil {
 			context.Set(r, "pluto_error", err)
 			responseError(err, w)

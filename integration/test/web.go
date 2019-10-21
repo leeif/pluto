@@ -23,8 +23,8 @@ func testPasswordResetResultFail() error {
 }
 
 func testPasswordResetResultOK() error {
-	token, perror := jwt.GenerateJWT(jwt.Head{Type: jwt.PASSWORDRESETRESULT, Alg: jwt.ALGRAS},
-		&jwt.PasswordResetResultPayload{Successed: true}, 10*60)
+	prrp := jwt.NewPasswordResetResultPayload(true, 10*60)
+	token, perror := jwt.GenerateRSAJWT(prrp)
 
 	if perror != nil {
 		return fmt.Errorf("Expect no error, but %v", perror.LogError)
@@ -65,8 +65,8 @@ func testPasswordResetFail() error {
 }
 
 func testPasswordResetOK() error {
-	token, perror := jwt.GenerateJWT(jwt.Head{Type: jwt.PASSWORDRESET, Alg: jwt.ALGRAS},
-		&jwt.PasswordResetPayload{Mail: "test@gmail.com"}, 60*60)
+	prp := jwt.NewPasswordResetPayload("test@gmail.com", 60*60)
+	token, perror := jwt.GenerateRSAJWT(prp)
 
 	if perror != nil {
 		return fmt.Errorf("Expect no error, but %v", perror.LogError)

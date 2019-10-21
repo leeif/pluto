@@ -3,6 +3,7 @@ package route
 import (
 	"encoding/json"
 	"net/http"
+	"time"
 
 	"github.com/gorilla/context"
 	"github.com/gorilla/mux"
@@ -73,17 +74,22 @@ func webRouter(router *mux.Router, db *gorm.DB, config *config.Config, logger *l
 			return
 		}
 
-		head := jwt.Head{}
-		json.Unmarshal(jwtToken.Head, &head)
-		if head.Type != jwt.PASSWORDRESETRESULT {
+		prp := jwt.PasswordResetResultPayload{}
+		json.Unmarshal(jwtToken.Payload, &prp)
+
+		if prp.Type != jwt.PASSWORDRESETRESULT {
 			context.Set(r, "pluto_error", perror.InvalidJWTToekn)
 			next(w, r)
 			responseHTMLError("error.html", nil, w, http.StatusInternalServerError)
 			return
 		}
 
-		prp := jwt.PasswordResetResultPayload{}
-		json.Unmarshal(jwtToken.Payload, &prp)
+		if time.Now().Unix() > prp.Expire {
+			context.Set(r, "pluto_error", perror.InvalidJWTToekn)
+			next(w, r)
+			responseHTMLError("error.html", nil, w, http.StatusInternalServerError)
+			return
+		}
 
 		type Data struct {
 			Successed bool

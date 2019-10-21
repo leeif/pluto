@@ -89,8 +89,8 @@ func (m *Manger) EmailLogin(login request.MailLogin) (map[string]string, *perror
 	}
 
 	// generate jwt token
-	token, err := jwt.GenerateJWT(jwt.Head{Type: jwt.ACCESS},
-		&jwt.UserPayload{UserID: user.ID, DeviceID: deviceAPP.DeviceID, AppID: deviceAPP.AppID}, m.config.JWT.AccessTokenExpire)
+	up := jwt.NewUserPayload(user.ID, deviceAPP.DeviceID, deviceAPP.AppID, m.config.JWT.AccessTokenExpire)
+	token, err := jwt.GenerateRSAJWT(up)
 
 	if err != nil {
 		return nil, err.Wrapper(errors.New("JWT token generate failed"))
@@ -162,8 +162,8 @@ func (m *Manger) GoogleLoginMobile(login request.GoogleMobileLogin) (map[string]
 	}
 
 	// generate jwt token
-	token, err := jwt.GenerateJWT(jwt.Head{Type: jwt.ACCESS},
-		&jwt.UserPayload{UserID: user.ID, DeviceID: deviceAPP.DeviceID, AppID: deviceAPP.AppID}, m.config.JWT.AccessTokenExpire)
+	up := jwt.NewUserPayload(user.ID, deviceAPP.DeviceID, deviceAPP.AppID, m.config.JWT.AccessTokenExpire)
+	token, err := jwt.GenerateRSAJWT(up)
 
 	if err != nil {
 		return nil, err.Wrapper(errors.New("JWT token generate failed"))
@@ -285,8 +285,8 @@ func (m *Manger) WechatLoginMobile(login request.WechatMobileLogin) (map[string]
 	}
 
 	// generate jwt token
-	token, err := jwt.GenerateJWT(jwt.Head{Type: jwt.ACCESS},
-		&jwt.UserPayload{UserID: user.ID, DeviceID: deviceAPP.DeviceID, AppID: deviceAPP.AppID}, m.config.JWT.AccessTokenExpire)
+	up := jwt.NewUserPayload(user.ID, deviceAPP.DeviceID, deviceAPP.AppID, m.config.JWT.AccessTokenExpire)
+	token, err := jwt.GenerateRSAJWT(up)
 
 	if err != nil {
 		return nil, err.Wrapper(errors.New("JWT token generate failed"))

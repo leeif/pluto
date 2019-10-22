@@ -1,169 +1,42 @@
-# Pluto Server
+# Pluto
 
 [![Build Status](https://travis-ci.org/MuShare/pluto.svg?branch=master)](https://travis-ci.org/MuShare/pluto)
 [![Go Report Card](https://goreportcard.com/badge/github.com/leeif/pluto)](https://goreportcard.com/report/github.com/leeif/pluto)
 
-# API Document
+Pluto is a JWT based authorization/authentication service. Pluto is designed for the use case like microservices so you can use Pluto as an auth service for your own apps or services.
 
-## 1. User
-(1) /api/user/register
+## Main Features
 
- * method: POST
- * request: 
- ```
- {"mail":<string>, "name": <string>, "password":<string>}
- ```
- * response:
- ```
- {
-  "status": "ok",
-  "body": {
-    "mail": "geeklyf@hotmail.com"
-  }
-}
- ```
+* User registration / login
+* JWT generation / verification
 
-(2) /api/user/register/verify/mail
 
-resend register verify mail
- * method: POST
- * request:
- ```
- {"mail":<string>}
- ```
- * response:
- ```
-{
-  "status": "ok",
-  "body": nil
-}
- ```
+## Getting started
 
-(3) /api/user/login
+The [Installation docs](https://github.com/MuShare/pluto/blob/master/docs/installation.md) have a guide on how to install Pluto via Docker images, Kubernetes or from source.
 
-* method: POST
-* request:
-```
-{"mail":<string>, "password":<string>, "device_id":<string>, "app_id":<string>}
-```
-* response:
-```
-{
-  "status": "ok",
-  "body": {
-    "jwt": "",
-    "refresh_token": ""
-  }
-}
-```
+### Documents
 
-(4) /api/user/login/google
+All documents can be find in [/docs](https://github.com/MuShare/pluto/blob/master/docs)
 
-* method: POST
-* request:
-```
-{"id_token":<string>, "device_id":<string>, "app_id":<string>}
-```
-* response:
-```
-{
-  "status": "ok",
-  "body": {
-    "jwt": "",
-    "refresh_token": ""
-  }
-}
-```
+Here are some helpful documents for reading.
 
-(5) /api/user/password/reset/mail
+* [API Document](https://github.com/MuShare/pluto/blob/master/docs/api.md) has all the APIs to get interactive with Pluto.
+* [Configuration](https://github.com/MuShare/pluto/blob/master/docs/configuration.md) 
+* [Replace Views](https://github.com/MuShare/pluto/blob/master/docs/view.md) is a guide for replacing the default html pages with your own custom files
+* [JWT Token](https://github.com/MuShare/pluto/blob/master/docs/jwt.md) gives an introduction of the JWT.
+* (Doing) [Example]() is an example showing how to using Pluto with your apps.
 
-send password reset form to mail
-* method: POST
-* request:
-```
-{"mail":<string>}
-```
-* response:
-```
-{
-  "status": "ok",
-  "body": nil
-}
-```
+## Future Plan
 
-(6) /api/user/info/me
+* Admin page
+* Support OAuth2 / OpenID Connect
+* Support grpc endpoint
 
-Get User info, token needs a base64 encoded string of jwt token
-* method: GET
-* header: Authorization: jwt base64(token)
-* response:
-```
-{
-  "status": "ok",
-  "body": {
-    "id": 2,
-    "create_at": 1567236370,
-    "updated_at": 1567236410,
-    "delete_at": 0,
-    "mail": "geeklyf92610@gmail.com",
-    "name": "yifan.li",
-    "gender": null,
-    "birthday": 0,
-    "avatar": "xxxx"
-  }
-}
-```
+## Contribute
 
-## 2. Auth
-(1) /api/auth/publickey
+Feel free to fire an issue or send a pull request.
 
-get the public key from auth server
- * method: Get
- * response:
- ```
-{
-  "status": "ok",
-  "body": {
-    "public_key": ""
-  }
-}
- ```
-(2) /api/auth/refresh
+## License
 
-get a new jwt access token
-* method: POST
-* request:
-```
-{"refresh_token":<string>, "user_id":<int>, "device_id":<string>, "app_id":<string>}
-```
-* response:
- ```
- {
-  "status": "ok",
-  "body": {
-    "jwt": ""
-  }
-}
- ```
-
-## 3. Health Check
-/healthcheck
-* method: Get
-
-# Access JWT Token Example
-
-expire: 3600s
-```
-{
- type: "access",
- alg: "rsa"
-}.
-{
- create_time: 1566396559,
- expire_time: 1566400159,
- userId: 1,
- deviceId: "xxxx",
- appId: "xxxxx"
-}.
-[signature]
-```
+MIT License, see [LICENSE](https://github.com/MuShare/pluto/blob/master/LICENSE)

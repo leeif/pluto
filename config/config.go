@@ -24,7 +24,7 @@ type Config struct {
 	Mail        *MailConfig        `kiper_config:"name:mail"`
 	Avatar      *AvatarConfig      `kiper_config:"name:avatar"`
 	GoogleLogin *GoogleLoginConfig `kiper_config:"name:google_login"`
-	WechatLogin *WechatLoginConfig `kiper_config:"name:webchat_login"`
+	WechatLogin *WechatLoginConfig `kiper_config:"name:wechat_login"`
 	JWT         *JWTConfig         `kiper_config:"name:jwt"`
 	View        *ViewConfig        `kiper_config:"name:view"`
 }

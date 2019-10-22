@@ -1,7 +1,5 @@
 # API Document
-Pluto now provides a set of HTTP resetful APIs.
-
-They are as follows:
+Pluto provides a set of HTTP resetful APIs.
 
 * [`/api/user/register`](#/api/user/register)
 * [`/api/user/register/verify/mail`](#/api/user/register/verify/mail)

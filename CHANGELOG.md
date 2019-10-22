@@ -1,4 +1,14 @@
 
+<a name="v0.0.15"></a>
+## [v0.0.15](https://github.com/MuShare/pluto/compare/v0.0.14...v0.0.15)
+
+> 2019-10-22
+
+### Update
+
+* **docs:** add new docs
+
+
 <a name="v0.0.14"></a>
 ## [v0.0.14](https://github.com/MuShare/pluto/compare/v0.0.13...v0.0.14)
 

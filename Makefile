@@ -1,21 +1,19 @@
 VERSION=$(shell cat VERSION)
 
 docker-build:
-	docker build --build-arg VERSION=$(VERSION) -t pluto-server:latest .
-	docker tag pluto-server:latest registry.cn-hongkong.aliyuncs.com/mushare/pluto-server:latest
-	docker tag pluto-server:latest registry.cn-hongkong.aliyuncs.com/mushare/pluto-server:$(VERSION)
+	docker build --build-arg VERSION=$(VERSION) -t leeif/pluto:latest .
+	docker tag leeif/pluto:latest leeif/pluto:$(VERSION)
 
 docker-push:
-	docker push registry.cn-hongkong.aliyuncs.com/mushare/pluto-server:latest
-	docker push registry.cn-hongkong.aliyuncs.com/mushare/pluto-server:$(VERSION)
+	docker push leeif/pluto:latest
+	docker push leeif/pluto:$(VERSION)
 
 docker-run: local-docker-build
 	docker run -d -t pluto-server:latest
 
 docker-clean:
-	docker rmi registry.cn-hongkong.aliyuncs.com/mushare/pluto-server:latest || true
-	docker rmi registry.cn-hongkong.aliyuncs.com/mushare/pluto-server:$(VERSION) || true
-	docker rmi pluto-server:latest || true
+	docker rmi leeif/pluto:latest || true
+	docker rmi leeif/pluto:$(VERSION) || true
 	docker rm -v $(shell docker ps --filter status=exited -q 2>/dev/null) 2>/dev/null || true
 	docker rmi $(shell docker images --filter dangling=true -q 2>/dev/null) 2>/dev/null || true
 

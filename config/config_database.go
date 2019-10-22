@@ -8,7 +8,7 @@ type DatabaseConfig struct {
 	User     string  `kiper_value:"name:user;help:database user;default:root"`
 	Password string  `kiper_value:"name:password;help:database password"`
 	Port     *Port   `kiper_value:"name:port;help:database port;default:3306"`
-	DB       string  `kiper_value:"name:db;help:db name"`
+	DB       string  `kiper_value:"name:db;help:db name;default:pluto"`
 }
 
 type DBType struct {

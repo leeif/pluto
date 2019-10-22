@@ -44,7 +44,7 @@ func TestConfigDefault(t *testing.T) {
 	assert.Equal(t, "root", c.Database.User, "default of database user should be root")
 	assert.Equal(t, "3306", c.Database.Port.String(), "default of database port should be 3306")
 	assert.Equal(t, "", c.Database.Password, "default of database port should be empty")
-	assert.Equal(t, "", c.Database.DB, "default of database port should be empty")
+	assert.Equal(t, "pluto", c.Database.DB, "default of database port should be pluto")
 	assert.Equal(t, "test.smtp.com", c.Mail.SMTP.String(), "default of database port should be empty")
 }
 

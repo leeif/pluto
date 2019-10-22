@@ -12,7 +12,7 @@ require (
 	github.com/gorilla/context v1.1.1
 	github.com/gorilla/mux v1.7.3
 	github.com/jinzhu/gorm v1.9.10
-	github.com/leeif/kiper v0.0.0-20191013083357-5a9c870fb970
+	github.com/leeif/kiper v0.0.0-20191022040104-3cfd97a2a6c0
 	github.com/satori/go.uuid v1.2.0 // indirect
 	github.com/stretchr/testify v1.4.0
 	github.com/urfave/negroni v1.0.0

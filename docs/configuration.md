@@ -22,6 +22,7 @@ Pluto use [kiper](https://github.com/leeif/kiper), which is a wrapper of kingpin
 
 ### rsa
 RSA private/public files are used to sign/verify JWTs.
+
 |  Command line flag  |  Description  | Type | Default |
 | ---- | ---- | ---- | ---- |
 |--rsa.path|rsa file path|string|./|
@@ -30,6 +31,7 @@ RSA private/public files are used to sign/verify JWTs.
 
 ### database
 database now only support MySQL.
+
 |  Command line flag  |  Description  | Type | Default |
 | ---- | ---- | ---- | ---- |
 |--database.type|database type, now mysql only|string|mysql|
@@ -72,6 +74,7 @@ Now google and wechat login are supported.
 
 ### JWT
 Expiration time of JWT can be configured.
+
 |  Command line flag  |  Description  | Type | Default |
 | ---- | ---- | ---- | ---- |
 |--jwt.access_token_expire|expire time(s) of access token|int|600|

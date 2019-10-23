@@ -1,16 +1,16 @@
 # API Document
 Pluto provides a set of HTTP resetful APIs.
 
-* [`/api/user/register`](#/api/user/register)
-* [`/api/user/register/verify/mail`](#/api/user/register/verify/mail)
-* [`/api/user/login`](#/api/user/login)
-* [`/api/user/login/google/mobile`](#/api/user/login/google/mobile)
-* [`/api/user/login/wechat/mobile`](#/api/user/login/wechat/mobile)
-* [`/api/user/password/reset/mail`](#/api/user/password/reset/mail)
-* [`/api/user/info/me`](#/api/user/info/me)
-* [`/api/auth/publickey`](#/api/auth/publickey)
-* [`/api/auth/refresh`](#/api/auth/refresh)
-* [`/healthcheck`](#/healthcheck)
+* [`/api/user/register`](#apiuserregister)
+* [`/api/user/register/verify/mail`](#apiuserregisterverifymail)
+* [`/api/user/login`](#apiuserlogin)
+* [`/api/user/login/google/mobile`](#apiuserlogingooglemobile)
+* [`/api/user/login/wechat/mobile`](#apiuserloginwechatmobile)
+* [`/api/user/password/reset/mail`](#apiuserpasswordresetmail)
+* [`/api/user/info/me`](#apiuserinfome)
+* [`/api/auth/publickey`](#apiauthpublickey)
+* [`/api/auth/refresh`](#apiauthrefresh)
+* [`/healthcheck`](#healthcheck)
 
 ## User
 

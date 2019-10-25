@@ -20,7 +20,25 @@ Pluto assign a JWT for each user and you can use this JWT to authenticate users 
 [signature]
 ```
 
-Here is the example of an access JWT token. You can customize the expiration time through [Configuration](https://github.com/mushare/kiper/blob/master/README.md).
+Here is the example of an access JWT token. You can customize the expiration time through [Configuration](https://github.com/mushare/pluto/blob/master/README.md).
+
+## Signature
+
+### rsa algorithm
+
+The third part of the JWT token is a signature signed with the rsa private key which provided through [rsa config](https://github.com/mushare/pluto/blob/master/docs/configuration.md#rsa)
+
+The sign text is a concat of head and payload of a JWT.
+```
+sign(string(head)+string(payload), <private key>)
+```
+
+Verify a signature need the rsa public key, which you can get through the [public key api](https://github.com/mushare/pluto/blob/master/docs/api.md#apiauthpublickey)
+
+```
+verify(string(head)+string(payload), <public key>)
+```
+
 
 ## Type of JWT in Pluto
 

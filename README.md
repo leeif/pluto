@@ -13,11 +13,11 @@ Pluto is a JWT based authorization/authentication service. Pluto is designed for
 
 ## Getting started
 
-The [Installation docs](https://github.com/MuShare/pluto/blob/master/docs/installation.md) have a guide on how to install Pluto via Docker images, Kubernetes or from source.
+The [Installation doc](https://github.com/MuShare/pluto/blob/master/docs/installation.md) have a guide on how to install Pluto via Docker images, Kubernetes or from source.
 
 ### Documents
 
-All documents can be find in [/docs](https://github.com/MuShare/pluto/blob/master/docs)
+All documents can be found in [/docs](https://github.com/MuShare/pluto/blob/master/docs)
 
 Here are some helpful documents for reading.
 
@@ -27,11 +27,11 @@ Here are some helpful documents for reading.
 * [JWT Token](https://github.com/MuShare/pluto/blob/master/docs/jwt.md) gives an introduction of the JWT.
 * (Doing) [Example]() is an example showing how to using Pluto with your apps.
 
-## Future Plan
+## Roadmap
 
 * Admin page
 * Support OAuth2 / OpenID Connect
-* Support grpc endpoint
+* Support grpc endpoints
 
 ## Contribute
 

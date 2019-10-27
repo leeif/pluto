@@ -2,9 +2,9 @@ FROM golang:1.12 as build
 
 ARG VERSION
 
-ADD . /go/src/pluto
+ADD . /go/src/github.com/leeif/pluto
 
-WORKDIR /go/src/pluto
+WORKDIR /go/src/github.com/leeif/pluto
 
 RUN  export GO111MODULE=on GOPROXY=https://proxy.golang.org && go build -ldflags="-X 'main.VERSION=${VERSION}'" -o pluto-server cmd/pluto-server/main.go
 
@@ -19,8 +19,8 @@ RUN wget https://github.com/jwilder/dockerize/releases/download/$DOCKERIZE_VERSI
 
 ENV ConfigFile /etc/pluto/config.json
 
-COPY --from=build /go/src/pluto/pluto-server /usr/bin/
+COPY --from=build /go/src/github.com/leeif/pluto/pluto-server /usr/bin/
 
-COPY --from=build /go/src/pluto/views views/
+COPY --from=build /go/src/github.com/leeif/pluto/views views/
 
 CMD /usr/bin/pluto-server --config.file=$ConfigFile

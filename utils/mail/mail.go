@@ -121,7 +121,7 @@ func (m *Mail) SendRegisterVerify(userID uint, address string, baseURL string) *
 		Token   string
 	}
 	t.Execute(&buffer, Data{Token: token.B64String(), BaseURL: baseURL})
-	if err := m.Send(address, "[MuShare]Mail Verification", "text/html", buffer.String()); err != nil {
+	if err := m.Send(address, "[Pluto]Mail Verification", "text/html", buffer.String()); err != nil {
 		return perror.ServerError.Wrapper(errors.New("Mail sending failed: " + err.Error()))
 	}
 
@@ -146,7 +146,7 @@ func (m *Mail) SendResetPassword(address string, baseURL string) *perror.PlutoEr
 		Token   string
 	}
 	t.Execute(&buffer, Data{Token: token.B64String(), BaseURL: baseURL})
-	if err := m.Send(address, "[MuShare]Password Reset", "text/html", buffer.String()); err != nil {
+	if err := m.Send(address, "[Pluto]Password Reset", "text/html", buffer.String()); err != nil {
 		return perror.ServerError.Wrapper(errors.New("Mail sending failed: " + err.Error()))
 	}
 	return nil

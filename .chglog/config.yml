@@ -2,7 +2,7 @@ style: github
 template: CHANGELOG.tpl.md
 info:
   title: CHANGELOG
-  repository_url: https://github.com/MuShare/pluto
+  repository_url: https://github.com/leeif/pluto
 options:
   commits:
     filters:

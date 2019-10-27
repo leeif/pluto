@@ -94,7 +94,7 @@ Expiration time of JWT can be configured.
 
 View template location which Pluto used like register verfication mail or reset password page.
 
-You can also replace the default pages with your own pages, see [docs/view.md](https://github.com/MuShare/pluto/blob/master/docs/view.md) for more information.
+You can also replace the default pages with your own pages, see [docs/view.md](https://github.com/leeif/pluto/blob/master/docs/view.md) for more information.
 
 |  Command line flag  |  Description  | Type | Default |
 | ---- | ---- | ---- | ---- |

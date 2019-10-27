@@ -1,6 +1,6 @@
 # view
 Pluto is using the golang [template](https://golang.org/pkg/text/template/) engine to parse the template HTML files.
-Pluto default uses the templates in [views](https://github.com/MuShare/pluto/blob/master/views).
+Pluto default uses the templates in [views](https://github.com/leeif/pluto/blob/master/views).
 
 
 ## template/
@@ -54,4 +54,4 @@ Docker
 ```
 docker run -v ./config.json:/etc/pluto/config.json -v ./views:/views --name pluto -d leeif/pluto:latest
 ```
-Replace the default views in container, remember the name of your files should be the same as above except the files under the [views/template/](https://github.com/MuShare/pluto/blob/master/views/template/).
+Replace the default views in container, remember the name of your files should be the same as above except the files under the [views/template/](https://github.com/leeif/pluto/blob/master/views/template/).

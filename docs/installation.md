@@ -6,7 +6,7 @@ docker run -v ${PWD}/config.json:/etc/pluto/config.json --name pluto -d leeif/pl
 docker logs pluto
 ```
 The default config file location in Pluto container is /etc/pluto/config.json.
-Here we mount a local config file into container. About config, please see here [Configuration](https://github.com/MuShare/pluto/blob/master/docs/configuration.md) for more information.
+Here we mount a local config file into container. About config, please see here [Configuration](https://github.com/leeif/pluto/blob/master/docs/configuration.md) for more information.
 
 Pluto also support several other formats of config file like YAML, TOML.
 To use these kinds , you need to pass an env variable like this,
@@ -58,7 +58,8 @@ Requirement: Go (> 1.12)
 
 Download the source file.
 ```
-git clone https://github.com/MuShare/pluto.git
+git clone https://github.com/leeif/pluto.git
+git checkout vx.x.x // switch to the version your want to install
 cd pluto/
 ```
 Build the binary

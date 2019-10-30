@@ -21,8 +21,9 @@ func NewDatabase(config *config.Config) (*gorm.DB, error) {
 		if err != nil {
 			return nil, err
 		}
-		db.DB().SetMaxIdleConns(10)
-		// db.LogMode(false)
+		db.DB().SetMaxOpenConns(dbcfg.MaxOpenConns)
+		db.DB().SetMaxIdleConns(dbcfg.MaxIdleConns)
+		db.LogMode(false)
 		database = db
 	}
 	return database, nil

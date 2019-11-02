@@ -36,7 +36,7 @@ func (m *Manger) EmailLogin(login request.MailLogin) (map[string]string, *perror
 	}()
 
 	user := models.User{}
-	identifyToken := b64.StdEncoding.EncodeToString([]byte(login.Mail))
+	identifyToken := b64.RawStdEncoding.EncodeToString([]byte(login.Mail))
 	if tx.Where("login_type = ? and identify_token = ?", MAILLOGIN, identifyToken).First(&user).RecordNotFound() {
 		return nil, perror.MailIsNotExsit
 	}

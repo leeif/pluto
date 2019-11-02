@@ -25,7 +25,7 @@ func (m *Manger) RegisterWithEmail(register request.MailRegister) (uint, *perror
 	}()
 
 	user := models.User{}
-	identifyToken := b64.StdEncoding.EncodeToString([]byte(register.Mail))
+	identifyToken := b64.RawStdEncoding.EncodeToString([]byte(register.Mail))
 	if !tx.Where("login_type = ? and identify_token = ?", MAILLOGIN, identifyToken).First(&user).RecordNotFound() {
 		return 0, perror.MailIsAlreadyRegister
 	}
@@ -77,7 +77,7 @@ func (m *Manger) RegisterVerifyMail(db *gorm.DB, rvm request.RegisterVerifyMail,
 	}
 
 	user := models.User{}
-	identifyToken := b64.StdEncoding.EncodeToString([]byte(rvm.Mail))
+	identifyToken := b64.RawStdEncoding.EncodeToString([]byte(rvm.Mail))
 	if db.Where("login_type = ? and identify_token = ?", MAILLOGIN, identifyToken).First(&user).RecordNotFound() {
 		return perror.MailIsNotExsit
 	}

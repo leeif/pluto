@@ -196,7 +196,7 @@ func testGetUserInfo() error {
 	if err != nil {
 		return fmt.Errorf("Expect no error, but %v", err)
 	}
-	req.Header.Set("Authorization", "jwt "+base64.StdEncoding.EncodeToString([]byte(accessToken)))
+	req.Header.Set("Authorization", "jwt "+base64.RawStdEncoding.EncodeToString([]byte(accessToken)))
 	client := http.Client{}
 	resp, err := client.Do(req)
 

@@ -28,18 +28,18 @@ type JWT struct {
 }
 
 func (jwt *JWT) String() string {
-	headB64 := b64.StdEncoding.EncodeToString(jwt.Head)
-	payloadB64 := b64.StdEncoding.EncodeToString(jwt.Payload)
-	signB64 := b64.StdEncoding.EncodeToString(jwt.Sign)
+	headB64 := b64.RawStdEncoding.EncodeToString(jwt.Head)
+	payloadB64 := b64.RawStdEncoding.EncodeToString(jwt.Payload)
+	signB64 := b64.RawStdEncoding.EncodeToString(jwt.Sign)
 	return fmt.Sprintf("%s.%s.%s", headB64, payloadB64, signB64)
 }
 
 func (jwt *JWT) B64String() string {
-	headB64 := b64.StdEncoding.EncodeToString(jwt.Head)
-	payloadB64 := b64.StdEncoding.EncodeToString(jwt.Payload)
-	signB64 := b64.StdEncoding.EncodeToString(jwt.Sign)
+	headB64 := b64.RawStdEncoding.EncodeToString(jwt.Head)
+	payloadB64 := b64.RawStdEncoding.EncodeToString(jwt.Payload)
+	signB64 := b64.RawStdEncoding.EncodeToString(jwt.Sign)
 	plain := fmt.Sprintf("%s.%s.%s", headB64, payloadB64, signB64)
-	return b64.StdEncoding.EncodeToString([]byte(plain))
+	return b64.RawStdEncoding.EncodeToString([]byte(plain))
 }
 
 type Head struct {
@@ -149,26 +149,26 @@ func GenerateRSAJWT(payload interface{}) (*JWT, *perror.PlutoError) {
 
 func VerifyB64JWT(b64JWTToken string) (*JWT, *perror.PlutoError) {
 	jwt := &JWT{}
-	b, err := b64.StdEncoding.DecodeString(b64JWTToken)
+	b, err := b64.RawStdEncoding.DecodeString(b64JWTToken)
 	if err != nil {
 		return nil, perror.InvalidJWTToekn
 	}
 	parts := strings.Split(string(b), ".")
-	head, err := b64.StdEncoding.DecodeString(parts[0])
+	head, err := b64.RawStdEncoding.DecodeString(parts[0])
 	if err != nil {
 		return nil, perror.InvalidJWTToekn
 	}
 
 	jwt.Head = head
 
-	payload, err := b64.StdEncoding.DecodeString(parts[1])
+	payload, err := b64.RawStdEncoding.DecodeString(parts[1])
 	if err != nil {
 		return nil, perror.InvalidJWTToekn
 	}
 
 	jwt.Payload = payload
 
-	sign, err := b64.StdEncoding.DecodeString(parts[2])
+	sign, err := b64.RawStdEncoding.DecodeString(parts[2])
 	if err != nil {
 		return nil, perror.InvalidJWTToekn
 	}

@@ -17,7 +17,7 @@ import (
 	saltUtil "github.com/leeif/pluto/utils/salt"
 )
 
-func (m *Manger) RegisterWithEmail(register request.MailRegister) (uint, *perror.PlutoError) {
+func (m *Manager) RegisterWithEmail(register request.MailRegister) (uint, *perror.PlutoError) {
 
 	tx := m.db.Begin()
 	defer func() {
@@ -49,11 +49,15 @@ func (m *Manger) RegisterWithEmail(register request.MailRegister) (uint, *perror
 	}
 
 	// get a random avatar
-	a := avatar.NewAvatar(m.config)
-	avatarURL, err := a.GetRandomAvatar()
-	user.Avatar = avatarURL
+	ag := avatar.AvatarGen{}
+	avatarReader, err := ag.GenFromGravatar()
+	as := avatar.NewAvatarSaver(m.config)
+	remoteURL, err := as.SaveAvatarImageInOSS(avatarReader)
 	if err != nil {
+		user.Avatar = avatarReader.OriginURL
 		m.logger.Warn(err.LogError)
+	} else {
+		user.Avatar = remoteURL
 	}
 
 	if err := create(tx, &user); err != nil {
@@ -71,7 +75,7 @@ func (m *Manger) RegisterWithEmail(register request.MailRegister) (uint, *perror
 	return user.ID, nil
 }
 
-func (m *Manger) RegisterVerifyMail(db *gorm.DB, rvm request.RegisterVerifyMail, baseURL string) *perror.PlutoError {
+func (m *Manager) RegisterVerifyMail(db *gorm.DB, rvm request.RegisterVerifyMail, baseURL string) *perror.PlutoError {
 	if db == nil {
 		return perror.ServerError.Wrapper(errors.New("DB connection is empty"))
 	}
@@ -97,7 +101,7 @@ func (m *Manger) RegisterVerifyMail(db *gorm.DB, rvm request.RegisterVerifyMail,
 	return nil
 }
 
-func (m *Manger) RegisterVerify(token string) *perror.PlutoError {
+func (m *Manager) RegisterVerify(token string) *perror.PlutoError {
 
 	jwtToken, perr := jwt.VerifyB64JWT(token)
 	if perr != nil {
@@ -115,7 +119,7 @@ func (m *Manger) RegisterVerify(token string) *perror.PlutoError {
 
 	// expire
 	if time.Now().Unix() > verifyPayload.Expire {
-		return perror.InvalidJWTToekn
+		return perror.JWTTokenExpired
 	}
 
 	tx := m.db.Begin()

@@ -8,14 +8,14 @@ import (
 	"github.com/leeif/pluto/models"
 )
 
-type Manger struct {
+type Manager struct {
 	logger *log.PlutoLog
 	config *config.Config
 	db     *gorm.DB
 }
 
-func NewManager(db *gorm.DB, config *config.Config, logger *log.PlutoLog) *Manger {
-	return &Manger{
+func NewManager(db *gorm.DB, config *config.Config, logger *log.PlutoLog) *Manager {
+	return &Manager{
 		logger: logger.With("compoment", "manager"),
 		config: config,
 		db:     db,

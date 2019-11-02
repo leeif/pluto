@@ -1,29 +1,31 @@
 package avatar
 
 import (
+	"bytes"
 	"crypto/rand"
 	"errors"
 	"fmt"
 	"io"
+	"io/ioutil"
 	"net/http"
+	"strings"
+
+	b64 "encoding/base64"
 
 	"github.com/aliyun/aliyun-oss-go-sdk/oss"
 	"github.com/leeif/pluto/config"
 	perror "github.com/leeif/pluto/datatype/pluto_error"
 )
 
-type Avatar struct {
-	Bucket          string
-	EndPoint        string
-	AccessKeyID     string
-	AccessKeySecret string
-	CDN             string
-}
+var validAvatarType = []string{"jpeg", "jpg", "png"}
 
 func randToken(len int) string {
 	b := make([]byte, len)
 	rand.Read(b)
 	return fmt.Sprintf("%x", b)
+}
+
+type AvatarGen struct {
 }
 
 type AvatarReader struct {
@@ -32,12 +34,33 @@ type AvatarReader struct {
 	OriginURL string
 }
 
-func (avatar *Avatar) GetRandomAvatar() (string, *perror.PlutoError) {
+func (ag *AvatarGen) GenFromBase64String(avatar string) (*AvatarReader, *perror.PlutoError) {
+	b, err := b64.StdEncoding.DecodeString(avatar)
+	if err != nil {
+		return nil, perror.ServerError.Wrapper(fmt.Errorf("input is not in base64 format"))
+	}
+	ar := &AvatarReader{}
+	ar.Reader = ioutil.NopCloser(bytes.NewReader(b))
+	ct := http.DetectContentType(b)
+	for _, vat := range validAvatarType {
+		if strings.Contains(ct, vat) {
+			ar.Ext = vat
+			break
+		}
+	}
+	if ar.Ext == "" {
+		return nil, perror.InvalidAvatarFormat
+	}
+	ar.OriginURL = ""
+	return ar, nil
+}
+
+func (ag *AvatarGen) GenFromGravatar() (*AvatarReader, *perror.PlutoError) {
 	ar := &AvatarReader{}
 	originURL := fmt.Sprintf("https://www.gravatar.com/avatar/%s?f=y&d=identicon", randToken(8))
 	resp, err := http.Get(originURL)
 	if err != nil {
-		return "", perror.ServerError.Wrapper(err)
+		return nil, perror.ServerError.Wrapper(err)
 	}
 	ar.Reader = resp.Body
 	ar.OriginURL = originURL
@@ -47,31 +70,30 @@ func (avatar *Avatar) GetRandomAvatar() (string, *perror.PlutoError) {
 	} else if contentType == "image/jpg" {
 		ar.Ext = "jpg"
 	} else {
-		return "", perror.ServerError.Wrapper(errors.New("Not support type of avatar " + contentType))
+		return nil, perror.ServerError.Wrapper(errors.New("Not support type of avatar " + contentType))
 	}
-	ossURL, perr := avatar.saveAvatarImageInOSS(ar)
-	if perr != nil {
-		return originURL, perr
-	}
-	return ossURL, nil
+	return ar, nil
 }
 
-func (avatar *Avatar) saveAvatarImageInOSS(reader *AvatarReader) (string, *perror.PlutoError) {
+func (as *AvatarSaver) SaveAvatarImageInOSS(reader *AvatarReader) (string, *perror.PlutoError) {
 
-	if avatar.AccessKeyID == "" ||
-		avatar.AccessKeySecret == "" ||
-		avatar.Bucket == "" ||
-		avatar.EndPoint == "" {
+	if as.AccessKeyID == "" ||
+		as.AccessKeySecret == "" ||
+		as.Bucket == "" ||
+		as.EndPoint == "" {
 		return "", perror.ServerError.Wrapper(errors.New("aliyun config is not enough"))
 	}
 
-	client, err := oss.New(avatar.EndPoint, avatar.AccessKeyID, avatar.AccessKeySecret)
+	client, err := oss.New(as.EndPoint, as.AccessKeyID, as.AccessKeySecret)
 	if err != nil {
 		return "", perror.ServerError.Wrapper(err)
 	}
-	bucket, err := client.Bucket(avatar.Bucket)
+	bucket, err := client.Bucket(as.Bucket)
 	if err != nil {
 		return "", perror.ServerError.Wrapper(err)
+	}
+	if reader.Ext == "" {
+		reader.Ext = "jpg"
 	}
 	osskey := fmt.Sprintf("avatar/%s.%s", randToken(8), reader.Ext)
 	err = bucket.PutObject(osskey, reader.Reader)
@@ -79,25 +101,33 @@ func (avatar *Avatar) saveAvatarImageInOSS(reader *AvatarReader) (string, *perro
 		return "", perror.ServerError.Wrapper(err)
 	}
 	url := ""
-	if avatar.CDN == "" {
-		url = fmt.Sprintf("https://%s.%s/%s", avatar.Bucket, avatar.EndPoint, osskey)
+	if as.CDN == "" {
+		url = fmt.Sprintf("https://%s.%s/%s", as.Bucket, as.EndPoint, osskey)
 	} else {
-		url = fmt.Sprintf("%s/%s", avatar.CDN, osskey)
+		url = fmt.Sprintf("%s/%s", as.CDN, osskey)
 	}
 	return url, nil
 }
 
-func (avatar *Avatar) SaveAvatarImageInLocal(file io.ReadCloser) (string, error) {
+func (as *AvatarSaver) SaveAvatarImageInLocal(file io.ReadCloser) (string, error) {
 	return "", nil
 }
 
-func NewAvatar(config *config.Config) *Avatar {
-	avatar := &Avatar{
+type AvatarSaver struct {
+	Bucket          string
+	EndPoint        string
+	AccessKeyID     string
+	AccessKeySecret string
+	CDN             string
+}
+
+func NewAvatarSaver(config *config.Config) *AvatarSaver {
+	as := &AvatarSaver{
 		Bucket:          *config.Avatar.Bucket,
 		EndPoint:        *config.Avatar.EndPoint,
 		AccessKeyID:     *config.Avatar.AccessKeyID,
 		AccessKeySecret: *config.Avatar.AccessKeySecret,
 		CDN:             *config.Avatar.CDN,
 	}
-	return avatar
+	return as
 }

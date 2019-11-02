@@ -134,10 +134,10 @@ Send password reset form to mail.
 
 ### /api/user/info/me
 
-Get User info which requires a base64 encoded string of jwt token.
+Get User info which requires a jwt token.
 
 * method: GET
-* header: Authorization: jwt base64(token)
+* header: Authorization: jwt \<raw base64 encoded token\>
 * response example:
 ```
 {
@@ -153,6 +153,25 @@ Get User info which requires a base64 encoded string of jwt token.
     "birthday": 0,
     "avatar": "xxxx"
   }
+}
+```
+
+### /api/user/info/me/update
+
+Update the user info.
+You can change the avatar by sending a url or a raw base64 encoded image file.
+
+* method: POST
+* header: Authorization: jwt \<raw base64 encoded token\>
+* request
+```
+{"name":<string>, "gender":<string>, "avatar":<string>}
+```
+* response example:
+```
+{
+  "status": "ok",
+  "body": nil
 }
 ```
 

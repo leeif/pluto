@@ -45,6 +45,10 @@ var testCases = []testCase{
 		Func: testGetUserInfo,
 	},
 	{
+		Name: "testUpdateUserInfo",
+		Func: testUpdateUserInfo,
+	},
+	{
 		Name: "testGetPublicKey",
 		Func: testGetPublicKey,
 	},

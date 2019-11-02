@@ -127,6 +127,7 @@ func (m *Manger) GoogleLoginMobile(login request.GoogleMobileLogin) (map[string]
 	user.Avatar = info.Picture
 	user.Name = &info.Name
 	user.Mail = &info.Email
+	user.Verified = true
 	if tx.Where("login_type = ? and identify_token = ?", user.LoginType, user.IdentifyToken).First(&user).RecordNotFound() {
 		if err := create(tx, &user); err != nil {
 			return nil, err
@@ -250,6 +251,7 @@ func (m *Manger) WechatLoginMobile(login request.WechatMobileLogin) (map[string]
 	user.LoginType = WECHATLOGIN
 	user.Avatar = info.HeadimgURL
 	user.Name = &info.Nickname
+	user.Verified = true
 	if tx.Where("login_type = ? and identify_token = ?", user.LoginType, user.IdentifyToken).First(&user).RecordNotFound() {
 		if err := create(tx, &user); err != nil {
 			return nil, err

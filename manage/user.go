@@ -21,7 +21,7 @@ import (
 func (m *Manager) ResetPasswordMail(rpm request.ResetPasswordMail, baseURL string) *perror.PlutoError {
 
 	user := models.User{}
-	identifyToken := b64.StdEncoding.EncodeToString([]byte(rpm.Mail))
+	identifyToken := b64.RawStdEncoding.EncodeToString([]byte(rpm.Mail))
 	if m.db.Where("login_type = ? and identify_token = ?", MAILLOGIN, identifyToken).First(&user).RecordNotFound() {
 		return perror.MailIsNotExsit
 	}
@@ -58,7 +58,7 @@ func (m *Manager) ResetPasswordPage(token string) *perror.PlutoError {
 	}
 
 	user := models.User{}
-	identifyToken := b64.StdEncoding.EncodeToString([]byte(prp.Mail))
+	identifyToken := b64.RawStdEncoding.EncodeToString([]byte(prp.Mail))
 	if m.db.Where("login_type = ? and identify_token = ?", MAILLOGIN, identifyToken).First(&user).RecordNotFound() {
 		return perror.ServerError.Wrapper(errors.New("mail not found"))
 	}
@@ -95,7 +95,7 @@ func (m *Manager) ResetPassword(rp request.ResetPassword) *perror.PlutoError {
 	}()
 
 	user := models.User{}
-	identifyToken := b64.StdEncoding.EncodeToString([]byte(prp.Mail))
+	identifyToken := b64.RawStdEncoding.EncodeToString([]byte(prp.Mail))
 	if tx.Where("login_type = ? and identify_token = ?", MAILLOGIN, identifyToken).First(&user).RecordNotFound() {
 		return perror.ServerError.Wrapper(errors.New("mail not found"))
 	}

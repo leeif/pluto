@@ -36,7 +36,7 @@ func (m *Manager) EmailLogin(login request.MailLogin) (map[string]string, *perro
 	}()
 
 	user := models.User{}
-	identifyToken := b64.StdEncoding.EncodeToString([]byte(login.Mail))
+	identifyToken := b64.RawStdEncoding.EncodeToString([]byte(login.Mail))
 	if tx.Where("login_type = ? and identify_token = ?", MAILLOGIN, identifyToken).First(&user).RecordNotFound() {
 		return nil, perror.MailIsNotExsit
 	}
@@ -127,6 +127,7 @@ func (m *Manager) GoogleLoginMobile(login request.GoogleMobileLogin) (map[string
 	user.Avatar = info.Picture
 	user.Name = &info.Name
 	user.Mail = &info.Email
+	user.Verified = true
 	if tx.Where("login_type = ? and identify_token = ?", user.LoginType, user.IdentifyToken).First(&user).RecordNotFound() {
 		if err := create(tx, &user); err != nil {
 			return nil, err
@@ -213,7 +214,7 @@ func verifyGoogleIdToken(idToken string) (*googleIDTokenInfo, *perror.PlutoError
 	if err != nil {
 		return nil, perror.InvalidGoogleIDToken.Wrapper(err)
 	}
-	if tokenInfo.Audience != "" {
+	if tokenInfo.Audience == "" {
 		return nil, perror.InvalidGoogleIDToken
 	}
 	parser := gjwt.Parser{}
@@ -250,6 +251,7 @@ func (m *Manager) WechatLoginMobile(login request.WechatMobileLogin) (map[string
 	user.LoginType = WECHATLOGIN
 	user.Avatar = info.HeadimgURL
 	user.Name = &info.Nickname
+	user.Verified = true
 	if tx.Where("login_type = ? and identify_token = ?", user.LoginType, user.IdentifyToken).First(&user).RecordNotFound() {
 		if err := create(tx, &user); err != nil {
 			return nil, err

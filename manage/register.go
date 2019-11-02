@@ -119,7 +119,7 @@ func (m *Manager) RegisterVerify(token string) *perror.PlutoError {
 
 	// expire
 	if time.Now().Unix() > verifyPayload.Expire {
-		return perror.InvalidJWTToekn
+		return perror.JWTTokenExpired
 	}
 
 	tx := m.db.Begin()

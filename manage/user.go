@@ -57,7 +57,7 @@ func (m *Manager) ResetPasswordPage(token string) *perror.PlutoError {
 	}
 
 	if time.Now().Unix() > prp.Expire {
-		return perror.InvalidJWTToekn
+		return perror.JWTTokenExpired
 	}
 
 	user := models.User{}
@@ -89,7 +89,7 @@ func (m *Manager) ResetPassword(rp request.ResetPassword) *perror.PlutoError {
 	}
 
 	if time.Now().Unix() > prp.Expire {
-		return perror.InvalidJWTToekn
+		return perror.JWTTokenExpired
 	}
 
 	tx := m.db.Begin()
@@ -153,7 +153,7 @@ func (m *Manager) UserInfo(token string) (*models.User, *perror.PlutoError) {
 	}
 
 	if time.Now().Unix() > userPayload.Expire {
-		return nil, perror.InvalidJWTToekn
+		return nil, perror.JWTTokenExpired
 	}
 
 	user := models.User{}
@@ -226,7 +226,7 @@ func (m *Manager) UpdateUserInfo(token string, uui request.UpdateUserInfo) *perr
 	}
 
 	if time.Now().Unix() > userPayload.Expire {
-		return perror.InvalidJWTToekn
+		return perror.JWTTokenExpired
 	}
 
 	if userPayload.LoginType != MAILLOGIN {

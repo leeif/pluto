@@ -231,3 +231,37 @@ func testGetUserInfo() error {
 
 	return nil
 }
+
+func testUpdateUserInfo() error {
+	url := "http://localhost:8010/api/user/info/me/update"
+	payload := request.UpdateUserInfo{
+		Name: "test update",
+	}
+
+	b, err := json.Marshal(payload)
+	if err != nil {
+		return fmt.Errorf("Expect no error, but %v", err)
+	}
+
+	fmt.Println(string(b))
+
+	req, err := http.NewRequest("POST", url, bytes.NewReader(b))
+	if err != nil {
+		return fmt.Errorf("Expect no error, but %v", err)
+	}
+
+	req.Header.Set("Authorization", "jwt "+base64.RawStdEncoding.EncodeToString([]byte(accessToken)))
+	req.Header.Set("Content-type", "application/json")
+	client := http.Client{}
+	resp, err := client.Do(req)
+
+	if err != nil {
+		return fmt.Errorf("Expect no error, but %v", err)
+	}
+
+	if resp.StatusCode != http.StatusOK {
+		return fmt.Errorf("%v request expect ok (200) status code, but %v", url, resp.StatusCode)
+	}
+
+	return nil
+}

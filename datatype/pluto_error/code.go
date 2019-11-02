@@ -17,4 +17,6 @@ var (
 	InvalidGoogleIDToken = NewPlutoError(http.StatusForbidden, 3004, "Invalid Google ID Token", nil)
 	InvalidWechatCode    = NewPlutoError(http.StatusForbidden, 3005, "Invalid Wechat Code", nil)
 	InvalidAvatarFormat  = NewPlutoError(http.StatusBadRequest, 3006, "Invalid Avatar Format", nil)
+
+	JWTTokenExpired = NewPlutoError(http.StatusForbidden, 3007, "JWT Token Expired", nil)
 )

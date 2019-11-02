@@ -3,6 +3,7 @@ package manage
 import (
 	"encoding/json"
 	"errors"
+	"fmt"
 	"time"
 
 	perror "github.com/leeif/pluto/datatype/pluto_error"
@@ -17,7 +18,7 @@ import (
 	"github.com/leeif/pluto/utils/mail"
 )
 
-func (m *Manger) ResetPasswordMail(rpm request.ResetPasswordMail, baseURL string) *perror.PlutoError {
+func (m *Manager) ResetPasswordMail(rpm request.ResetPasswordMail, baseURL string) *perror.PlutoError {
 
 	user := models.User{}
 	identifyToken := b64.StdEncoding.EncodeToString([]byte(rpm.Mail))
@@ -37,7 +38,7 @@ func (m *Manger) ResetPasswordMail(rpm request.ResetPasswordMail, baseURL string
 	return nil
 }
 
-func (m *Manger) ResetPasswordPage(token string) *perror.PlutoError {
+func (m *Manager) ResetPasswordPage(token string) *perror.PlutoError {
 
 	jwtToken, err := jwt.VerifyB64JWT(token)
 	// token verify failed
@@ -70,7 +71,7 @@ func (m *Manger) ResetPasswordPage(token string) *perror.PlutoError {
 	return nil
 }
 
-func (m *Manger) ResetPassword(rp request.ResetPassword) *perror.PlutoError {
+func (m *Manager) ResetPassword(rp request.ResetPassword) *perror.PlutoError {
 
 	jwtToken, perr := jwt.VerifyB64JWT(rp.Token)
 	if perr != nil {
@@ -135,7 +136,7 @@ func (m *Manger) ResetPassword(rp request.ResetPassword) *perror.PlutoError {
 	return nil
 }
 
-func (m *Manger) UserInfo(token string) (*models.User, *perror.PlutoError) {
+func (m *Manager) UserInfo(token string) (*models.User, *perror.PlutoError) {
 	jwtToken, err := jwt.VerifyB64JWT(token)
 	if err != nil {
 		return nil, err
@@ -160,7 +161,7 @@ func (m *Manger) UserInfo(token string) (*models.User, *perror.PlutoError) {
 	return &user, nil
 }
 
-func (m *Manger) RefreshAccessToken(rat request.RefreshAccessToken) (map[string]string, *perror.PlutoError) {
+func (m *Manager) RefreshAccessToken(rat request.RefreshAccessToken) (map[string]string, *perror.PlutoError) {
 	res := make(map[string]string)
 
 	tx := m.db.Begin()
@@ -184,8 +185,13 @@ func (m *Manger) RefreshAccessToken(rat request.RefreshAccessToken) (map[string]
 		return nil, perror.InvalidRefreshToken
 	}
 
+	user := models.User{}
+	if tx.Where("id = ?", rat.UseID).First(&user).RecordNotFound() {
+		return nil, perror.ServerError.Wrapper(fmt.Errorf("UserID not found: %d", rat.UseID))
+	}
+
 	// generate jwt token
-	up := jwt.NewUserPayload(rat.UseID, rat.DeviceID, rat.AppID, m.config.JWT.AccessTokenExpire)
+	up := jwt.NewUserPayload(rat.UseID, rat.DeviceID, rat.AppID, user.LoginType, m.config.JWT.AccessTokenExpire)
 	token, err := jwt.GenerateRSAJWT(up)
 
 	if err != nil {
@@ -201,4 +207,8 @@ func (m *Manger) RefreshAccessToken(rat request.RefreshAccessToken) (map[string]
 
 	tx.Commit()
 	return res, nil
+}
+
+func (m *Manager) UpdateUserInfo(request.UpdateUserInfo) *perror.PlutoError {
+	return nil
 }

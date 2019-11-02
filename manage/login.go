@@ -27,7 +27,7 @@ const (
 	WECHATLOGIN = "wechat"
 )
 
-func (m *Manger) EmailLogin(login request.MailLogin) (map[string]string, *perror.PlutoError) {
+func (m *Manager) EmailLogin(login request.MailLogin) (map[string]string, *perror.PlutoError) {
 	res := make(map[string]string)
 
 	tx := m.db.Begin()
@@ -89,7 +89,7 @@ func (m *Manger) EmailLogin(login request.MailLogin) (map[string]string, *perror
 	}
 
 	// generate jwt token
-	up := jwt.NewUserPayload(user.ID, deviceAPP.DeviceID, deviceAPP.AppID, m.config.JWT.AccessTokenExpire)
+	up := jwt.NewUserPayload(user.ID, deviceAPP.DeviceID, deviceAPP.AppID, MAILLOGIN, m.config.JWT.AccessTokenExpire)
 	token, err := jwt.GenerateRSAJWT(up)
 
 	if err != nil {
@@ -109,7 +109,7 @@ func (m *Manger) EmailLogin(login request.MailLogin) (map[string]string, *perror
 	return res, nil
 }
 
-func (m *Manger) GoogleLoginMobile(login request.GoogleMobileLogin) (map[string]string, *perror.PlutoError) {
+func (m *Manager) GoogleLoginMobile(login request.GoogleMobileLogin) (map[string]string, *perror.PlutoError) {
 	res := make(map[string]string)
 
 	info, err := verifyGoogleIdToken(login.IDToken)
@@ -162,7 +162,7 @@ func (m *Manger) GoogleLoginMobile(login request.GoogleMobileLogin) (map[string]
 	}
 
 	// generate jwt token
-	up := jwt.NewUserPayload(user.ID, deviceAPP.DeviceID, deviceAPP.AppID, m.config.JWT.AccessTokenExpire)
+	up := jwt.NewUserPayload(user.ID, deviceAPP.DeviceID, deviceAPP.AppID, GOOGLELOGIN, m.config.JWT.AccessTokenExpire)
 	token, err := jwt.GenerateRSAJWT(up)
 
 	if err != nil {
@@ -227,7 +227,7 @@ func verifyGoogleIdToken(idToken string) (*googleIDTokenInfo, *perror.PlutoError
 	return nil, perror.InvalidGoogleIDToken
 }
 
-func (m *Manger) WechatLoginMobile(login request.WechatMobileLogin) (map[string]string, *perror.PlutoError) {
+func (m *Manager) WechatLoginMobile(login request.WechatMobileLogin) (map[string]string, *perror.PlutoError) {
 	res := make(map[string]string)
 
 	accessToken, openID, err := getWechatAccessToken(login.Code, m.config.WechatLogin)
@@ -285,7 +285,7 @@ func (m *Manger) WechatLoginMobile(login request.WechatMobileLogin) (map[string]
 	}
 
 	// generate jwt token
-	up := jwt.NewUserPayload(user.ID, deviceAPP.DeviceID, deviceAPP.AppID, m.config.JWT.AccessTokenExpire)
+	up := jwt.NewUserPayload(user.ID, deviceAPP.DeviceID, deviceAPP.AppID, WECHATLOGIN, m.config.JWT.AccessTokenExpire)
 	token, err := jwt.GenerateRSAJWT(up)
 
 	if err != nil {

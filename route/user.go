@@ -95,4 +95,46 @@ func userRouter(router *mux.Router, db *gorm.DB, config *config.Config, logger *
 
 		responseOK(res, w)
 	})).Methods("GET")
+
+	router.Handle("/info/me/avatar/update", mw.NoVerifyMiddleware(func(w http.ResponseWriter, r *http.Request, next http.HandlerFunc) {
+		auth := strings.Fields(r.Header.Get("Authorization"))
+
+		if len(auth) < 2 && strings.ToLower(auth[0]) != "jwt" {
+			context.Set(r, "pluto_error", perror.InvalidJWTToekn)
+			responseError(perror.InvalidJWTToekn, w)
+			next(w, r)
+			return
+		}
+
+		if err != nil {
+			// set err to context for log
+			context.Set(r, "pluto_error", err)
+			responseError(err, w)
+			next(w, r)
+			return
+		}
+
+		responseOK(res, w)
+	})).Methods("POST")
+
+	router.Handle("/info/me/update", mw.NoVerifyMiddleware(func(w http.ResponseWriter, r *http.Request, next http.HandlerFunc) {
+		auth := strings.Fields(r.Header.Get("Authorization"))
+
+		if len(auth) < 2 && strings.ToLower(auth[0]) != "jwt" {
+			context.Set(r, "pluto_error", perror.InvalidJWTToekn)
+			responseError(perror.InvalidJWTToekn, w)
+			next(w, r)
+			return
+		}
+
+		if err != nil {
+			// set err to context for log
+			context.Set(r, "pluto_error", err)
+			responseError(err, w)
+			next(w, r)
+			return
+		}
+
+		responseOK(res, w)
+	})).Methods("POST")
 }

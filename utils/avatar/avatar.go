@@ -8,6 +8,7 @@ import (
 	"io"
 	"io/ioutil"
 	"net/http"
+	"strings"
 
 	b64 "encoding/base64"
 
@@ -16,7 +17,7 @@ import (
 	perror "github.com/leeif/pluto/datatype/pluto_error"
 )
 
-var validAvatarType = []string{"image/jpeg", "image/jpg", "image/png"}
+var validAvatarType = []string{"jpeg", "jpg", "png"}
 
 func randToken(len int) string {
 	b := make([]byte, len)
@@ -42,8 +43,9 @@ func (ag *AvatarGen) GenFromBase64String(avatar string) (*AvatarReader, *perror.
 	ar.Reader = ioutil.NopCloser(bytes.NewReader(b))
 	ct := http.DetectContentType(b)
 	for _, vat := range validAvatarType {
-		if vat == ct {
+		if strings.Contains(ct, vat) {
 			ar.Ext = vat
+			break
 		}
 	}
 	if ar.Ext == "" {

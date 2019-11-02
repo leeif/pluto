@@ -213,7 +213,7 @@ func verifyGoogleIdToken(idToken string) (*googleIDTokenInfo, *perror.PlutoError
 	if err != nil {
 		return nil, perror.InvalidGoogleIDToken.Wrapper(err)
 	}
-	if tokenInfo.Audience != "" {
+	if tokenInfo.Audience == "" {
 		return nil, perror.InvalidGoogleIDToken
 	}
 	parser := gjwt.Parser{}

@@ -106,13 +106,13 @@ func (rp *ResetPassword) Validation() bool {
 }
 
 type UpdateUserInfo struct {
-	Name   string `json:"user"`
+	Name   string `json:"name"`
 	Gender string `json:"gender"`
 	Avatar string `json:"avatar"`
 }
 
 func (uui *UpdateUserInfo) Validation() bool {
-	if uui.Name == "" || uui.Gender == "" || uui.Avatar == "" {
+	if uui.Name == "" && uui.Gender == "" && uui.Avatar == "" {
 		return false
 	}
 

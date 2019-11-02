@@ -4,7 +4,10 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"net/url"
 	"time"
+
+	"github.com/leeif/pluto/utils/avatar"
 
 	perror "github.com/leeif/pluto/datatype/pluto_error"
 	"github.com/leeif/pluto/models"
@@ -209,6 +212,85 @@ func (m *Manager) RefreshAccessToken(rat request.RefreshAccessToken) (map[string
 	return res, nil
 }
 
-func (m *Manager) UpdateUserInfo(request.UpdateUserInfo) *perror.PlutoError {
+func (m *Manager) UpdateUserInfo(token string, uui request.UpdateUserInfo) *perror.PlutoError {
+	jwtToken, err := jwt.VerifyB64JWT(token)
+	if err != nil {
+		return err
+	}
+
+	userPayload := jwt.UserPayload{}
+	json.Unmarshal(jwtToken.Payload, &userPayload)
+
+	if userPayload.Type != jwt.ACCESS {
+		return perror.InvalidJWTToekn
+	}
+
+	if time.Now().Unix() > userPayload.Expire {
+		return perror.InvalidJWTToekn
+	}
+
+	if userPayload.LoginType != MAILLOGIN {
+		return perror.InvalidJWTToekn
+	}
+
+	tx := m.db.Begin()
+
+	defer func() {
+		tx.Rollback()
+	}()
+
+	user := models.User{}
+	if tx.Where("id = ?", userPayload.UserID).First(&user).RecordNotFound() {
+		return perror.ServerError.Wrapper(errors.New("user not found id: " + string(userPayload.UserID)))
+	}
+
+	if uui.Avatar != "" && m.isValidURL(uui.Avatar) {
+		user.Avatar = uui.Avatar
+	} else if uui.Avatar != "" && m.isValidBase64(uui.Avatar) {
+		ag := avatar.AvatarGen{}
+		ar, err := ag.GenFromBase64String(uui.Avatar)
+		if err != nil {
+			return err
+		}
+		as := avatar.NewAvatarSaver(m.config)
+		url, err := as.SaveAvatarImageInOSS(ar)
+		if err != nil {
+			return err
+		}
+		user.Avatar = url
+	} else if uui.Avatar != "" {
+		return perror.InvalidAvatarFormat
+	}
+
+	if uui.Gender != "" {
+		user.Gender = &uui.Gender
+	}
+
+	if uui.Name != "" {
+		user.Name = &uui.Name
+	}
+
+	if err := update(tx, user); err != nil {
+		return err
+	}
+
+	tx.Commit()
+
 	return nil
+}
+
+func (m *Manager) isValidURL(toTest string) bool {
+	_, err := url.ParseRequestURI(toTest)
+	if err != nil {
+		return false
+	}
+	return true
+}
+
+func (m *Manager) isValidBase64(toTest string) bool {
+	_, err := b64.RawStdEncoding.DecodeString(toTest)
+	if err != nil {
+		return false
+	}
+	return true
 }

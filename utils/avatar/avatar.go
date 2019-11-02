@@ -16,6 +16,8 @@ import (
 	perror "github.com/leeif/pluto/datatype/pluto_error"
 )
 
+var validAvatarType = []string{"image/jpeg", "image/jpg", "image/png"}
+
 func randToken(len int) string {
 	b := make([]byte, len)
 	rand.Read(b)
@@ -38,7 +40,15 @@ func (ag *AvatarGen) GenFromBase64String(avatar string) (*AvatarReader, *perror.
 	}
 	ar := &AvatarReader{}
 	ar.Reader = ioutil.NopCloser(bytes.NewReader(b))
-	ar.Ext = ""
+	ct := http.DetectContentType(b)
+	for _, vat := range validAvatarType {
+		if vat == ct {
+			ar.Ext = vat
+		}
+	}
+	if ar.Ext == "" {
+		return nil, perror.InvalidAvatarFormat
+	}
 	ar.OriginURL = ""
 	return ar, nil
 }

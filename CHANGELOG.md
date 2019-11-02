@@ -1,4 +1,15 @@
 
+<a name="v0.0.18"></a>
+## [v0.0.18](https://github.com/leeif/pluto/compare/v0.0.17...v0.0.18)
+
+> 2019-11-02
+
+### Update
+
+* **jwt:** change base64 encoding method
+* **login:** auto verify when third party login
+
+
 <a name="v0.0.17"></a>
 ## [v0.0.17](https://github.com/leeif/pluto/compare/v0.0.16...v0.0.17)
 

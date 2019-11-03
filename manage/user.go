@@ -280,11 +280,8 @@ func (m *Manager) UpdateUserInfo(token string, uui request.UpdateUserInfo) *perr
 }
 
 func (m *Manager) isValidURL(toTest string) bool {
-	_, err := url.ParseRequestURI(toTest)
-	if err != nil {
-		return false
-	}
-	return true
+	u, err := url.Parse(toTest)
+	return err == nil && u.Scheme != "" && u.Host != ""
 }
 
 func (m *Manager) isValidBase64(toTest string) bool {

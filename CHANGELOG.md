@@ -1,4 +1,10 @@
 
+<a name="v0.1.0"></a>
+## [v0.1.0](https://github.com/leeif/pluto/compare/v0.0.19...v0.1.0)
+
+> 2019-11-03
+
+
 <a name="v0.0.19"></a>
 ## [v0.0.19](https://github.com/leeif/pluto/compare/v0.0.18...v0.0.19)
 

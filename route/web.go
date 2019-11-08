@@ -1,13 +1,13 @@
 package route
 
 import (
+	"database/sql"
 	"encoding/json"
 	"net/http"
 	"time"
 
 	"github.com/gorilla/context"
 	"github.com/gorilla/mux"
-	"github.com/jinzhu/gorm"
 	"github.com/leeif/pluto/config"
 	perror "github.com/leeif/pluto/datatype/pluto_error"
 	"github.com/leeif/pluto/log"
@@ -16,7 +16,7 @@ import (
 	"github.com/leeif/pluto/utils/jwt"
 )
 
-func webRouter(router *mux.Router, db *gorm.DB, config *config.Config, logger *log.PlutoLog) {
+func webRouter(router *mux.Router, db *sql.DB, config *config.Config, logger *log.PlutoLog) {
 
 	mw := middleware.NewMiddle(logger)
 	manager := manage.NewManager(db, config, logger)

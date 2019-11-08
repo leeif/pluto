@@ -1,33 +1,31 @@
 package migrate
 
 import (
+	"database/sql"
 	"fmt"
-
-	"github.com/jinzhu/gorm"
-	"github.com/leeif/pluto/models"
+	"log"
+	"time"
 )
 
 type Migrations struct {
 	name     string
-	function func(db *gorm.DB, name string) error
+	function func(db *sql.DB, name string) error
 }
 
-func Migrate(db *gorm.DB) error {
-
-	// auto migrate
-	db.AutoMigrate(&models.User{})
-	db.AutoMigrate(&models.Salt{})
-	db.AutoMigrate(&models.DeviceAPP{})
-	db.AutoMigrate(&models.RefreshToken{})
-	db.AutoMigrate(&models.Applictaion{})
-	db.AutoMigrate(&models.HistoryOperation{})
+func Migrate(db *sql.DB) error {
 
 	if err := createMigrationTable(db); err != nil {
 		return err
 	}
 
 	for _, m := range migrations {
-		if migrationNotExists(db, m.name) == false {
+		exists, err := migrationExists(db, m.name)
+
+		if err != nil {
+			return err
+		}
+
+		if exists {
 			continue
 		}
 
@@ -43,32 +41,46 @@ func Migrate(db *gorm.DB) error {
 	return nil
 }
 
-func createMigrationTable(db *gorm.DB) error {
+func createMigrationTable(db *sql.DB) error {
 
-	if exists := db.HasTable(&models.Migration{}); exists {
-		return nil
-	}
-
-	// Create migrations table if not exists
-	if err := db.CreateTable(&models.Migration{}).Error; err != nil {
-		return fmt.Errorf("Error creating migrations table: %s", db.Error)
+	_, err := db.Exec("CREATE TABLE IF NOT EXISTS `migrations` (" +
+		"`id` int(10) unsigned NOT NULL AUTO_INCREMENT, " +
+		"`created_at` timestamp NULL DEFAULT NULL, " +
+		"`name` varchar(100) NOT NULL, " +
+		"PRIMARY KEY (`id`))")
+	if err != nil {
+		return err
 	}
 
 	return nil
 }
 
-func migrationNotExists(db *gorm.DB, name string) bool {
-	migration := models.Migration{}
-	notFound := db.Where("name = ?", name).First(&migration).RecordNotFound()
-	return notFound
+func migrationExists(db *sql.DB, name string) (bool, error) {
+	res, err := db.Query("select * from migrations where name = ?", name)
+	if err != nil {
+		return false, err
+	}
+	if res.Next() {
+		return true, nil
+	}
+	return false, nil
 }
 
-func saveMigration(db *gorm.DB, name string) error {
-	migration := models.Migration{}
-	migration.Name = name
+func saveMigration(db *sql.DB, name string) error {
+	log.Println("Start " + name)
+	createAt := time.Now()
+	res, err := db.Exec("insert into migrations (created_at, name) values (?, ?)", createAt, name)
 
-	if err := db.Create(&migration).Error; err != nil {
-		return fmt.Errorf("Error saving record to migrations table: %s", err)
+	if err != nil {
+		return err
+	}
+
+	affected, err := res.RowsAffected()
+	if err != nil {
+		return err
+	}
+	if affected < 1 {
+		return fmt.Errorf("save migration %s failed", name)
 	}
 
 	return nil

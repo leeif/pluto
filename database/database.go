@@ -3,30 +3,20 @@ package database
 import (
 	// database driver
 
-	_ "github.com/go-sql-driver/mysql"
-	"github.com/jinzhu/gorm"
+	"database/sql"
 
-	// gorm mysql
-	_ "github.com/jinzhu/gorm/dialects/mysql"
 	"github.com/leeif/pluto/config"
 )
 
-var database *gorm.DB
-
-func NewDatabase(config *config.Config) (*gorm.DB, error) {
-	if database == nil {
-		dbcfg := config.Database
-		con := generateConnectionSchema(dbcfg)
-		db, err := gorm.Open(dbcfg.Type.String(), con)
-		if err != nil {
-			return nil, err
-		}
-		db.DB().SetMaxOpenConns(dbcfg.MaxOpenConns)
-		db.DB().SetMaxIdleConns(dbcfg.MaxIdleConns)
-		db.LogMode(false)
-		database = db
+func NewDatabase(config *config.Config) (*sql.DB, error) {
+	dbcfg := config.Database
+	db, err := sql.Open("mysql", generateConnectionSchema(dbcfg))
+	if err != nil {
+		return nil, err
 	}
-	return database, nil
+	db.SetMaxOpenConns(dbcfg.MaxOpenConns)
+	db.SetMaxIdleConns(dbcfg.MaxIdleConns)
+	return db, nil
 }
 
 func generateConnectionSchema(dbcfg *config.DatabaseConfig) string {

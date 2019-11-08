@@ -1,11 +1,11 @@
 package route
 
 import (
+	"database/sql"
 	"net/http"
 
 	"github.com/gorilla/context"
 	"github.com/gorilla/mux"
-	"github.com/jinzhu/gorm"
 	"github.com/leeif/pluto/config"
 	"github.com/leeif/pluto/datatype/request"
 	"github.com/leeif/pluto/log"
@@ -13,7 +13,7 @@ import (
 	"github.com/leeif/pluto/middleware"
 )
 
-func loginRouter(router *mux.Router, db *gorm.DB, config *config.Config, logger *log.PlutoLog) {
+func loginRouter(router *mux.Router, db *sql.DB, config *config.Config, logger *log.PlutoLog) {
 	mw := middleware.NewMiddle(logger)
 	manager := manage.NewManager(db, config, logger)
 	router.Handle("/login", mw.NoVerifyMiddleware(func(w http.ResponseWriter, r *http.Request, next http.HandlerFunc) {

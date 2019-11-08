@@ -1,11 +1,16 @@
 package manage
 
 import (
+	"database/sql"
 	"encoding/json"
 	"errors"
 	"fmt"
 	"net/url"
 	"time"
+
+	"github.com/volatiletech/sqlboiler/boil"
+
+	"github.com/volatiletech/sqlboiler/queries/qm"
 
 	"github.com/leeif/pluto/utils/avatar"
 
@@ -23,18 +28,20 @@ import (
 
 func (m *Manager) ResetPasswordMail(rpm request.ResetPasswordMail, baseURL string) *perror.PlutoError {
 
-	user := models.User{}
 	identifyToken := b64.RawStdEncoding.EncodeToString([]byte(rpm.Mail))
-	if m.db.Where("login_type = ? and identify_token = ?", MAILLOGIN, identifyToken).First(&user).RecordNotFound() {
+	user, err := models.Users(qm.Where("login_type = ? and identify_token = ?", MAILLOGIN, identifyToken)).One(m.db)
+	if err != nil && err == sql.ErrNoRows {
 		return perror.MailIsNotExsit
+	} else if err != nil {
+		return perror.ServerError.Wrapper(err)
 	}
 
-	ml, err := mail.NewMail(m.config)
-	if err != nil {
-		return err
+	ml, perr := mail.NewMail(m.config)
+	if perr != nil {
+		return perr
 	}
 
-	if err := ml.SendResetPassword(*user.Mail, baseURL); err != nil {
+	if err := ml.SendResetPassword(user.Mail.String, baseURL); err != nil {
 		return err
 	}
 
@@ -43,10 +50,10 @@ func (m *Manager) ResetPasswordMail(rpm request.ResetPasswordMail, baseURL strin
 
 func (m *Manager) ResetPasswordPage(token string) *perror.PlutoError {
 
-	jwtToken, err := jwt.VerifyB64JWT(token)
+	jwtToken, perr := jwt.VerifyB64JWT(token)
 	// token verify failed
-	if err != nil {
-		return err
+	if perr != nil {
+		return perr
 	}
 
 	prp := jwt.PasswordResetPayload{}
@@ -60,14 +67,16 @@ func (m *Manager) ResetPasswordPage(token string) *perror.PlutoError {
 		return perror.JWTTokenExpired
 	}
 
-	user := models.User{}
 	identifyToken := b64.RawStdEncoding.EncodeToString([]byte(prp.Mail))
-	if m.db.Where("login_type = ? and identify_token = ?", MAILLOGIN, identifyToken).First(&user).RecordNotFound() {
+	user, err := models.Users(qm.Where("login_type = ? and identify_token = ?", MAILLOGIN, identifyToken)).One(m.db)
+	if err != nil && err == sql.ErrNoRows {
 		return perror.ServerError.Wrapper(errors.New("mail not found"))
+	} else if err != nil {
+		return perror.ServerError.Wrapper(err)
 	}
 
 	// user is updated after password reset token is created
-	if user.UpdatedAt.Unix() > prp.Create {
+	if user.UpdatedAt.Valid && user.UpdatedAt.Time.Unix() > prp.Create {
 		return perror.InvalidJWTToekn
 	}
 
@@ -92,41 +101,48 @@ func (m *Manager) ResetPassword(rp request.ResetPassword) *perror.PlutoError {
 		return perror.JWTTokenExpired
 	}
 
-	tx := m.db.Begin()
+	tx, err := m.db.Begin()
+
+	if err != nil {
+		return perror.ServerError.Wrapper(err)
+	}
+
 	defer func() {
 		tx.Rollback()
 	}()
 
-	user := models.User{}
 	identifyToken := b64.RawStdEncoding.EncodeToString([]byte(prp.Mail))
-	if tx.Where("login_type = ? and identify_token = ?", MAILLOGIN, identifyToken).First(&user).RecordNotFound() {
+	user, err := models.Users(qm.Where("login_type = ? and identify_token = ?", MAILLOGIN, identifyToken)).One(tx)
+	if err != nil && err == sql.ErrNoRows {
 		return perror.ServerError.Wrapper(errors.New("mail not found"))
+	} else if err != nil {
+		return perror.ServerError.Wrapper(err)
 	}
 
 	// user is updated after password reset token is created
-	if user.UpdatedAt.Unix() > prp.Create {
+	if user.UpdatedAt.Valid && user.UpdatedAt.Time.Unix() > prp.Create {
 		return perror.InvalidJWTToekn
 	}
 
-	salt := models.Salt{}
-	if tx.Where("user_id = ?", user.ID).First(&salt).RecordNotFound() {
-		return perror.ServerError.Wrapper(errors.New("Salt is not found"))
+	salt, err := models.Salts(qm.Where("user_id = ?", user.ID)).One(tx)
+	if err != nil {
+		return perror.ServerError.Wrapper(err)
 	}
 
 	salt.Salt = saltUtil.RandomSalt(prp.Mail)
 
-	if err := update(tx, &salt); err != nil {
-		return err
+	if _, err := salt.Update(tx, boil.Whitelist("salt")); err != nil {
+		return perror.ServerError.Wrapper(err)
 	}
 
-	encodedPassword, err := saltUtil.EncodePassword(rp.Password, salt.Salt)
-	if err != nil {
+	encodedPassword, perr := saltUtil.EncodePassword(rp.Password, salt.Salt)
+	if perr != nil {
 		return perror.ServerError.Wrapper(errors.New("Salt encoding is failed"))
 	}
 
-	user.Password = &encodedPassword
-	if err := update(tx, &user); err != nil {
-		return err
+	user.Password.SetValid(encodedPassword)
+	if _, err := user.Update(tx, boil.Infer()); err != nil {
+		return perror.ServerError.Wrapper(err)
 	}
 
 	// add operation history
@@ -140,9 +156,9 @@ func (m *Manager) ResetPassword(rp request.ResetPassword) *perror.PlutoError {
 }
 
 func (m *Manager) UserInfo(token string) (*models.User, *perror.PlutoError) {
-	jwtToken, err := jwt.VerifyB64JWT(token)
-	if err != nil {
-		return nil, err
+	jwtToken, perr := jwt.VerifyB64JWT(token)
+	if perr != nil {
+		return nil, perr
 	}
 
 	userPayload := jwt.UserPayload{}
@@ -156,49 +172,60 @@ func (m *Manager) UserInfo(token string) (*models.User, *perror.PlutoError) {
 		return nil, perror.JWTTokenExpired
 	}
 
-	user := models.User{}
-	if m.db.Where("id = ?", userPayload.UserID).First(&user).RecordNotFound() {
+	user, err := models.Users(qm.Where("id = ?", userPayload.UserID)).One(m.db)
+	if err != nil && err == sql.ErrNoRows {
 		return nil, perror.ServerError.Wrapper(errors.New("user not found id: " + string(userPayload.UserID)))
+	} else if err != nil {
+		return nil, perror.ServerError.Wrapper(err)
 	}
 
-	return &user, nil
+	return user, nil
 }
 
 func (m *Manager) RefreshAccessToken(rat request.RefreshAccessToken) (map[string]string, *perror.PlutoError) {
 	res := make(map[string]string)
 
-	tx := m.db.Begin()
+	tx, err := m.db.Begin()
+
+	if err != nil {
+		return nil, perror.ServerError.Wrapper(err)
+	}
 
 	defer func() {
 		tx.Rollback()
 	}()
 
-	rt := models.RefreshToken{}
-	if tx.Where("user_id = ? and refresh_token = ?", rat.UseID, rat.RefreshToken).First(&rt).RecordNotFound() {
+	rt, err := models.RefreshTokens(qm.Where("user_id = ? and refresh_token = ?", rat.UseID, rat.RefreshToken)).One(tx)
+	if err != nil && err == sql.ErrNoRows {
 		return nil, perror.InvalidRefreshToken
+	} else if err != nil {
+		return nil, perror.ServerError.Wrapper(err)
 	}
 
-	da := models.DeviceAPP{}
-	da.ID = rt.DeviceAPPID
-	if tx.Where("id = ?", da.ID).First(&da).RecordNotFound() {
+	da, err := models.DeviceApps(qm.Where("id = ?", rt.DeviceAppID)).One(tx)
+	if err != nil && err == sql.ErrNoRows {
 		return nil, perror.InvalidRefreshToken
+	} else if err != nil {
+		return nil, perror.ServerError.Wrapper(err)
 	}
 
 	if rt.UserID != rat.UseID || da.DeviceID != rat.DeviceID || da.AppID != rat.AppID {
 		return nil, perror.InvalidRefreshToken
 	}
 
-	user := models.User{}
-	if tx.Where("id = ?", rat.UseID).First(&user).RecordNotFound() {
+	user, err := models.Users(qm.Where("id = ?", rat.UseID)).One(tx)
+	if err != nil && err == sql.ErrNoRows {
 		return nil, perror.ServerError.Wrapper(fmt.Errorf("UserID not found: %d", rat.UseID))
+	} else if err != nil {
+		return nil, perror.ServerError.Wrapper(err)
 	}
 
 	// generate jwt token
 	up := jwt.NewUserPayload(rat.UseID, rat.DeviceID, rat.AppID, user.LoginType, m.config.JWT.AccessTokenExpire)
-	token, err := jwt.GenerateRSAJWT(up)
+	token, perr := jwt.GenerateRSAJWT(up)
 
-	if err != nil {
-		return nil, err.Wrapper(errors.New("JWT token generate failed"))
+	if perr != nil {
+		return nil, perr.Wrapper(errors.New("JWT token generate failed"))
 	}
 
 	// add operation history
@@ -213,9 +240,9 @@ func (m *Manager) RefreshAccessToken(rat request.RefreshAccessToken) (map[string
 }
 
 func (m *Manager) UpdateUserInfo(token string, uui request.UpdateUserInfo) *perror.PlutoError {
-	jwtToken, err := jwt.VerifyB64JWT(token)
-	if err != nil {
-		return err
+	jwtToken, perr := jwt.VerifyB64JWT(token)
+	if perr != nil {
+		return perr
 	}
 
 	userPayload := jwt.UserPayload{}
@@ -233,19 +260,25 @@ func (m *Manager) UpdateUserInfo(token string, uui request.UpdateUserInfo) *perr
 		return perror.InvalidJWTToekn
 	}
 
-	tx := m.db.Begin()
+	tx, err := m.db.Begin()
+
+	if err != nil {
+		return perror.ServerError.Wrapper(err)
+	}
 
 	defer func() {
 		tx.Rollback()
 	}()
 
-	user := models.User{}
-	if tx.Where("id = ?", userPayload.UserID).First(&user).RecordNotFound() {
+	user, err := models.Users(qm.Where("id = ?", userPayload.UserID)).One(tx)
+	if err != nil && err == sql.ErrNoRows {
 		return perror.ServerError.Wrapper(errors.New("user not found id: " + string(userPayload.UserID)))
+	} else if err != nil {
+		return perror.ServerError.Wrapper(err)
 	}
 
 	if uui.Avatar != "" && m.isValidURL(uui.Avatar) {
-		user.Avatar = uui.Avatar
+		user.Avatar.SetValid(uui.Avatar)
 	} else if uui.Avatar != "" && m.isValidBase64(uui.Avatar) {
 		ag := avatar.AvatarGen{}
 		ar, err := ag.GenFromBase64String(uui.Avatar)
@@ -257,21 +290,21 @@ func (m *Manager) UpdateUserInfo(token string, uui request.UpdateUserInfo) *perr
 		if err != nil {
 			return err
 		}
-		user.Avatar = url
+		user.Avatar.SetValid(url)
 	} else if uui.Avatar != "" {
 		return perror.InvalidAvatarFormat
 	}
 
 	if uui.Gender != "" {
-		user.Gender = &uui.Gender
+		user.Gender.SetValid(uui.Gender)
 	}
 
 	if uui.Name != "" {
-		user.Name = &uui.Name
+		user.Name = uui.Name
 	}
 
-	if err := update(tx, user); err != nil {
-		return err
+	if _, err := user.Update(tx, boil.Infer()); err != nil {
+		return perror.ServerError.Wrapper(err)
 	}
 
 	tx.Commit()

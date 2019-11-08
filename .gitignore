@@ -8,3 +8,4 @@ integration/docker/id_rsa*
 .vscode
 env
 bin/
+sqlboiler.toml

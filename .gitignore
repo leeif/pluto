@@ -9,3 +9,4 @@ integration/docker/id_rsa*
 env
 bin/
 sqlboiler.toml
+*.p8

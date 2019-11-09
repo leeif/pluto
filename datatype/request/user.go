@@ -68,6 +68,25 @@ func (wml *WechatMobileLogin) Validation() bool {
 	return true
 }
 
+type AppleMobileLogin struct {
+	Code     string `json:"code"`
+	DeviceID string `json:"device_id"`
+	AppID    string `json:"app_id"`
+	Name     string `json:"name"`
+}
+
+func (aml *AppleMobileLogin) Validation() bool {
+	if aml.Code == "" || aml.Name == "" {
+		return false
+	}
+
+	if aml.DeviceID == "" || aml.AppID == "" {
+		return false
+	}
+
+	return true
+}
+
 type RegisterVerifyMail struct {
 	Mail string `json:"mail"`
 }

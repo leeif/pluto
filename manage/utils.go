@@ -27,7 +27,8 @@ func NewManager(db *sql.DB, config *config.Config, logger *log.PlutoLog) *Manage
 const (
 	OperationMailLogin   = "maillogin"
 	OperationGoogleLogin = "googlelogin"
-	OperationWechatLogin = "wecgatlogin"
+	OperationWechatLogin = "wechatlogin"
+	OperationAppleLogin  = "applelogin"
 
 	OperationLogout        = "logout"
 	OperationResetPassword = "reset_password"

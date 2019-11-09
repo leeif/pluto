@@ -25,6 +25,7 @@ type Config struct {
 	Avatar      *AvatarConfig      `kiper_config:"name:avatar"`
 	GoogleLogin *GoogleLoginConfig `kiper_config:"name:google_login"`
 	WechatLogin *WechatLoginConfig `kiper_config:"name:wechat_login"`
+	AppleLogin  *AppleLoginConfig  `kiper_config:"name:apple_login"`
 	JWT         *JWTConfig         `kiper_config:"name:jwt"`
 	View        *ViewConfig        `kiper_config:"name:view"`
 }
@@ -39,6 +40,7 @@ func NewConfig(args []string, version string) (*Config, error) {
 		Avatar:      newAvatarConfig(),
 		GoogleLogin: newGoogleLoginConfig(),
 		WechatLogin: newWechatLoginConfig(),
+		AppleLogin:  newAppleLoginConfig(),
 		JWT:         newJWTConfig(),
 		View:        newViewConfig(),
 	}

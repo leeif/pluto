@@ -62,7 +62,7 @@ func loginRouter(router *mux.Router, db *sql.DB, config *config.Config, logger *
 		responseOK(res, w)
 	})).Methods("POST")
 
-	router.Handle("/login/google/mobile", mw.NoVerifyMiddleware(func(w http.ResponseWriter, r *http.Request, next http.HandlerFunc) {
+	router.Handle("/login/wechat/mobile", mw.NoVerifyMiddleware(func(w http.ResponseWriter, r *http.Request, next http.HandlerFunc) {
 		login := request.WechatMobileLogin{}
 
 		if err := getBody(r, &login); err != nil {
@@ -73,6 +73,30 @@ func loginRouter(router *mux.Router, db *sql.DB, config *config.Config, logger *
 		}
 
 		res, err := manager.WechatLoginMobile(login)
+
+		if err != nil {
+			// set err to context for log
+			context.Set(r, "pluto_error", err)
+			responseError(err, w)
+			next(w, r)
+			return
+		}
+
+		responseOK(res, w)
+
+	})).Methods("POST")
+
+	router.Handle("/login/apple/mobile", mw.NoVerifyMiddleware(func(w http.ResponseWriter, r *http.Request, next http.HandlerFunc) {
+		login := request.AppleMobileLogin{}
+
+		if err := getBody(r, &login); err != nil {
+			context.Set(r, "pluto_error", err)
+			responseError(err, w)
+			next(w, r)
+			return
+		}
+
+		res, err := manager.AppleLoginMobile(login)
 
 		if err != nil {
 			// set err to context for log

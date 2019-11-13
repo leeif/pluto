@@ -466,7 +466,7 @@ func (m *Manager) AppleLoginMobile(login request.AppleMobileLogin) (map[string]s
 		tx.Rollback()
 	}()
 
-	user, err := models.Users(qm.Where("login_type = ? and identify_token = ?", APPLELOGIN)).One(tx)
+	user, err := models.Users(qm.Where("login_type = ? and identify_token = ?", APPLELOGIN, info.Sub)).One(tx)
 	if err != nil && err != sql.ErrNoRows {
 		return nil, perror.ServerError.Wrapper(err)
 	} else if err != nil && err == sql.ErrNoRows {
@@ -488,6 +488,7 @@ func (m *Manager) AppleLoginMobile(login request.AppleMobileLogin) (map[string]s
 		}
 
 		user.IdentifyToken = info.Sub
+		user.Mail.SetValid(info.Email)
 		user.LoginType = APPLELOGIN
 		user.Name = login.Name
 		user.Verified.SetValid(true)
@@ -537,7 +538,7 @@ type appleIdTokenInfo struct {
 	Sub           string `json:"sub"`
 	Email         string `json:"email"`
 	EmailVerified string `json:"email_verified"`
-	AuthTime      string `json:"auth_time"`
+	AuthTime      int64  `json:"auth_time"`
 	gjwt.StandardClaims
 }
 
@@ -545,7 +546,7 @@ func getAppleToken(cfg *config.Config, code string) (*appleIdTokenInfo, *perror.
 	a := appleLogin.InitAppleConfig(
 		cfg.AppleLogin.TeamID,
 		cfg.AppleLogin.ClientID,
-		"",
+		cfg.AppleLogin.RedirectURL,
 		cfg.AppleLogin.KeyID,
 	)
 
@@ -553,15 +554,17 @@ func getAppleToken(cfg *config.Config, code string) (*appleIdTokenInfo, *perror.
 	if err != nil {
 		return nil, perror.ServerError.Wrapper(err)
 	}
+
 	token, err := a.GetAppleToken(code, 120)
 	if err != nil {
-		return nil, perror.ServerError.Wrapper(err)
+		return nil, perror.InvalidAppleIDToken.Wrapper(err)
 	}
 
 	info, perr := parseAppleIDToken(token.IDToken)
 	if perr != nil {
 		return nil, perr
 	}
+
 	if info.Aud != cfg.AppleLogin.ClientID {
 		return nil, perror.InvalidAppleIDToken
 	}

@@ -543,9 +543,10 @@ type appleIdTokenInfo struct {
 }
 
 func getAppleToken(cfg *config.Config, code string) (*appleIdTokenInfo, *perror.PlutoError) {
+	fmt.Println(cfg.AppleLogin.BundleID)
 	a := appleLogin.InitAppleConfig(
 		cfg.AppleLogin.TeamID,
-		cfg.AppleLogin.ClientID,
+		cfg.AppleLogin.BundleID,
 		cfg.AppleLogin.RedirectURL,
 		cfg.AppleLogin.KeyID,
 	)
@@ -565,7 +566,7 @@ func getAppleToken(cfg *config.Config, code string) (*appleIdTokenInfo, *perror.
 		return nil, perr
 	}
 
-	if info.Aud != cfg.AppleLogin.ClientID {
+	if info.Aud != cfg.AppleLogin.BundleID {
 		return nil, perror.InvalidAppleIDToken
 	}
 	return info, nil

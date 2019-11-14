@@ -1,6 +1,7 @@
 package route
 
 import (
+	"database/sql"
 	"encoding/json"
 	"errors"
 	"fmt"
@@ -8,8 +9,9 @@ import (
 	"net/http"
 	"strings"
 
+	"github.com/leeif/pluto/models"
+
 	"github.com/gorilla/mux"
-	"github.com/jinzhu/gorm"
 	"github.com/leeif/pluto/config"
 	"github.com/leeif/pluto/datatype/request"
 	"github.com/leeif/pluto/log"
@@ -22,7 +24,7 @@ import (
 type router struct {
 	Name   string
 	Prefix string
-	Func   func(router *mux.Router, db *gorm.DB, config *config.Config, logger *log.PlutoLog)
+	Func   func(router *mux.Router, db *sql.DB, config *config.Config, logger *log.PlutoLog)
 }
 
 var routers = []router{
@@ -58,7 +60,7 @@ var routers = []router{
 	},
 }
 
-func Router(router *mux.Router, db *gorm.DB, config *config.Config, logger *log.PlutoLog) {
+func Router(router *mux.Router, db *sql.DB, config *config.Config, logger *log.PlutoLog) {
 
 	for _, r := range routers {
 		logger.Info(fmt.Sprintf("Register %s router", r.Name))
@@ -94,6 +96,20 @@ func getBody(r *http.Request, revicer interface{}) *perror.PlutoError {
 		return perror.BadRequest
 	}
 	return nil
+}
+
+func formatUser(user *models.User) map[string]interface{} {
+	res := make(map[string]interface{})
+	res["id"] = user.ID
+	res["mail"] = user.ID
+	res["name"] = user.Name
+	res["gender"] = user.Gender
+	res["avatar"] = user.Avatar
+	res["login_type"] = user.LoginType
+	res["verified"] = user.Verified
+	res["created_at"] = user.CreatedAt.Time.Unix()
+	res["updated_at"] = user.UpdatedAt.Time.Unix()
+	return res
 }
 
 func responseOK(body interface{}, w http.ResponseWriter) error {

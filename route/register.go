@@ -1,9 +1,9 @@
 package route
 
 import (
+	"database/sql"
 	"net/http"
 
-	"github.com/jinzhu/gorm"
 	"github.com/leeif/pluto/config"
 	"github.com/leeif/pluto/middleware"
 
@@ -16,7 +16,7 @@ import (
 	"github.com/gorilla/mux"
 )
 
-func registerRouter(router *mux.Router, db *gorm.DB, config *config.Config, logger *log.PlutoLog) {
+func registerRouter(router *mux.Router, db *sql.DB, config *config.Config, logger *log.PlutoLog) {
 	mw := middleware.NewMiddle(logger)
 	manager := manage.NewManager(db, config, logger)
 
@@ -67,7 +67,7 @@ func registerRouter(router *mux.Router, db *gorm.DB, config *config.Config, logg
 			return
 		}
 
-		err := manager.RegisterVerifyMail(db, rvm, getBaseURL(r))
+		err := manager.RegisterVerifyMail(rvm, getBaseURL(r))
 
 		if err != nil {
 			// set err to context for log

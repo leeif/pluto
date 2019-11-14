@@ -1,9 +1,9 @@
 package route
 
 import (
+	"database/sql"
 	"net/http"
 
-	"github.com/jinzhu/gorm"
 	"github.com/leeif/pluto/config"
 	"github.com/leeif/pluto/middleware"
 
@@ -17,7 +17,7 @@ import (
 	"github.com/gorilla/mux"
 )
 
-func authRouter(router *mux.Router, db *gorm.DB, config *config.Config, logger *log.PlutoLog) {
+func authRouter(router *mux.Router, db *sql.DB, config *config.Config, logger *log.PlutoLog) {
 	mw := middleware.NewMiddle(logger)
 	manager := manage.NewManager(db, config, logger)
 

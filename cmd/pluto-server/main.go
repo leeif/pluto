@@ -2,6 +2,7 @@ package main
 
 import (
 	"context"
+	"database/sql"
 	"fmt"
 	"log"
 	"os"
@@ -13,19 +14,18 @@ import (
 	plog "github.com/leeif/pluto/log"
 	"github.com/leeif/pluto/route"
 
-	"github.com/jinzhu/gorm"
-
 	"github.com/gorilla/mux"
 	"github.com/leeif/pluto/config"
 	"go.uber.org/fx"
 
 	"github.com/leeif/pluto/database"
-	"github.com/leeif/pluto/utils/migrate"
 
+	_ "github.com/go-sql-driver/mysql"
 	"github.com/leeif/pluto/utils/rsa"
 	"github.com/leeif/pluto/utils/view"
 )
 
+// VERSION is the pluto build version
 var VERSION = ""
 
 func printConfig(config *config.Config, logger *plog.PlutoLog) {
@@ -35,7 +35,7 @@ func printConfig(config *config.Config, logger *plog.PlutoLog) {
 	logger.Info(fmt.Sprintf("ResetPasswordTokenExpire: %d", config.JWT.ResetPasswordTokenExpire))
 }
 
-func register(router *mux.Router, db *gorm.DB, config *config.Config, logger *plog.PlutoLog) error {
+func register(router *mux.Router, db *sql.DB, config *config.Config, logger *plog.PlutoLog) error {
 
 	printConfig(config, logger)
 
@@ -45,12 +45,6 @@ func register(router *mux.Router, db *gorm.DB, config *config.Config, logger *pl
 	}
 
 	if err := view.Init(config, logger); err != nil {
-		logger.Error(err.Error())
-		return err
-	}
-
-	// DB Migration
-	if err := migrate.Migrate(db); err != nil {
 		logger.Error(err.Error())
 		return err
 	}

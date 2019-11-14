@@ -1,13 +1,17 @@
 package manage
 
 import (
+	"database/sql"
 	"encoding/json"
 	"errors"
 	"time"
 
+	"github.com/volatiletech/sqlboiler/boil"
+
+	"github.com/volatiletech/sqlboiler/queries/qm"
+
 	b64 "encoding/base64"
 
-	"github.com/jinzhu/gorm"
 	perror "github.com/leeif/pluto/datatype/pluto_error"
 	"github.com/leeif/pluto/datatype/request"
 	"github.com/leeif/pluto/models"
@@ -19,55 +23,66 @@ import (
 
 func (m *Manager) RegisterWithEmail(register request.MailRegister) (uint, *perror.PlutoError) {
 
-	tx := m.db.Begin()
+	tx, err := m.db.Begin()
+	if err != nil {
+		return 0, perror.ServerError.Wrapper(err)
+	}
 	defer func() {
 		tx.Rollback()
 	}()
 
-	user := models.User{}
 	identifyToken := b64.RawStdEncoding.EncodeToString([]byte(register.Mail))
-	if !tx.Where("login_type = ? and identify_token = ?", MAILLOGIN, identifyToken).First(&user).RecordNotFound() {
+	exists, err := models.Users(qm.Where("login_type = ? and identify_token = ?", MAILLOGIN, identifyToken)).Exists(tx)
+	if err != nil {
+		return 0, perror.ServerError.Wrapper(err)
+	}
+
+	if exists {
 		return 0, perror.MailIsAlreadyRegister
 	}
 
-	salt := models.Salt{}
-	salt.Salt = saltUtil.RandomSalt(identifyToken)
+	salt := saltUtil.RandomSalt(identifyToken)
 
-	encodedPassword, err := saltUtil.EncodePassword(register.Password, salt.Salt)
-	if err != nil {
-		return 0, perror.ServerError.Wrapper(errors.New("Salt encoding is failed"))
+	encodedPassword, perr := saltUtil.EncodePassword(register.Password, salt)
+	if perr != nil {
+		return 0, perr
 	}
-
-	user.Mail = &register.Mail
-	user.Name = &register.Name
+	user := models.User{}
+	user.Mail.SetValid(register.Mail)
+	user.Name = register.Name
 	user.IdentifyToken = identifyToken
 	user.LoginType = MAILLOGIN
-	user.Password = &encodedPassword
+	user.Password.SetValid(encodedPassword)
 
 	if m.config.Server.SkipRegisterVerifyMail {
-		user.Verified = true
+		user.Verified.SetValid(true)
 	}
 
 	// get a random avatar
 	ag := avatar.AvatarGen{}
-	avatarReader, err := ag.GenFromGravatar()
+	avatarReader, perr := ag.GenFromGravatar()
+	if perr != nil {
+		return 0, perr
+	}
+
 	as := avatar.NewAvatarSaver(m.config)
-	remoteURL, err := as.SaveAvatarImageInOSS(avatarReader)
-	if err != nil {
-		user.Avatar = avatarReader.OriginURL
-		m.logger.Warn(err.LogError)
+	remoteURL, perr := as.SaveAvatarImageInOSS(avatarReader)
+	if perr != nil {
+		user.Avatar.SetValid(avatarReader.OriginURL)
+		m.logger.Warn(perr.LogError)
 	} else {
-		user.Avatar = remoteURL
+		user.Avatar.SetValid(remoteURL)
 	}
 
-	if err := create(tx, &user); err != nil {
-		return 0, err
+	if err := user.Insert(tx, boil.Infer()); err != nil {
+		return 0, perror.ServerError.Wrapper(err)
 	}
 
-	salt.UserID = user.ID
-
-	if err := create(tx, &salt); err != nil {
-		return 0, err
+	saltModel := models.Salt{}
+	saltModel.Salt = salt
+	saltModel.UserID = user.ID
+	if err := saltModel.Insert(tx, boil.Infer()); err != nil {
+		return 0, perror.ServerError.Wrapper(err)
 	}
 
 	tx.Commit()
@@ -75,27 +90,26 @@ func (m *Manager) RegisterWithEmail(register request.MailRegister) (uint, *perro
 	return user.ID, nil
 }
 
-func (m *Manager) RegisterVerifyMail(db *gorm.DB, rvm request.RegisterVerifyMail, baseURL string) *perror.PlutoError {
-	if db == nil {
-		return perror.ServerError.Wrapper(errors.New("DB connection is empty"))
-	}
+func (m *Manager) RegisterVerifyMail(rvm request.RegisterVerifyMail, baseURL string) *perror.PlutoError {
 
-	user := models.User{}
 	identifyToken := b64.RawStdEncoding.EncodeToString([]byte(rvm.Mail))
-	if db.Where("login_type = ? and identify_token = ?", MAILLOGIN, identifyToken).First(&user).RecordNotFound() {
+	user, err := models.Users(qm.Where("login_type = ? and identify_token = ?", MAILLOGIN, identifyToken)).One(m.db)
+	if err != nil && err == sql.ErrNoRows {
 		return perror.MailIsNotExsit
+	} else if err != nil {
+		return perror.ServerError.Wrapper(err)
 	}
 
-	if user.Verified == true {
+	if user.Verified.Bool == true {
 		return perror.MailAlreadyVerified
 	}
 
-	ml, err := mail.NewMail(m.config)
-	if err != nil {
-		return err
+	ml, perr := mail.NewMail(m.config)
+	if perr != nil {
+		return perr
 	}
-	if err := ml.SendRegisterVerify(user.ID, *user.Mail, baseURL); err != nil {
-		return err
+	if perr := ml.SendRegisterVerify(user.ID, user.Mail.String, baseURL); perr != nil {
+		return perr
 	}
 
 	return nil
@@ -122,25 +136,29 @@ func (m *Manager) RegisterVerify(token string) *perror.PlutoError {
 		return perror.JWTTokenExpired
 	}
 
-	tx := m.db.Begin()
+	tx, err := m.db.Begin()
+	if err != nil {
+		return perror.ServerError.Wrapper(err)
+	}
+
 	defer func() {
 		tx.Rollback()
 	}()
 
-	user := models.User{}
-	if tx.Where("id = ?", verifyPayload.UserID).First(&user).RecordNotFound() {
+	user, err := models.Users(qm.Where("id = ?", verifyPayload.UserID)).One(tx)
+	if err != nil && err == sql.ErrNoRows {
 		return perror.ServerError.Wrapper(errors.New("user not found"))
+	} else if err != nil {
+		return perror.ServerError.Wrapper(err)
 	}
 
-	if user.Verified == true {
+	if user.Verified.Bool == true {
 		return perror.MailAlreadyVerified
 	}
 
-	user.Verified = true
+	user.Verified.SetValid(true)
 
-	if err := update(tx, &user); err != nil {
-		return err
-	}
+	user.Update(tx, boil.Whitelist("verified"))
 
 	tx.Commit()
 

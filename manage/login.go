@@ -1,6 +1,7 @@
 package manage
 
 import (
+	"database/sql"
 	b64 "encoding/base64"
 	"encoding/json"
 	"errors"
@@ -9,12 +10,18 @@ import (
 	"net/http"
 	"strings"
 
+	"github.com/BillSJC/appleLogin"
+	"github.com/volatiletech/sqlboiler/boil"
+
+	"github.com/volatiletech/sqlboiler/queries/qm"
+
 	"github.com/leeif/pluto/config"
 
 	gjwt "github.com/dgrijalva/jwt-go"
 	perror "github.com/leeif/pluto/datatype/pluto_error"
 	"github.com/leeif/pluto/datatype/request"
 	"github.com/leeif/pluto/models"
+	"github.com/leeif/pluto/utils/avatar"
 	"github.com/leeif/pluto/utils/jwt"
 	"github.com/leeif/pluto/utils/refresh"
 	saltUtil "github.com/leeif/pluto/utils/salt"
@@ -25,75 +32,108 @@ const (
 	MAILLOGIN   = "mail"
 	GOOGLELOGIN = "google"
 	WECHATLOGIN = "wechat"
+	APPLELOGIN  = "apple"
 )
+
+func (m *Manager) addDeviceApp(tx *sql.Tx, deviceID, appID string) (*models.DeviceApp, *perror.PlutoError) {
+	// insert deviceID and appID into device table
+	deviceApp, err := models.DeviceApps(qm.Where("device_id = ? and app_id = ?", deviceID, appID)).One(tx)
+
+	if err != nil && err != sql.ErrNoRows {
+		return nil, perror.ServerError.Wrapper(err)
+	} else if err == sql.ErrNoRows {
+		deviceApp = &models.DeviceApp{}
+		deviceApp.DeviceID = deviceID
+		deviceApp.AppID = appID
+		if err := deviceApp.Insert(tx, boil.Infer()); err != nil {
+			return nil, perror.ServerError.Wrapper(err)
+		}
+	}
+	return deviceApp, nil
+}
+
+func (m *Manager) updateRefreshToken(tx *sql.Tx, userID uint, deviceApp *models.DeviceApp) (string, *perror.PlutoError) {
+	refreshToken := refresh.GenerateRefreshToken(string(userID) + string(deviceApp.ID))
+
+	rt, err := models.RefreshTokens(qm.Where("user_id = ? and device_app_id = ?", userID, deviceApp.ID)).One(tx)
+	if err != nil && err != sql.ErrNoRows {
+		return "", perror.ServerError.Wrapper(err)
+	} else if err == sql.ErrNoRows {
+		rt = &models.RefreshToken{}
+		rt.DeviceAppID = deviceApp.ID
+		rt.UserID = userID
+		rt.RefreshToken = refreshToken
+		if err := rt.Insert(tx, boil.Infer()); err != nil {
+			return "", perror.ServerError.Wrapper(err)
+		}
+	} else if err == nil {
+		rt.RefreshToken = refreshToken
+		if _, err := rt.Update(tx, boil.Infer()); err != nil {
+			return "", perror.ServerError.Wrapper(err)
+		}
+	}
+	return refreshToken, nil
+}
 
 func (m *Manager) EmailLogin(login request.MailLogin) (map[string]string, *perror.PlutoError) {
 	res := make(map[string]string)
 
-	tx := m.db.Begin()
+	tx, err := m.db.Begin()
+
 	defer func() {
 		tx.Rollback()
 	}()
 
-	user := models.User{}
-	identifyToken := b64.RawStdEncoding.EncodeToString([]byte(login.Mail))
-	if tx.Where("login_type = ? and identify_token = ?", MAILLOGIN, identifyToken).First(&user).RecordNotFound() {
-		return nil, perror.MailIsNotExsit
+	if err != nil {
+		return nil, perror.ServerError.Wrapper(err)
 	}
 
-	if user.Verified == false {
+	identifyToken := b64.RawStdEncoding.EncodeToString([]byte(login.Mail))
+	user, err := models.Users(qm.Where("login_type = ? and identify_token = ?", MAILLOGIN, identifyToken)).One(tx)
+	if err != nil && err == sql.ErrNoRows {
+		return nil, perror.MailIsNotExsit
+	} else if err != nil {
+		return nil, perror.ServerError.Wrapper(err)
+	}
+
+	if user.Verified.Bool == false {
 		return nil, perror.MailIsNotVerified
 	}
 
-	salt := models.Salt{}
-	if tx.Where("user_id = ?", user.ID).First(&salt).RecordNotFound() {
+	salt, err := models.Salts(qm.Where("user_id = ?", user.ID)).One(tx)
+	if err != nil {
 		return nil, perror.ServerError.Wrapper(errors.New("Salt is not found"))
 	}
 
-	encodePassword, err := saltUtil.EncodePassword(login.Password, salt.Salt)
+	encodePassword, perr := saltUtil.EncodePassword(login.Password, salt.Salt)
 
-	if err != nil {
-		return nil, err.Wrapper(errors.New("Password encoding is failed"))
+	if perr != nil {
+		return nil, perr.Wrapper(errors.New("Password encoding is failed"))
 	}
 
-	if *user.Password != encodePassword {
+	if user.Password.String != encodePassword {
 		return nil, perror.InvalidPassword
 	}
 
 	// insert deviceID and appID into device table
-	deviceAPP := models.DeviceAPP{}
-
-	if tx.Where("device_id = ? and app_id = ?", login.DeviceID, login.AppID).First(&deviceAPP).RecordNotFound() {
-		deviceAPP.DeviceID = login.DeviceID
-		deviceAPP.AppID = login.AppID
-		if err := create(tx, &deviceAPP); err != nil {
-			return nil, err.Wrapper(errors.New("table device_apps"))
-		}
+	deviceApp, perr := m.addDeviceApp(tx, login.DeviceID, login.AppID)
+	if perr != nil {
+		return nil, perr
 	}
 
-	// refresh token
-	rt := models.RefreshToken{}
-	refreshToken := refresh.GenerateRefreshToken(string(user.ID) + deviceAPP.DeviceID + deviceAPP.AppID)
-	rt.UserID = user.ID
-	rt.DeviceAPPID = deviceAPP.ID
-	if tx.Where("device_app_id = ? and user_id = ?", deviceAPP.ID, user.ID).First(&rt).RecordNotFound() {
-		rt.RefreshToken = refreshToken
-		if err := create(tx, &rt); err != nil {
-			return nil, err.Wrapper(errors.New("table refresh_tokens"))
-		}
-	} else {
-		rt.RefreshToken = refreshToken
-		if err := update(tx, &rt); err != nil {
-			return nil, err
-		}
+	// update refresh token
+	refreshToken, perr := m.updateRefreshToken(tx, user.ID, deviceApp)
+
+	if perr != nil {
+		return nil, perr
 	}
 
 	// generate jwt token
-	up := jwt.NewUserPayload(user.ID, deviceAPP.DeviceID, deviceAPP.AppID, MAILLOGIN, m.config.JWT.AccessTokenExpire)
-	token, err := jwt.GenerateRSAJWT(up)
+	up := jwt.NewUserPayload(user.ID, deviceApp.DeviceID, deviceApp.AppID, MAILLOGIN, m.config.JWT.AccessTokenExpire)
+	token, perr := jwt.GenerateRSAJWT(up)
 
-	if err != nil {
-		return nil, err.Wrapper(errors.New("JWT token generate failed"))
+	if perr != nil {
+		return nil, perr.Wrapper(errors.New("JWT token generate failed"))
 	}
 
 	// add operation history
@@ -102,7 +142,7 @@ func (m *Manager) EmailLogin(login request.MailLogin) (map[string]string, *perro
 	}
 
 	res["jwt"] = token.String()
-	res["refresh_token"] = rt.RefreshToken
+	res["refresh_token"] = refreshToken
 
 	tx.Commit()
 
@@ -112,73 +152,66 @@ func (m *Manager) EmailLogin(login request.MailLogin) (map[string]string, *perro
 func (m *Manager) GoogleLoginMobile(login request.GoogleMobileLogin) (map[string]string, *perror.PlutoError) {
 	res := make(map[string]string)
 
-	info, err := verifyGoogleIdToken(login.IDToken)
-	if err != nil {
-		return nil, err
+	info, perr := verifyGoogleIdToken(login.IDToken)
+	if perr != nil {
+		return nil, perr
 	}
 
-	tx := m.db.Begin()
+	tx, err := m.db.Begin()
+	if err != nil {
+		return nil, perror.ServerError.Wrapper(err)
+	}
+
 	defer func() {
 		tx.Rollback()
 	}()
-	user := models.User{}
-	user.IdentifyToken = info.Sub
-	user.LoginType = GOOGLELOGIN
-	user.Avatar = info.Picture
-	user.Name = &info.Name
-	user.Mail = &info.Email
-	user.Verified = true
-	if tx.Where("login_type = ? and identify_token = ?", user.LoginType, user.IdentifyToken).First(&user).RecordNotFound() {
-		if err := create(tx, &user); err != nil {
-			return nil, err
+
+	user, err := models.Users(qm.Where("login_type = ? and identify_token = ?", GOOGLELOGIN, info.Sub)).One(tx)
+	if err != nil && err != sql.ErrNoRows {
+		return nil, perror.ServerError.Wrapper(err)
+	} else if err != nil && err == sql.ErrNoRows {
+		user = &models.User{}
+		user.IdentifyToken = info.Sub
+		user.LoginType = GOOGLELOGIN
+		user.Avatar.SetValid(info.Picture)
+		user.Name = info.Name
+		user.Verified.SetValid(true)
+		if err := user.Insert(tx, boil.Infer()); err != nil {
+			return nil, perror.ServerError.Wrapper(err)
 		}
 	}
 
 	// insert deviceID and appID into device table
-	deviceAPP := models.DeviceAPP{}
-
-	if tx.Where("device_id = ? and app_id = ?", login.DeviceID, login.AppID).First(&deviceAPP).RecordNotFound() {
-		deviceAPP.DeviceID = login.DeviceID
-		deviceAPP.AppID = login.AppID
-		if err := create(tx, &deviceAPP); err != nil {
-			return nil, err
-		}
+	deviceApp, perr := m.addDeviceApp(tx, login.DeviceID, login.AppID)
+	if perr != nil {
+		return nil, perr
 	}
 
-	// refresh token
-	rt := models.RefreshToken{}
-	refreshToken := refresh.GenerateRefreshToken(string(user.ID) + deviceAPP.DeviceID + deviceAPP.AppID)
-	rt.UserID = user.ID
-	rt.DeviceAPPID = deviceAPP.ID
-	if tx.Where("device_app_id = ? and user_id = ?", deviceAPP.ID, user.ID).First(&rt).RecordNotFound() {
-		rt.RefreshToken = refreshToken
-		if err := create(tx, &rt); err != nil {
-			return nil, err
-		}
-	} else {
-		rt.RefreshToken = refreshToken
-		if err := update(tx, &rt); err != nil {
-			return nil, err
-		}
+	// update refresh token
+	refreshToken, perr := m.updateRefreshToken(tx, user.ID, deviceApp)
+
+	if perr != nil {
+		return nil, perr
 	}
 
 	// generate jwt token
-	up := jwt.NewUserPayload(user.ID, deviceAPP.DeviceID, deviceAPP.AppID, GOOGLELOGIN, m.config.JWT.AccessTokenExpire)
-	token, err := jwt.GenerateRSAJWT(up)
+	up := jwt.NewUserPayload(user.ID, deviceApp.DeviceID, deviceApp.AppID, GOOGLELOGIN, m.config.JWT.AccessTokenExpire)
+	token, perr := jwt.GenerateRSAJWT(up)
 
-	if err != nil {
-		return nil, err.Wrapper(errors.New("JWT token generate failed"))
+	if perr != nil {
+		return nil, perr.Wrapper(errors.New("JWT token generate failed"))
 	}
-
-	res["jwt"] = token.String()
-	res["refresh_token"] = rt.RefreshToken
 
 	// add operation history
 	if err := historyOperation(tx, OperationGoogleLogin, user.ID); err != nil {
 		return nil, err
 	}
 
+	res["jwt"] = token.String()
+	res["refresh_token"] = refreshToken
+
 	tx.Commit()
+
 	return res, nil
 }
 
@@ -231,76 +264,69 @@ func verifyGoogleIdToken(idToken string) (*googleIDTokenInfo, *perror.PlutoError
 func (m *Manager) WechatLoginMobile(login request.WechatMobileLogin) (map[string]string, *perror.PlutoError) {
 	res := make(map[string]string)
 
-	accessToken, openID, err := getWechatAccessToken(login.Code, m.config.WechatLogin)
+	accessToken, openID, perr := getWechatAccessToken(login.Code, m.config.WechatLogin)
 
-	if err != nil {
-		return nil, err
+	if perr != nil {
+		return nil, perr
 	}
 
-	info, err := getWebchatUserInfo(accessToken, openID)
-	if err != nil {
-		return nil, err
+	info, perr := getWechatUserInfo(accessToken, openID)
+	if perr != nil {
+		return nil, perr
 	}
 
-	tx := m.db.Begin()
+	tx, err := m.db.Begin()
+	if err != nil {
+		return nil, perror.ServerError.Wrapper(err)
+	}
+
 	defer func() {
 		tx.Rollback()
 	}()
-	user := models.User{}
-	user.IdentifyToken = info.Unionid
-	user.LoginType = WECHATLOGIN
-	user.Avatar = info.HeadimgURL
-	user.Name = &info.Nickname
-	user.Verified = true
-	if tx.Where("login_type = ? and identify_token = ?", user.LoginType, user.IdentifyToken).First(&user).RecordNotFound() {
-		if err := create(tx, &user); err != nil {
-			return nil, err
+
+	user, err := models.Users(qm.Where("login_type = ? and identify_token = ?", WECHATLOGIN, info.Unionid)).One(tx)
+	if err != nil && err != sql.ErrNoRows {
+		return nil, perror.ServerError.Wrapper(err)
+	} else if err != nil && err == sql.ErrNoRows {
+		user = &models.User{}
+		user.IdentifyToken = info.Unionid
+		user.LoginType = WECHATLOGIN
+		user.Avatar.SetValid(info.HeadimgURL)
+		user.Name = info.Nickname
+		user.Verified.SetValid(true)
+		if err := user.Insert(tx, boil.Infer()); err != nil {
+			return nil, perror.ServerError.Wrapper(err)
 		}
 	}
 
 	// insert deviceID and appID into device table
-	deviceAPP := models.DeviceAPP{}
-
-	if tx.Where("device_id = ? and app_id = ?", login.DeviceID, login.AppID).First(&deviceAPP).RecordNotFound() {
-		deviceAPP.DeviceID = login.DeviceID
-		deviceAPP.AppID = login.AppID
-		if err := create(tx, &deviceAPP); err != nil {
-			return nil, err
-		}
+	deviceApp, perr := m.addDeviceApp(tx, login.DeviceID, login.AppID)
+	if perr != nil {
+		return nil, perr
 	}
 
-	// refresh token
-	rt := models.RefreshToken{}
-	refreshToken := refresh.GenerateRefreshToken(string(user.ID) + deviceAPP.DeviceID + deviceAPP.AppID)
-	rt.UserID = user.ID
-	rt.DeviceAPPID = deviceAPP.ID
-	if tx.Where("device_app_id = ? and user_id = ?", deviceAPP.ID, user.ID).First(&rt).RecordNotFound() {
-		rt.RefreshToken = refreshToken
-		if err := create(tx, &rt); err != nil {
-			return nil, err
-		}
-	} else {
-		rt.RefreshToken = refreshToken
-		if err := update(tx, &rt); err != nil {
-			return nil, err
-		}
+	// update refresh token
+	refreshToken, perr := m.updateRefreshToken(tx, user.ID, deviceApp)
+
+	if perr != nil {
+		return nil, perr
 	}
 
 	// generate jwt token
-	up := jwt.NewUserPayload(user.ID, deviceAPP.DeviceID, deviceAPP.AppID, WECHATLOGIN, m.config.JWT.AccessTokenExpire)
-	token, err := jwt.GenerateRSAJWT(up)
+	up := jwt.NewUserPayload(user.ID, deviceApp.DeviceID, deviceApp.AppID, WECHATLOGIN, m.config.JWT.AccessTokenExpire)
+	token, perr := jwt.GenerateRSAJWT(up)
 
-	if err != nil {
-		return nil, err.Wrapper(errors.New("JWT token generate failed"))
+	if perr != nil {
+		return nil, perr.Wrapper(errors.New("JWT token generate failed"))
 	}
-
-	res["jwt"] = token.String()
-	res["refresh_token"] = rt.RefreshToken
 
 	// add operation history
 	if err := historyOperation(tx, OperationWechatLogin, user.ID); err != nil {
 		return nil, err
 	}
+
+	res["jwt"] = token.String()
+	res["refresh_token"] = refreshToken
 
 	tx.Commit()
 	return res, nil
@@ -371,7 +397,7 @@ type wechatUserInfo struct {
 	ErrMSG     string `json:"errmsg"`
 }
 
-func getWebchatUserInfo(accessToken string, openID string) (info *wechatUserInfo, pe *perror.PlutoError) {
+func getWechatUserInfo(accessToken string, openID string) (info *wechatUserInfo, pe *perror.PlutoError) {
 
 	defer func() {
 		var err error
@@ -420,4 +446,141 @@ func getWebchatUserInfo(accessToken string, openID string) (info *wechatUserInfo
 	}
 
 	return nil, perror.ServerError.Wrapper(errors.New("Unknow server error"))
+}
+
+func (m *Manager) AppleLoginMobile(login request.AppleMobileLogin) (map[string]string, *perror.PlutoError) {
+	res := make(map[string]string)
+
+	info, perr := getAppleToken(m.config, login.Code)
+
+	if perr != nil {
+		return nil, perr
+	}
+
+	tx, err := m.db.Begin()
+	if err != nil {
+		return nil, perror.ServerError.Wrapper(err)
+	}
+
+	defer func() {
+		tx.Rollback()
+	}()
+
+	user, err := models.Users(qm.Where("login_type = ? and identify_token = ?", APPLELOGIN, info.Sub)).One(tx)
+	if err != nil && err != sql.ErrNoRows {
+		return nil, perror.ServerError.Wrapper(err)
+	} else if err != nil && err == sql.ErrNoRows {
+		user = &models.User{}
+		// get a random avatar
+		ag := avatar.AvatarGen{}
+		avatarReader, perr := ag.GenFromGravatar()
+		if perr != nil {
+			return nil, perr
+		}
+
+		as := avatar.NewAvatarSaver(m.config)
+		remoteURL, perr := as.SaveAvatarImageInOSS(avatarReader)
+		if perr != nil {
+			user.Avatar.SetValid(avatarReader.OriginURL)
+			m.logger.Warn(perr.LogError)
+		} else {
+			user.Avatar.SetValid(remoteURL)
+		}
+
+		user.IdentifyToken = info.Sub
+		user.Mail.SetValid(info.Email)
+		user.LoginType = APPLELOGIN
+		user.Name = login.Name
+		user.Verified.SetValid(true)
+		if err := user.Insert(tx, boil.Infer()); err != nil {
+			return nil, perror.ServerError.Wrapper(err)
+		}
+	}
+
+	// insert deviceID and appID into device table
+	deviceApp, perr := m.addDeviceApp(tx, login.DeviceID, login.AppID)
+	if perr != nil {
+		return nil, perr
+	}
+
+	// update refresh token
+	refreshToken, perr := m.updateRefreshToken(tx, user.ID, deviceApp)
+
+	if perr != nil {
+		return nil, perr
+	}
+
+	// generate jwt token
+	up := jwt.NewUserPayload(user.ID, deviceApp.DeviceID, deviceApp.AppID, APPLELOGIN, m.config.JWT.AccessTokenExpire)
+	token, perr := jwt.GenerateRSAJWT(up)
+
+	if perr != nil {
+		return nil, perr.Wrapper(errors.New("JWT token generate failed"))
+	}
+
+	// add operation history
+	if err := historyOperation(tx, OperationAppleLogin, user.ID); err != nil {
+		return nil, err
+	}
+
+	res["jwt"] = token.String()
+	res["refresh_token"] = refreshToken
+
+	tx.Commit()
+	return res, nil
+}
+
+type appleIdTokenInfo struct {
+	Iss           string `json:"iss"`
+	Aud           string `json:"aud"`
+	Exp           int64  `json:"exp"`
+	Iat           int64  `json:"iat"`
+	Sub           string `json:"sub"`
+	Email         string `json:"email"`
+	EmailVerified string `json:"email_verified"`
+	AuthTime      int64  `json:"auth_time"`
+	gjwt.StandardClaims
+}
+
+func getAppleToken(cfg *config.Config, code string) (*appleIdTokenInfo, *perror.PlutoError) {
+	fmt.Println(cfg.AppleLogin.BundleID)
+	a := appleLogin.InitAppleConfig(
+		cfg.AppleLogin.TeamID,
+		cfg.AppleLogin.BundleID,
+		cfg.AppleLogin.RedirectURL,
+		cfg.AppleLogin.KeyID,
+	)
+
+	err := a.LoadP8CertByFile(cfg.AppleLogin.P8CertFile)
+	if err != nil {
+		return nil, perror.ServerError.Wrapper(err)
+	}
+
+	token, err := a.GetAppleToken(code, 120)
+	if err != nil {
+		return nil, perror.InvalidAppleIDToken.Wrapper(err)
+	}
+
+	info, perr := parseAppleIDToken(token.IDToken)
+	if perr != nil {
+		return nil, perr
+	}
+
+	if info.Aud != cfg.AppleLogin.BundleID {
+		return nil, perror.InvalidAppleIDToken
+	}
+	return info, nil
+}
+
+func parseAppleIDToken(idToken string) (*appleIdTokenInfo, *perror.PlutoError) {
+	parser := gjwt.Parser{}
+	token, _, err := parser.ParseUnverified(idToken, &appleIdTokenInfo{})
+	if err != nil {
+		return nil, perror.InvalidAppleIDToken.Wrapper(err)
+	}
+	info, ok := token.Claims.(*appleIdTokenInfo)
+	if !ok {
+		return nil, perror.InvalidAppleIDToken
+	}
+	return info, nil
 }

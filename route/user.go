@@ -1,10 +1,10 @@
 package route
 
 import (
+	"database/sql"
 	"net/http"
 	"strings"
 
-	"github.com/jinzhu/gorm"
 	"github.com/leeif/pluto/config"
 	"github.com/leeif/pluto/middleware"
 
@@ -18,7 +18,7 @@ import (
 	"github.com/gorilla/mux"
 )
 
-func userRouter(router *mux.Router, db *gorm.DB, config *config.Config, logger *log.PlutoLog) {
+func userRouter(router *mux.Router, db *sql.DB, config *config.Config, logger *log.PlutoLog) {
 	mw := middleware.NewMiddle(logger)
 	manager := manage.NewManager(db, config, logger)
 
@@ -94,7 +94,7 @@ func userRouter(router *mux.Router, db *gorm.DB, config *config.Config, logger *
 			return
 		}
 
-		responseOK(res, w)
+		responseOK(formatUser(res), w)
 	})).Methods("GET")
 
 	router.Handle("/info/me/update", mw.NoVerifyMiddleware(func(w http.ResponseWriter, r *http.Request, next http.HandlerFunc) {

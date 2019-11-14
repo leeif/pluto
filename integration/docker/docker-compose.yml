@@ -9,7 +9,9 @@ services:
     volumes:
       - ./:/etc/pluto/
     restart: always
-    command: dockerize -wait tcp://pluto-it-db:3306 -timeout 60s /usr/bin/pluto-server --config.file=/etc/pluto/config_test.json
+    command: >
+      bash -c "dockerize -wait tcp://pluto-it-db:3306 -timeout 60s /usr/bin/pluto-migrate --config.file=/etc/pluto/config_test.json &&
+        /usr/bin/pluto-server --config.file=/etc/pluto/config_test.json"
 
   pluto-it-db:
     image: mysql:8.0.17

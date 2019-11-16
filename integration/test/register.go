@@ -2,7 +2,6 @@ package test
 
 import (
 	"bytes"
-	"encoding/base64"
 	"encoding/json"
 	"fmt"
 	"io/ioutil"
@@ -251,7 +250,7 @@ func testUpdateUserInfo() error {
 		return fmt.Errorf("Expect no error, but %v", err)
 	}
 
-	req.Header.Set("Authorization", "jwt "+base64.RawStdEncoding.EncodeToString([]byte(accessToken)))
+	req.Header.Set("Authorization", "jwt "+accessToken)
 	req.Header.Set("Content-type", "application/json")
 	client := http.Client{}
 	resp, err := client.Do(req)

@@ -21,11 +21,11 @@ import (
 	saltUtil "github.com/leeif/pluto/utils/salt"
 )
 
-func (m *Manager) RegisterWithEmail(register request.MailRegister) (uint, *perror.PlutoError) {
+func (m *Manager) RegisterWithEmail(register request.MailRegister) (*models.User, *perror.PlutoError) {
 
 	tx, err := m.db.Begin()
 	if err != nil {
-		return 0, perror.ServerError.Wrapper(err)
+		return nil, perror.ServerError.Wrapper(err)
 	}
 	defer func() {
 		tx.Rollback()
@@ -34,18 +34,18 @@ func (m *Manager) RegisterWithEmail(register request.MailRegister) (uint, *perro
 	identifyToken := b64.RawStdEncoding.EncodeToString([]byte(register.Mail))
 	exists, err := models.Users(qm.Where("login_type = ? and identify_token = ?", MAILLOGIN, identifyToken)).Exists(tx)
 	if err != nil {
-		return 0, perror.ServerError.Wrapper(err)
+		return nil, perror.ServerError.Wrapper(err)
 	}
 
 	if exists {
-		return 0, perror.MailIsAlreadyRegister
+		return nil, perror.MailIsAlreadyRegister
 	}
 
 	salt := saltUtil.RandomSalt(identifyToken)
 
 	encodedPassword, perr := saltUtil.EncodePassword(register.Password, salt)
 	if perr != nil {
-		return 0, perr
+		return nil, perr
 	}
 	user := models.User{}
 	user.Mail.SetValid(register.Mail)
@@ -62,7 +62,7 @@ func (m *Manager) RegisterWithEmail(register request.MailRegister) (uint, *perro
 	ag := avatar.AvatarGen{}
 	avatarReader, perr := ag.GenFromGravatar()
 	if perr != nil {
-		return 0, perr
+		return nil, perr
 	}
 
 	as := avatar.NewAvatarSaver(m.config)
@@ -75,19 +75,19 @@ func (m *Manager) RegisterWithEmail(register request.MailRegister) (uint, *perro
 	}
 
 	if err := user.Insert(tx, boil.Infer()); err != nil {
-		return 0, perror.ServerError.Wrapper(err)
+		return nil, perror.ServerError.Wrapper(err)
 	}
 
 	saltModel := models.Salt{}
 	saltModel.Salt = salt
 	saltModel.UserID = user.ID
 	if err := saltModel.Insert(tx, boil.Infer()); err != nil {
-		return 0, perror.ServerError.Wrapper(err)
+		return nil, perror.ServerError.Wrapper(err)
 	}
 
 	tx.Commit()
 
-	return user.ID, nil
+	return &user, nil
 }
 
 func (m *Manager) RegisterVerifyMail(rvm request.RegisterVerifyMail, baseURL string) *perror.PlutoError {

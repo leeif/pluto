@@ -13,6 +13,8 @@ import (
 func healthCheckRouter(router *mux.Router, db *sql.DB, config *config.Config, logger *log.PlutoLog) {
 	mw := middleware.NewMiddle(logger)
 	router.Handle("/healthcheck", mw.NoVerifyMiddleware(func(w http.ResponseWriter, r *http.Request, next http.HandlerFunc) {
-		responseOK(nil, w)
+		respBody := make(map[string]interface{})
+		respBody["version"] = config.Version
+		responseOK(respBody, w)
 	})).Methods("GET")
 }

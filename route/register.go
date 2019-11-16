@@ -49,10 +49,10 @@ func registerRouter(router *mux.Router, db *sql.DB, config *config.Config, logge
 			}
 			ml, err := mail.NewMail(config)
 			if err != nil {
-				logger.Error(err.LogError.Error())
+				logger.Error("send mail failed: " + err.LogError.Error())
 			}
 			if err := ml.SendRegisterVerify(user.ID, register.Mail, getBaseURL(r)); err != nil {
-				logger.Error(err.LogError.Error())
+				logger.Error("send mail failed: " + err.LogError.Error())
 			}
 		}()
 		responseOK(respBody, w)
@@ -61,22 +61,32 @@ func registerRouter(router *mux.Router, db *sql.DB, config *config.Config, logge
 	router.Handle("/register/verify/mail", mw.NoVerifyMiddleware(func(w http.ResponseWriter, r *http.Request, next http.HandlerFunc) {
 		rvm := request.RegisterVerifyMail{}
 
-		if err := getBody(r, &rvm); err != nil {
-			context.Set(r, "pluto_error", err)
-			responseError(err, w)
+		if perr := getBody(r, &rvm); perr != nil {
+			context.Set(r, "pluto_error", perr)
+			responseError(perr, w)
 			next(w, r)
 			return
 		}
 
-		err := manager.RegisterVerifyMail(rvm, getBaseURL(r))
+		user, perr := manager.RegisterVerifyMail(rvm)
 
-		if err != nil {
+		if perr != nil {
 			// set err to context for log
-			context.Set(r, "pluto_error", err)
-			responseError(err, w)
+			context.Set(r, "pluto_error", perr)
+			responseError(perr, w)
 			next(w, r)
 			return
 		}
+
+		go func() {
+			ml, perr := mail.NewMail(config)
+			if perr != nil {
+				logger.Error("send mail failed: " + perr.LogError.Error())
+			}
+			if perr := ml.SendRegisterVerify(user.ID, user.Mail.String, getBaseURL(r)); perr != nil {
+				logger.Error("send mail failed: " + perr.LogError.Error())
+			}
+		}()
 
 		responseOK(nil, w)
 	})).Methods("POST")

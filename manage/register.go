@@ -17,7 +17,6 @@ import (
 	"github.com/leeif/pluto/models"
 	"github.com/leeif/pluto/utils/avatar"
 	"github.com/leeif/pluto/utils/jwt"
-	"github.com/leeif/pluto/utils/mail"
 	saltUtil "github.com/leeif/pluto/utils/salt"
 )
 
@@ -90,29 +89,21 @@ func (m *Manager) RegisterWithEmail(register request.MailRegister) (*models.User
 	return &user, nil
 }
 
-func (m *Manager) RegisterVerifyMail(rvm request.RegisterVerifyMail, baseURL string) *perror.PlutoError {
+func (m *Manager) RegisterVerifyMail(rvm request.RegisterVerifyMail) (*models.User, *perror.PlutoError) {
 
 	identifyToken := b64.RawStdEncoding.EncodeToString([]byte(rvm.Mail))
 	user, err := models.Users(qm.Where("login_type = ? and identify_token = ?", MAILLOGIN, identifyToken)).One(m.db)
 	if err != nil && err == sql.ErrNoRows {
-		return perror.MailIsNotExsit
+		return nil, perror.MailIsNotExsit
 	} else if err != nil {
-		return perror.ServerError.Wrapper(err)
+		return nil, perror.ServerError.Wrapper(err)
 	}
 
 	if user.Verified.Bool == true {
-		return perror.MailAlreadyVerified
+		return nil, perror.MailAlreadyVerified
 	}
 
-	ml, perr := mail.NewMail(m.config)
-	if perr != nil {
-		return perr
-	}
-	if perr := ml.SendRegisterVerify(user.ID, user.Mail.String, baseURL); perr != nil {
-		return perr
-	}
-
-	return nil
+	return user, nil
 }
 
 func (m *Manager) RegisterVerify(token string) *perror.PlutoError {

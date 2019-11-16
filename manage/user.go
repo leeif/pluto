@@ -156,7 +156,7 @@ func (m *Manager) ResetPassword(rp request.ResetPassword) *perror.PlutoError {
 }
 
 func (m *Manager) UserInfo(token string) (*models.User, *perror.PlutoError) {
-	jwtToken, perr := jwt.VerifyB64JWT(token)
+	jwtToken, perr := jwt.VerifyJWT(token)
 	if perr != nil {
 		return nil, perr
 	}

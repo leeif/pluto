@@ -240,7 +240,7 @@ func (m *Manager) RefreshAccessToken(rat request.RefreshAccessToken) (map[string
 }
 
 func (m *Manager) UpdateUserInfo(token string, uui request.UpdateUserInfo) *perror.PlutoError {
-	jwtToken, perr := jwt.VerifyB64JWT(token)
+	jwtToken, perr := jwt.VerifyJWT(token)
 	if perr != nil {
 		return perr
 	}

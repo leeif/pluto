@@ -103,7 +103,7 @@ func testMailRegisterOK() error {
 	expect := okResponse{
 		Status: "ok",
 		Body: map[string]interface{}{
-			"mail": "test@gmail.com",
+			"mail":     "test@gmail.com",
 			"verified": true,
 		},
 	}
@@ -197,7 +197,7 @@ func testGetUserInfo() error {
 	if err != nil {
 		return fmt.Errorf("Expect no error, but %v", err)
 	}
-	req.Header.Set("Authorization", "jwt "+base64.RawStdEncoding.EncodeToString([]byte(accessToken)))
+	req.Header.Set("Authorization", "jwt "+accessToken)
 	client := http.Client{}
 	resp, err := client.Do(req)
 

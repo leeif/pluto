@@ -149,13 +149,9 @@ func GenerateRSAJWT(payload interface{}) (*JWT, *perror.PlutoError) {
 	return jwt, nil
 }
 
-func VerifyB64JWT(b64JWTToken string) (*JWT, *perror.PlutoError) {
+func VerifyJWT(token string) (*JWT, *perror.PlutoError) {
 	jwt := &JWT{}
-	b, err := b64.RawStdEncoding.DecodeString(b64JWTToken)
-	if err != nil {
-		return nil, perror.InvalidJWTToekn
-	}
-	parts := strings.Split(string(b), ".")
+	parts := strings.Split(token, ".")
 	head, err := b64.RawStdEncoding.DecodeString(parts[0])
 	if err != nil {
 		return nil, perror.InvalidJWTToekn
@@ -180,5 +176,18 @@ func VerifyB64JWT(b64JWTToken string) (*JWT, *perror.PlutoError) {
 	if err := rsa.VerifySignWithPublicKey(append(head, payload...), sign, crypto.SHA256); err != nil {
 		return nil, perror.InvalidJWTToekn
 	}
+	return jwt, nil
+}
+
+func VerifyB64JWT(b64JWTToken string) (*JWT, *perror.PlutoError) {
+	b, err := b64.RawStdEncoding.DecodeString(b64JWTToken)
+	if err != nil {
+		return nil, perror.InvalidJWTToekn
+	}
+	jwt, perr := VerifyJWT(string(b))
+	if perr != nil {
+		return nil, perr
+	}
+
 	return jwt, nil
 }

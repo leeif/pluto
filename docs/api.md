@@ -29,7 +29,8 @@ Register pluto with personal mail.
  {
   "status": "ok",
   "body": {
-    "mail": "geeklyf@hotmail.com"
+    "mail": "geeklyf@hotmail.com",
+    "verified": false
   }
 }
  ```
@@ -241,5 +242,7 @@ Get a new jwt access token.
  ```
  {
   "status": "ok",
-  "body": null
+  "body": {
+    "version": ""
+  }
 }

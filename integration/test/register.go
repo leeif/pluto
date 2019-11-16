@@ -104,6 +104,7 @@ func testMailRegisterOK() error {
 		Status: "ok",
 		Body: map[string]interface{}{
 			"mail": "test@gmail.com",
+			"verified": true,
 		},
 	}
 

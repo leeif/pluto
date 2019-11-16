@@ -30,7 +30,7 @@ func registerRouter(router *mux.Router, db *sql.DB, config *config.Config, logge
 			return
 		}
 
-		userID, err := manager.RegisterWithEmail(register)
+		user, err := manager.RegisterWithEmail(register)
 		if err != nil {
 			// set err to context for log
 			context.Set(r, "pluto_error", err)
@@ -41,6 +41,7 @@ func registerRouter(router *mux.Router, db *sql.DB, config *config.Config, logge
 
 		respBody := make(map[string]interface{})
 		respBody["mail"] = register.Mail
+		respBody["verified"] = user.Verified.Bool
 		go func() {
 			if config.Server.SkipRegisterVerifyMail {
 				logger.Info("skip sending register mail")
@@ -50,7 +51,7 @@ func registerRouter(router *mux.Router, db *sql.DB, config *config.Config, logge
 			if err != nil {
 				logger.Error(err.LogError.Error())
 			}
-			if err := ml.SendRegisterVerify(userID, register.Mail, getBaseURL(r)); err != nil {
+			if err := ml.SendRegisterVerify(user.ID, register.Mail, getBaseURL(r)); err != nil {
 				logger.Error(err.LogError.Error())
 			}
 		}()

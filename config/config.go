@@ -17,6 +17,7 @@ type PlutoValue interface {
 }
 
 type Config struct {
+	Version     string
 	Server      *ServerConfig      `kiper_config:"name:server"`
 	Log         *LogConfig         `kiper_config:"name:log"`
 	RSA         *RSAConfig         `kiper_config:"name:rsa"`
@@ -53,6 +54,6 @@ func NewConfig(args []string, version string) (*Config, error) {
 	if err := kiper.Parse(c, args[1:]); err != nil {
 		return nil, err
 	}
-
+	c.Version = version
 	return c, nil
 }

@@ -1,4 +1,14 @@
 
+<a name="v0.2.5"></a>
+## [v0.2.5](https://github.com/leeif/pluto/compare/v0.2.4...v0.2.5)
+
+> 2019-11-18
+
+### Fix
+
+* **api:** fix google login
+
+
 <a name="v0.2.4"></a>
 ## [v0.2.4](https://github.com/leeif/pluto/compare/v0.2.3...v0.2.4)
 

@@ -101,7 +101,7 @@ func getBody(r *http.Request, revicer interface{}) *perror.PlutoError {
 func formatUser(user *models.User) map[string]interface{} {
 	res := make(map[string]interface{})
 	res["id"] = user.ID
-	res["mail"] = user.ID
+	res["mail"] = user.Mail
 	res["name"] = user.Name
 	res["gender"] = user.Gender
 	res["avatar"] = user.Avatar

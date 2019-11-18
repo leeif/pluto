@@ -175,6 +175,7 @@ func (m *Manager) GoogleLoginMobile(login request.GoogleMobileLogin) (map[string
 		user.LoginType = GOOGLELOGIN
 		user.Avatar.SetValid(info.Picture)
 		user.Name = info.Name
+		user.Mail.SetValid(info.Email)
 		user.Verified.SetValid(true)
 		if err := user.Insert(tx, boil.Infer()); err != nil {
 			return nil, perror.ServerError.Wrapper(err)

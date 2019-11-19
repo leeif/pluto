@@ -1,4 +1,14 @@
 
+<a name="v0.2.6"></a>
+## [v0.2.6](https://github.com/leeif/pluto/compare/v0.2.5...v0.2.6)
+
+> 2019-11-19
+
+### Fix
+
+* **login:** apple login allows empty name parameter
+
+
 <a name="v0.2.5"></a>
 ## [v0.2.5](https://github.com/leeif/pluto/compare/v0.2.4...v0.2.5)
 

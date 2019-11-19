@@ -76,7 +76,7 @@ type AppleMobileLogin struct {
 }
 
 func (aml *AppleMobileLogin) Validation() bool {
-	if aml.Code == "" || aml.Name == "" {
+	if aml.Code == "" {
 		return false
 	}
 

@@ -496,6 +496,16 @@ func (m *Manager) AppleLoginMobile(login request.AppleMobileLogin) (map[string]s
 		if err := user.Insert(tx, boil.Infer()); err != nil {
 			return nil, perror.ServerError.Wrapper(err)
 		}
+	} else {
+		if login.Name != "" {
+			user.Name = login.Name
+		}
+		if info.Email != "" {
+			user.Mail.SetValid(info.Email)
+		}
+		if _, err := user.Update(tx, boil.Infer()); err != nil {
+			return nil, perror.ServerError.Wrapper(err)
+		}
 	}
 
 	// insert deviceID and appID into device table

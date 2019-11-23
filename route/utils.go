@@ -78,7 +78,7 @@ func getBaseURL(r *http.Request) string {
 	return fmt.Sprintf("%s://%s", scheme, r.Host)
 }
 
-func getBody(r *http.Request, revicer interface{}) *perror.PlutoError {
+func getBody(r *http.Request, reciver interface{}) *perror.PlutoError {
 
 	contentType := r.Header.Get("Content-type")
 	if strings.Contains(contentType, "application/json") {
@@ -86,7 +86,7 @@ func getBody(r *http.Request, revicer interface{}) *perror.PlutoError {
 		if err != nil {
 			return perror.ServerError.Wrapper(errors.New("Read body failed: " + err.Error()))
 		}
-		err = json.Unmarshal(body, &revicer)
+		err = json.Unmarshal(body, &reciver)
 		if err != nil {
 			return perror.BadRequest
 		}
@@ -96,12 +96,12 @@ func getBody(r *http.Request, revicer interface{}) *perror.PlutoError {
 			return perror.BadRequest
 		}
 		decoder := schema.NewDecoder()
-		err = decoder.Decode(revicer, r.PostForm)
+		err = decoder.Decode(reciver, r.PostForm)
 		if err != nil {
-			return perror.BadRequest
+			return perror.BadRequest.Wrapper(err)
 		}
 	}
-	pr, ok := revicer.(request.PlutoRequest)
+	pr, ok := reciver.(request.PlutoRequest)
 	// check request body validation
 	if ok && !pr.Validation() {
 		return perror.BadRequest

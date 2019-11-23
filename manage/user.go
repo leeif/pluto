@@ -73,9 +73,9 @@ func (m *Manager) ResetPasswordPage(token string) *perror.PlutoError {
 	return nil
 }
 
-func (m *Manager) ResetPassword(rp request.ResetPassword) *perror.PlutoError {
+func (m *Manager) ResetPassword(token string, rp request.ResetPasswordWeb) *perror.PlutoError {
 
-	jwtToken, perr := jwt.VerifyB64JWT(rp.Token)
+	jwtToken, perr := jwt.VerifyB64JWT(token)
 	if perr != nil {
 		return perr
 	}

@@ -88,8 +88,10 @@ func webRouter(router *mux.Router, db *sql.DB, config *config.Config, logger *lo
 
 	})).Methods("GET")
 
-	router.Handle("/password/reset/result", mw.NoVerifyMiddleware(func(w http.ResponseWriter, r *http.Request, next http.HandlerFunc) {
-		rp := request.ResetPassword{}
+	router.Handle("/password/reset/{token}", mw.NoVerifyMiddleware(func(w http.ResponseWriter, r *http.Request, next http.HandlerFunc) {
+		rpw := request.ResetPasswordWeb{}
+		vars := mux.Vars(r)
+		token := vars["token"]
 
 		type Data struct {
 			Error *perror.PlutoError
@@ -97,14 +99,14 @@ func webRouter(router *mux.Router, db *sql.DB, config *config.Config, logger *lo
 
 		data := &Data{}
 
-		if err := getBody(r, &rp); err != nil {
+		if err := getBody(r, &rpw); err != nil {
 			context.Set(r, "pluto_error", err)
 			next(w, r)
 			data.Error = err
 			goto responseHTML
 		}
 
-		if err := manager.ResetPassword(rp); err != nil {
+		if err := manager.ResetPassword(token, rpw); err != nil {
 			context.Set(r, "pluto_error", err)
 			next(w, r)
 			data.Error = err

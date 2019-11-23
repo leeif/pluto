@@ -17,10 +17,12 @@ Data
 BaseURL <string> : base url of request
 Token <string> : JWT token
 ```
+
 ## password_reset.html
 Password reset page.
 Data
 ```
+Error <pluto_error>
 Token <string>
 ```
 
@@ -29,7 +31,7 @@ Password reset result page.
 
 Data
 ```
-Successed <bool>
+Error <pluto_error>
 ```
 
 ## register_verify_mail.html
@@ -46,7 +48,7 @@ Register verification result page.
 
 Data
 ```
-Successed <bool>
+Error <pluto_error>
 ```
 
 # Replace the default views

@@ -1,4 +1,14 @@
 
+<a name="0.2.7"></a>
+## [0.2.7](https://github.com/leeif/pluto/compare/v0.2.6...0.2.7)
+
+> 2019-11-23
+
+### Update
+
+* **view:** update html views
+
+
 <a name="v0.2.6"></a>
 ## [v0.2.6](https://github.com/leeif/pluto/compare/v0.2.5...v0.2.6)
 

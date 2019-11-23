@@ -42,6 +42,10 @@ func webRouter(router *mux.Router, db *sql.DB, config *config.Config, logger *lo
 			if err := responseHTMLError("error.html", nil, w, data.Error.HTTPCode); err != nil {
 				logger.Error(err.Error())
 			}
+		} else if data.Error != nil {
+			if err := responseHTMLError("register_verify_result.html", data, w, data.Error.HTTPCode); err != nil {
+				logger.Error(err.Error())
+			}
 		} else {
 			if err := responseHTMLOK("register_verify_result.html", data, w); err != nil {
 				logger.Error(err.Error())
@@ -72,7 +76,11 @@ func webRouter(router *mux.Router, db *sql.DB, config *config.Config, logger *lo
 			if err := responseHTMLError("error.html", nil, w, data.Error.HTTPCode); err != nil {
 				logger.Error(err.Error())
 			}
-		} else {
+		} else if data.Error != nil {
+			if err := responseHTMLError("password_reset.html", data, w, data.Error.HTTPCode); err != nil {
+				logger.Error(err.Error())
+			}
+		} else if data.Error == nil {
 			if err := responseHTMLOK("password_reset.html", data, w); err != nil {
 				logger.Error(err.Error())
 			}
@@ -105,9 +113,17 @@ func webRouter(router *mux.Router, db *sql.DB, config *config.Config, logger *lo
 
 	responseHTML:
 		if data.Error != nil && data.Error.PlutoCode == perror.ServerError.PlutoCode {
-			responseHTMLError("error.html", nil, w, data.Error.HTTPCode)
+			if err := responseHTMLError("error.html", nil, w, data.Error.HTTPCode); err != nil {
+				logger.Error(err.Error())
+			}
+		} else if data.Error != nil {
+			if err := responseHTMLError("password_reset_result.html", data, w, data.Error.HTTPCode); err != nil {
+				logger.Error(err.Error())
+			}
 		} else {
-			responseHTMLOK("password_reset_result.html", data, w)
+			if err := responseHTMLOK("password_reset_result.html", data, w); err != nil {
+				logger.Error(err.Error())
+			}
 		}
 
 	})).Methods("POST")

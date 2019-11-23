@@ -21,8 +21,8 @@ func testPasswordResetFail() error {
 		return fmt.Errorf("Expect no error, but %v", err)
 	}
 
-	if resp.StatusCode != http.StatusInternalServerError {
-		return fmt.Errorf("Expect internal server error (500) status code, but %v", resp.StatusCode)
+	if resp.StatusCode != http.StatusForbidden {
+		return fmt.Errorf("Expect forbidden error (403) status code, but %v", resp.StatusCode)
 	}
 	return nil
 }

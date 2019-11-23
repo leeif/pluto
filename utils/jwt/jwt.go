@@ -14,11 +14,10 @@ import (
 )
 
 const (
-	ALGRAS              = "rsa"
-	ACCESS              = "access"
-	REGISTERVERIFY      = "register_verify"
-	PASSWORDRESET       = "password_reset"
-	PASSWORDRESETRESULT = "password_reset_result"
+	ALGRAS         = "rsa"
+	ACCESS         = "access"
+	REGISTERVERIFY = "register_verify"
+	PASSWORDRESET  = "password_reset"
 )
 
 type JWT struct {
@@ -107,16 +106,6 @@ func NewPasswordResetPayload(mail string, expire int64) *PasswordResetPayload {
 type PasswordResetResultPayload struct {
 	Payload
 	Successed bool `json:"successed"`
-}
-
-func NewPasswordResetResultPayload(successed bool, expire int64) *PasswordResetResultPayload {
-	rrrp := &PasswordResetResultPayload{}
-	rrrp.Successed = successed
-
-	rrrp.Payload.Type = PASSWORDRESETRESULT
-	rrrp.Payload.Create = time.Now().Unix()
-	rrrp.Payload.Expire = time.Now().Unix() + expire
-	return rrrp
 }
 
 func GenerateRSAJWT(payload interface{}) (*JWT, *perror.PlutoError) {

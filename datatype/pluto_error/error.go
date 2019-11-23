@@ -1,6 +1,8 @@
 package pluto_error
 
-import "errors"
+import (
+	"errors"
+)
 
 type PlutoError struct {
 	HTTPCode  int

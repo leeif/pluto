@@ -23,29 +23,19 @@ import (
 
 	"github.com/leeif/pluto/datatype/request"
 	"github.com/leeif/pluto/utils/jwt"
-	"github.com/leeif/pluto/utils/mail"
 )
 
-func (m *Manager) ResetPasswordMail(rpm request.ResetPasswordMail, baseURL string) *perror.PlutoError {
+func (m *Manager) ResetPasswordMail(rpm request.ResetPasswordMail) (*models.User, *perror.PlutoError) {
 
 	identifyToken := b64.RawStdEncoding.EncodeToString([]byte(rpm.Mail))
 	user, err := models.Users(qm.Where("login_type = ? and identify_token = ?", MAILLOGIN, identifyToken)).One(m.db)
 	if err != nil && err == sql.ErrNoRows {
-		return perror.MailIsNotExsit
+		return nil, perror.MailIsNotExsit
 	} else if err != nil {
-		return perror.ServerError.Wrapper(err)
+		return nil, perror.ServerError.Wrapper(err)
 	}
 
-	ml, perr := mail.NewMail(m.config)
-	if perr != nil {
-		return perr
-	}
-
-	if err := ml.SendResetPassword(user.Mail.String, baseURL); err != nil {
-		return err
-	}
-
-	return nil
+	return user, nil
 }
 
 func (m *Manager) ResetPasswordPage(token string) *perror.PlutoError {
@@ -83,9 +73,9 @@ func (m *Manager) ResetPasswordPage(token string) *perror.PlutoError {
 	return nil
 }
 
-func (m *Manager) ResetPassword(rp request.ResetPassword) *perror.PlutoError {
+func (m *Manager) ResetPassword(token string, rp request.ResetPasswordWeb) *perror.PlutoError {
 
-	jwtToken, perr := jwt.VerifyB64JWT(rp.Token)
+	jwtToken, perr := jwt.VerifyB64JWT(token)
 	if perr != nil {
 		return perr
 	}

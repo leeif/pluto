@@ -50,7 +50,5 @@ In Pluto, we have the following types of JWT token.
 
 *	PASSWORDRESET token is used to reset the password.
 
-*	PASSWORDRESETRESULT token is used to access the result page of password reset.
-
 Accept the ACCESS token, all other tokens are used internally in Pluto.
 Since Pluto is based on JWT, we use JWT to access all the exposed HTML pages in Pluto.

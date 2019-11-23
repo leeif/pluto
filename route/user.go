@@ -12,7 +12,6 @@ import (
 	"github.com/leeif/pluto/datatype/request"
 	"github.com/leeif/pluto/log"
 	"github.com/leeif/pluto/manage"
-	"github.com/leeif/pluto/utils/jwt"
 
 	"github.com/gorilla/context"
 	"github.com/gorilla/mux"
@@ -40,38 +39,6 @@ func userRouter(router *mux.Router, db *sql.DB, config *config.Config, logger *l
 		}
 
 		responseOK(nil, w)
-	})).Methods("POST")
-
-	router.Handle("/password/reset", mw.NoVerifyMiddleware(func(w http.ResponseWriter, r *http.Request, next http.HandlerFunc) {
-		rp := request.ResetPassword{}
-
-		if err := getBody(r, &rp); err != nil {
-			context.Set(r, "pluto_error", err)
-			responseError(err, w)
-			next(w, r)
-			return
-		}
-
-		if err := manager.ResetPassword(rp); err != nil {
-			context.Set(r, "pluto_error", err)
-			responseError(err, w)
-			next(w, r)
-			return
-		}
-
-		// generate JWT for password reset result page only when successed
-		prrp := jwt.NewPasswordResetResultPayload(true, config.JWT.ResetPasswordResultTokenExpire)
-		token, err := jwt.GenerateRSAJWT(prrp)
-		if err != nil {
-			context.Set(r, "pluto_error", err)
-			responseError(err, w)
-			next(w, r)
-			return
-		}
-		res := make(map[string]string)
-		res["redirect"] = "/password/reset/result/" + token.B64String()
-
-		responseOK(res, w)
 	})).Methods("POST")
 
 	router.Handle("/info/me", mw.NoVerifyMiddleware(func(w http.ResponseWriter, r *http.Request, next http.HandlerFunc) {

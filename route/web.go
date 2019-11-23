@@ -2,18 +2,17 @@ package route
 
 import (
 	"database/sql"
-	"encoding/json"
+	"fmt"
 	"net/http"
-	"time"
 
 	"github.com/gorilla/context"
 	"github.com/gorilla/mux"
 	"github.com/leeif/pluto/config"
 	perror "github.com/leeif/pluto/datatype/pluto_error"
+	"github.com/leeif/pluto/datatype/request"
 	"github.com/leeif/pluto/log"
 	"github.com/leeif/pluto/manage"
 	"github.com/leeif/pluto/middleware"
-	"github.com/leeif/pluto/utils/jwt"
 )
 
 func webRouter(router *mux.Router, db *sql.DB, config *config.Config, logger *log.PlutoLog) {
@@ -26,7 +25,7 @@ func webRouter(router *mux.Router, db *sql.DB, config *config.Config, logger *lo
 		token := vars["token"]
 
 		type Data struct {
-			Successed bool
+			Error *perror.PlutoError
 		}
 		data := &Data{}
 
@@ -34,11 +33,20 @@ func webRouter(router *mux.Router, db *sql.DB, config *config.Config, logger *lo
 			// set err to context for log
 			context.Set(r, "pluto_error", err)
 			next(w, r)
-			data.Successed = false
-			responseHTMLError("register_verify_result.html", data, w, http.StatusForbidden)
+			data.Error = err
+			goto responseHTML
+		}
+
+	responseHTML:
+
+		if data.Error != nil && data.Error.PlutoCode == perror.ServerError.PlutoCode {
+			if err := responseHTMLError("error.html", nil, w, data.Error.HTTPCode); err != nil {
+				fmt.Println(err)
+			}
 		} else {
-			data.Successed = true
-			responseHTMLOK("register_verify_result.html", data, w)
+			if err := responseHTMLOK("register_verify_result.html", data, w); err != nil {
+				fmt.Println(err)
+			}
 		}
 
 	})).Methods("GET")
@@ -46,55 +54,58 @@ func webRouter(router *mux.Router, db *sql.DB, config *config.Config, logger *lo
 	router.Handle("/password/reset/{token}", mw.NoVerifyMiddleware(func(w http.ResponseWriter, r *http.Request, next http.HandlerFunc) {
 		vars := mux.Vars(r)
 		token := vars["token"]
+
+		type Data struct {
+			Error *perror.PlutoError
+			Token string
+		}
+
+		data := &Data{Token: token}
 		if err := manager.ResetPasswordPage(token); err != nil {
 			context.Set(r, "pluto_error", err)
 			next(w, r)
-			responseHTMLError("error.html", nil, w, http.StatusInternalServerError)
-			return
+			data.Error = err
+			goto responseHTML
 		}
 
-		type Data struct {
-			Token string
+	responseHTML:
+		if data.Error != nil && data.Error.PlutoCode == perror.ServerError.PlutoCode {
+			responseHTMLError("error.html", nil, w, data.Error.HTTPCode)
+		} else {
+			responseHTMLOK("password_reset.html", data, w)
 		}
-		data := &Data{Token: token}
 
-		responseHTMLOK("password_reset.html", data, w)
 	})).Methods("GET")
 
-	router.Handle("/password/reset/result/{token}", mw.NoVerifyMiddleware(func(w http.ResponseWriter, r *http.Request, next http.HandlerFunc) {
-		vars := mux.Vars(r)
-		token := vars["token"]
+	router.Handle("/password/reset", mw.NoVerifyMiddleware(func(w http.ResponseWriter, r *http.Request, next http.HandlerFunc) {
+		rp := request.ResetPassword{}
 
-		jwtToken, err := jwt.VerifyB64JWT(token)
-		// token verify failed
-		if err != nil {
+		type Data struct {
+			Error *perror.PlutoError
+		}
+
+		data := &Data{}
+
+		if err := getBody(r, &rp); err != nil {
 			context.Set(r, "pluto_error", err)
 			next(w, r)
-			responseHTMLError("error.html", nil, w, http.StatusInternalServerError)
-			return
+			data.Error = err
+			goto responseHTML
 		}
 
-		prp := jwt.PasswordResetResultPayload{}
-		json.Unmarshal(jwtToken.Payload, &prp)
-
-		if prp.Type != jwt.PASSWORDRESETRESULT {
-			context.Set(r, "pluto_error", perror.InvalidJWTToekn)
+		if err := manager.ResetPassword(rp); err != nil {
+			context.Set(r, "pluto_error", err)
 			next(w, r)
-			responseHTMLError("error.html", nil, w, http.StatusInternalServerError)
-			return
+			data.Error = err
+			goto responseHTML
 		}
 
-		if time.Now().Unix() > prp.Expire {
-			context.Set(r, "pluto_error", perror.InvalidJWTToekn)
-			next(w, r)
-			responseHTMLError("error.html", nil, w, http.StatusInternalServerError)
-			return
+	responseHTML:
+		if data.Error != nil && data.Error.PlutoCode == perror.ServerError.PlutoCode {
+			responseHTMLError("error.html", nil, w, data.Error.HTTPCode)
+		} else {
+			responseHTMLOK("password_reset_result.html", data, w)
 		}
 
-		type Data struct {
-			Successed bool
-		}
-		data := &Data{Successed: prp.Successed}
-		responseHTMLOK("password_reset_result.html", data, w)
-	})).Methods("GET")
+	})).Methods("POST")
 }

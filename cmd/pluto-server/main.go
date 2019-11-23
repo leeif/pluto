@@ -31,7 +31,6 @@ var VERSION = ""
 func printConfig(config *config.Config, logger *plog.PlutoLog) {
 	logger.Info(fmt.Sprintf("AccessTokenExpire: %d", config.JWT.AccessTokenExpire))
 	logger.Info(fmt.Sprintf("RegisterVerifyTokenExpire: %d", config.JWT.RegisterVerifyTokenExpire))
-	logger.Info(fmt.Sprintf("ResetPasswordResultTokenExpire: %d", config.JWT.ResetPasswordResultTokenExpire))
 	logger.Info(fmt.Sprintf("ResetPasswordTokenExpire: %d", config.JWT.ResetPasswordTokenExpire))
 }
 

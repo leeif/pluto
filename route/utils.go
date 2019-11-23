@@ -12,6 +12,7 @@ import (
 	"github.com/leeif/pluto/models"
 
 	"github.com/gorilla/mux"
+	"github.com/gorilla/schema"
 	"github.com/leeif/pluto/config"
 	"github.com/leeif/pluto/datatype/request"
 	"github.com/leeif/pluto/log"
@@ -86,6 +87,16 @@ func getBody(r *http.Request, revicer interface{}) *perror.PlutoError {
 	contentType := r.Header.Get("Content-type")
 	if strings.Contains(contentType, "application/json") {
 		err := json.Unmarshal(body, &revicer)
+		if err != nil {
+			return perror.BadRequest
+		}
+	} else if strings.Contains(contentType, "application/x-www-form-urlencoded") {
+		err := r.ParseForm()
+		if err != nil {
+			return perror.BadRequest
+		}
+		decoder := schema.NewDecoder()
+		err = decoder.Decode(revicer, r.PostForm)
 		if err != nil {
 			return perror.BadRequest
 		}

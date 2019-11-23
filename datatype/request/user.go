@@ -112,8 +112,8 @@ func (rpm *ResetPasswordMail) Validation() bool {
 }
 
 type ResetPassword struct {
-	Token    string `json:"token"`
-	Password string `json:"password"`
+	Token    string `json:"token" schema:"token,required"`
+	Password string `json:"password" schema:"password,required"`
 }
 
 func (rp *ResetPassword) Validation() bool {

@@ -1366,13 +1366,16 @@
     p {
       margin-bottom: 0;
     }
+    .resend-mail {
+      padding: 0;
+    }
   </style>
   <script>
     $(document).ready(function() {
       $("#resend-mail-submit").click(function() {
         var mail = $("#resend-mail").val();
         if (mail == "") {
-          $("#resend-message-error").text("Mail can not be empty");
+          $("#resend-message-error").text("The mail address can not be empty");
           $("#resend-message-error").fadeIn(20);
           $("#resend-message-error").fadeOut(2000);
           return;
@@ -1384,7 +1387,7 @@
           data: JSON.stringify({mail: mail}),
           dataType: "json"
         }).done(function(data) {
-          $("#resend-message-success").text("Mail is send, retry after 60s");
+          $("#resend-message-success").text("The verification mail has been send, retry after 60s");
           buttonCountDown();
           $("#resend-message-success").fadeIn(20);
           $("#resend-message-success").fadeOut(3000);

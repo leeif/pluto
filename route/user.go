@@ -7,6 +7,7 @@ import (
 
 	"github.com/leeif/pluto/config"
 	"github.com/leeif/pluto/middleware"
+	"github.com/leeif/pluto/utils/mail"
 
 	perror "github.com/leeif/pluto/datatype/pluto_error"
 	"github.com/leeif/pluto/datatype/request"
@@ -31,12 +32,24 @@ func userRouter(router *mux.Router, db *sql.DB, config *config.Config, logger *l
 			return
 		}
 
-		if err := manager.ResetPasswordMail(rpm, getBaseURL(r)); err != nil {
+		user, err := manager.ResetPasswordMail(rpm)
+		if err != nil {
 			context.Set(r, "pluto_error", err)
 			responseError(err, w)
 			next(w, r)
 			return
 		}
+
+		go func() {
+			ml, err := mail.NewMail(config)
+			if err != nil {
+				logger.Error(err.LogError.Error())
+			}
+
+			if err := ml.SendResetPassword(user.Mail.String, getBaseURL(r)); err != nil {
+				logger.Error(err.LogError.Error())
+			}
+		}()
 
 		responseOK(nil, w)
 	})).Methods("POST")

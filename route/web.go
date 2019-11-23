@@ -2,7 +2,6 @@ package route
 
 import (
 	"database/sql"
-	"fmt"
 	"net/http"
 
 	"github.com/gorilla/context"
@@ -41,11 +40,11 @@ func webRouter(router *mux.Router, db *sql.DB, config *config.Config, logger *lo
 
 		if data.Error != nil && data.Error.PlutoCode == perror.ServerError.PlutoCode {
 			if err := responseHTMLError("error.html", nil, w, data.Error.HTTPCode); err != nil {
-				fmt.Println(err)
+				logger.Error(err.Error())
 			}
 		} else {
 			if err := responseHTMLOK("register_verify_result.html", data, w); err != nil {
-				fmt.Println(err)
+				logger.Error(err.Error())
 			}
 		}
 
@@ -70,14 +69,18 @@ func webRouter(router *mux.Router, db *sql.DB, config *config.Config, logger *lo
 
 	responseHTML:
 		if data.Error != nil && data.Error.PlutoCode == perror.ServerError.PlutoCode {
-			responseHTMLError("error.html", nil, w, data.Error.HTTPCode)
+			if err := responseHTMLError("error.html", nil, w, data.Error.HTTPCode); err != nil {
+				logger.Error(err.Error())
+			}
 		} else {
-			responseHTMLOK("password_reset.html", data, w)
+			if err := responseHTMLOK("password_reset.html", data, w); err != nil {
+				logger.Error(err.Error())
+			}
 		}
 
 	})).Methods("GET")
 
-	router.Handle("/password/reset", mw.NoVerifyMiddleware(func(w http.ResponseWriter, r *http.Request, next http.HandlerFunc) {
+	router.Handle("/password/reset/result", mw.NoVerifyMiddleware(func(w http.ResponseWriter, r *http.Request, next http.HandlerFunc) {
 		rp := request.ResetPassword{}
 
 		type Data struct {

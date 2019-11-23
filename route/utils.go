@@ -79,14 +79,14 @@ func getBaseURL(r *http.Request) string {
 }
 
 func getBody(r *http.Request, revicer interface{}) *perror.PlutoError {
-	body, err := ioutil.ReadAll(r.Body)
-	if err != nil {
-		return perror.ServerError.Wrapper(errors.New("Read body failed: " + err.Error()))
-	}
 
 	contentType := r.Header.Get("Content-type")
 	if strings.Contains(contentType, "application/json") {
-		err := json.Unmarshal(body, &revicer)
+		body, err := ioutil.ReadAll(r.Body)
+		if err != nil {
+			return perror.ServerError.Wrapper(errors.New("Read body failed: " + err.Error()))
+		}
+		err = json.Unmarshal(body, &revicer)
 		if err != nil {
 			return perror.BadRequest
 		}

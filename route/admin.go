@@ -25,7 +25,9 @@ func adminRouter(router *mux.Router, db *sql.DB, config *config.Config, logger *
 			next(w, r)
 			return
 		}
-		manager.CreateRole()
+		if err := manager.CreateRole(cr); err != nil {
+
+		}
 	})).Methods("POST")
 
 	router.Handle("/rbac/scope/create", mw.NoVerifyMiddleware(func(w http.ResponseWriter, r *http.Request, next http.HandlerFunc) {
@@ -35,6 +37,9 @@ func adminRouter(router *mux.Router, db *sql.DB, config *config.Config, logger *
 			responseError(err, w)
 			next(w, r)
 			return
+		}
+		if err := manager.CreateScope(cs); err != nil {
+
 		}
 	})).Methods("POST")
 
@@ -46,6 +51,9 @@ func adminRouter(router *mux.Router, db *sql.DB, config *config.Config, logger *
 			next(w, r)
 			return
 		}
+		if err := manager.AttachScope(rs); err != nil {
+
+		}
 	})).Methods("POST")
 
 	router.Handle("/rbac/scope/detach", mw.NoVerifyMiddleware(func(w http.ResponseWriter, r *http.Request, next http.HandlerFunc) {
@@ -55,6 +63,9 @@ func adminRouter(router *mux.Router, db *sql.DB, config *config.Config, logger *
 			responseError(err, w)
 			next(w, r)
 			return
+		}
+		if err := manager.DetachScope(rs); err != nil {
+
 		}
 	})).Methods("POST")
 
@@ -66,6 +77,9 @@ func adminRouter(router *mux.Router, db *sql.DB, config *config.Config, logger *
 			next(w, r)
 			return
 		}
+		if err := manager.CreateApplication(ca); err != nil {
+
+		}
 	})).Methods("POST")
 
 	router.Handle("/application/role/attach", mw.NoVerifyMiddleware(func(w http.ResponseWriter, r *http.Request, next http.HandlerFunc) {
@@ -76,6 +90,9 @@ func adminRouter(router *mux.Router, db *sql.DB, config *config.Config, logger *
 			next(w, r)
 			return
 		}
+		if err := manager.AttachRole(ar); err != nil {
+
+		}
 	})).Methods("POST")
 
 	router.Handle("/application/role/default", mw.NoVerifyMiddleware(func(w http.ResponseWriter, r *http.Request, next http.HandlerFunc) {
@@ -85,6 +102,9 @@ func adminRouter(router *mux.Router, db *sql.DB, config *config.Config, logger *
 			responseError(err, w)
 			next(w, r)
 			return
+		}
+		if err := manager.ApplicationDefaultRole(ar); err != nil {
+
 		}
 	})).Methods("POST")
 }

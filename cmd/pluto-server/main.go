@@ -1,6 +1,7 @@
 package main
 
 import (
+	"github.com/leeif/pluto/manage"
 	"context"
 	"database/sql"
 	"fmt"
@@ -14,7 +15,6 @@ import (
 	plog "github.com/leeif/pluto/log"
 	"github.com/leeif/pluto/route"
 
-	"github.com/gorilla/mux"
 	"github.com/leeif/pluto/config"
 	"go.uber.org/fx"
 
@@ -34,7 +34,7 @@ func printConfig(config *config.Config, logger *plog.PlutoLog) {
 	logger.Info(fmt.Sprintf("ResetPasswordTokenExpire: %d", config.JWT.ResetPasswordTokenExpire))
 }
 
-func register(router *mux.Router, db *sql.DB, config *config.Config, logger *plog.PlutoLog) error {
+func register(router *route.Router, db *sql.DB, config *config.Config, logger *plog.PlutoLog) error {
 
 	printConfig(config, logger)
 
@@ -48,8 +48,9 @@ func register(router *mux.Router, db *sql.DB, config *config.Config, logger *plo
 		return err
 	}
 
-	// add router
-	route.Router(router, db, config, logger)
+	// register routes
+	router.Register()
+
 	return nil
 }
 
@@ -67,6 +68,8 @@ func main() {
 			database.NewDatabase,
 			plog.NewLogger,
 			server.NewMux,
+			route.NewRouter,
+			manage.NewManager,
 		),
 		fx.Invoke(register),
 		fx.NopLogger,

@@ -135,11 +135,6 @@ func (m *Manager) ResetPassword(token string, rp request.ResetPasswordWeb) *perr
 		return perror.ServerError.Wrapper(err)
 	}
 
-	// add operation history
-	if err := historyOperation(tx, OperationResetPassword, user.ID); err != nil {
-		return err
-	}
-
 	tx.Commit()
 
 	return nil
@@ -216,11 +211,6 @@ func (m *Manager) RefreshAccessToken(rat request.RefreshAccessToken) (map[string
 
 	if perr != nil {
 		return nil, perr.Wrapper(errors.New("JWT token generate failed"))
-	}
-
-	// add operation history
-	if err := historyOperation(tx, OperationRefreshToken, rat.UseID); err != nil {
-		return nil, err
 	}
 
 	res["jwt"] = token.String()

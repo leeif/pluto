@@ -28,24 +28,36 @@ var migrations = []Migrations{
 		function: createHistoryOperationsTable,
 	},
 	{
-		name:     "create_rbac_role_groups_table",
-		function: createRBACRoleGroupTable,
+		name:     "drop_history_operations_table",
+		function: dropHistoryOperationsTable,
+	},
+	{
+		name:     "create_rbac_user_roles_table",
+		function: createRBACUserRoleTable,
 	},
 	{
 		name:     "create_rbac_roles_table",
 		function: createRBACRoleTable,
 	},
 	{
-		name:     "create_rbac_permissions_table",
-		function: createRBACPermissionTable,
+		name:     "create_rbac_role_scopes_table",
+		function: createRBACRoleScopeTable,
 	},
 	{
-		name:     "create_rbac_operations_table",
-		function: createRBACOperationTable,
+		name:     "create_rbac_scopes_table",
+		function: createRBACScopeTable,
 	},
 	{
-		name: "create_rbac_action_table",
-		function: createRBACActionTable,
+		name:     "add_default_role_column_for_applications_table",
+		function: addDefaultRoleColumnForApplicationTable,
+	},
+	{
+		name:     "add_identifier_column_for_applications_table",
+		function: addIdentifierColumnForApplicationTable,
+	},
+	{
+		name:     "add_identifier_index_for_applications_table",
+		function: addIdentifierIndexForApplicationTable,
 	},
 }
 
@@ -171,14 +183,27 @@ func createHistoryOperationsTable(db *sql.DB, name string) error {
 	return nil
 }
 
-func createRBACRoleGroupTable(db *sql.DB, name string) error {
-	sql := "CREATE TABLE IF NOT EXISTS `rbac_role_groups` (" +
+func dropHistoryOperationsTable(db *sql.DB, name string) error {
+	sql := "DROP TABLE IF EXISTS `history_operations`"
+	_, err := db.Exec(sql)
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
+func createRBACUserRoleTable(db *sql.DB, name string) error {
+	sql := "CREATE TABLE IF NOT EXISTS `rbac_user_roles` (" +
 		"`id` int(10) unsigned NOT NULL AUTO_INCREMENT," +
 		"`created_at` timestamp NULL DEFAULT NULL," +
 		"`updated_at` timestamp NULL DEFAULT NULL," +
 		"`deleted_at` timestamp NULL DEFAULT NULL," +
-		"`name` varchar(20) NOT NULL," +
-		"PRIMARY KEY (`id`)" +
+		"`user_id` int(10) unsigned NOT NULL," +
+		"`role_id` int(10) unsigned NOT NULL," +
+		"PRIMARY KEY (`id`)," +
+		"UNIQUE KEY `user_id` (`user_id`)," +
+		"KEY `role_id_user_id` (`role_id`)," +
+		"KEY `idx_user_roles_deleted_at` (`deleted_at`)" +
 		")"
 	_, err := db.Exec(sql)
 	if err != nil {
@@ -194,7 +219,10 @@ func createRBACRoleTable(db *sql.DB, name string) error {
 		"`updated_at` timestamp NULL DEFAULT NULL," +
 		"`deleted_at` timestamp NULL DEFAULT NULL," +
 		"`name` varchar(20) NOT NULL," +
-		"PRIMARY KEY (`id`)" +
+		"`app_id` int(10) unsigned NOT NULL," +
+		"PRIMARY KEY (`id`)," +
+		"KEY `app_id` (`app_id`)," +
+		"KEY `idx_roles_deleted_at` (`deleted_at`)" +
 		")"
 	_, err := db.Exec(sql)
 	if err != nil {
@@ -203,14 +231,18 @@ func createRBACRoleTable(db *sql.DB, name string) error {
 	return nil
 }
 
-func createRBACPermissionTable(db *sql.DB, name string) error {
-	sql := "CREATE TABLE IF NOT EXISTS `permissions` (" +
+func createRBACRoleScopeTable(db *sql.DB, name string) error {
+	sql := "CREATE TABLE IF NOT EXISTS `rbac_role_scopes` (" +
 		"`id` int(10) unsigned NOT NULL AUTO_INCREMENT," +
 		"`created_at` timestamp NULL DEFAULT NULL," +
 		"`updated_at` timestamp NULL DEFAULT NULL," +
 		"`deleted_at` timestamp NULL DEFAULT NULL," +
-		"`name` varchar(20) NOT NULL," +
-		"PRIMARY KEY (`id`)" +
+		"`role_id` int(10) unsigned NOT NULL," +
+		"`scope_id` int(10) unsigned NOT NULL," +
+		"PRIMARY KEY (`id`)," +
+		"KEY `role_id` (`role_id`)," +
+		"KEY `scope_id` (`scope_id`)," +
+		"KEY `idx_roles_deleted_at` (`deleted_at`)" +
 		")"
 	_, err := db.Exec(sql)
 	if err != nil {
@@ -219,14 +251,16 @@ func createRBACPermissionTable(db *sql.DB, name string) error {
 	return nil
 }
 
-func createRBACOperationTable(db *sql.DB, name string) error {
-	sql := "CREATE TABLE IF NOT EXISTS `rbac_operations` (" +
+func createRBACScopeTable(db *sql.DB, name string) error {
+	sql := "CREATE TABLE IF NOT EXISTS `scopes` (" +
 		"`id` int(10) unsigned NOT NULL AUTO_INCREMENT," +
 		"`created_at` timestamp NULL DEFAULT NULL," +
 		"`updated_at` timestamp NULL DEFAULT NULL," +
 		"`deleted_at` timestamp NULL DEFAULT NULL," +
 		"`name` varchar(20) NOT NULL," +
-		"PRIMARY KEY (`id`)" +
+		"`role_id` int(10) unsigned NOT NULL," +
+		"PRIMARY KEY (`id`)," +
+		"UNIQUE KEY `name` (`name`)" +
 		")"
 	_, err := db.Exec(sql)
 	if err != nil {
@@ -235,15 +269,26 @@ func createRBACOperationTable(db *sql.DB, name string) error {
 	return nil
 }
 
-func createRBACActionTable(db *sql.DB, name string) error {
-	sql := "CREATE TABLE IF NOT EXISTS `rbac_actions` (" +
-		"`id` int(10) unsigned NOT NULL AUTO_INCREMENT," +
-		"`created_at` timestamp NULL DEFAULT NULL," +
-		"`updated_at` timestamp NULL DEFAULT NULL," +
-		"`deleted_at` timestamp NULL DEFAULT NULL," +
-		"`name` varchar(20) NOT NULL," +
-		"PRIMARY KEY (`id`)" +
-		")"
+func addDefaultRoleColumnForApplicationTable(db *sql.DB, name string) error {
+	sql := "ALTER TABLE `applications` ADD `default_role` int(10) unsigned;"
+	_, err := db.Exec(sql)
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
+func addIdentifierColumnForApplicationTable(db *sql.DB, name string) error {
+	sql := "ALTER TABLE `applications` ADD `identifier` varchar(255) NOT NULL;"
+	_, err := db.Exec(sql)
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
+func addIdentifierIndexForApplicationTable(db *sql.DB, name string) error {
+	sql := "CREATE INDEX `identifier` ON `applications` (`identifier`)"
 	_, err := db.Exec(sql)
 	if err != nil {
 		return err

@@ -136,11 +136,6 @@ func (m *Manager) EmailLogin(login request.MailLogin) (map[string]string, *perro
 		return nil, perr.Wrapper(errors.New("JWT token generate failed"))
 	}
 
-	// add operation history
-	if err := historyOperation(tx, OperationMailLogin, user.ID); err != nil {
-		return nil, err
-	}
-
 	res["jwt"] = token.String()
 	res["refresh_token"] = refreshToken
 
@@ -201,11 +196,6 @@ func (m *Manager) GoogleLoginMobile(login request.GoogleMobileLogin) (map[string
 
 	if perr != nil {
 		return nil, perr.Wrapper(errors.New("JWT token generate failed"))
-	}
-
-	// add operation history
-	if err := historyOperation(tx, OperationGoogleLogin, user.ID); err != nil {
-		return nil, err
 	}
 
 	res["jwt"] = token.String()
@@ -319,11 +309,6 @@ func (m *Manager) WechatLoginMobile(login request.WechatMobileLogin) (map[string
 
 	if perr != nil {
 		return nil, perr.Wrapper(errors.New("JWT token generate failed"))
-	}
-
-	// add operation history
-	if err := historyOperation(tx, OperationWechatLogin, user.ID); err != nil {
-		return nil, err
 	}
 
 	res["jwt"] = token.String()
@@ -527,11 +512,6 @@ func (m *Manager) AppleLoginMobile(login request.AppleMobileLogin) (map[string]s
 
 	if perr != nil {
 		return nil, perr.Wrapper(errors.New("JWT token generate failed"))
-	}
-
-	// add operation history
-	if err := historyOperation(tx, OperationAppleLogin, user.ID); err != nil {
-		return nil, err
 	}
 
 	res["jwt"] = token.String()

@@ -14,11 +14,10 @@ import (
 )
 
 const (
-	ALGRAS              = "rsa"
-	ACCESS              = "access"
-	REGISTERVERIFY      = "register_verify"
-	PASSWORDRESET       = "password_reset"
-	PASSWORDRESETRESULT = "password_reset_result"
+	ALGRAS         = "rsa"
+	ACCESS         = "access"
+	REGISTERVERIFY = "register_verify"
+	PASSWORDRESET  = "password_reset"
 )
 
 type JWT struct {
@@ -109,16 +108,6 @@ type PasswordResetResultPayload struct {
 	Successed bool `json:"successed"`
 }
 
-func NewPasswordResetResultPayload(successed bool, expire int64) *PasswordResetResultPayload {
-	rrrp := &PasswordResetResultPayload{}
-	rrrp.Successed = successed
-
-	rrrp.Payload.Type = PASSWORDRESETRESULT
-	rrrp.Payload.Create = time.Now().Unix()
-	rrrp.Payload.Expire = time.Now().Unix() + expire
-	return rrrp
-}
-
 func GenerateRSAJWT(payload interface{}) (*JWT, *perror.PlutoError) {
 	jwt := &JWT{}
 	head := Head{}
@@ -149,13 +138,9 @@ func GenerateRSAJWT(payload interface{}) (*JWT, *perror.PlutoError) {
 	return jwt, nil
 }
 
-func VerifyB64JWT(b64JWTToken string) (*JWT, *perror.PlutoError) {
+func VerifyJWT(token string) (*JWT, *perror.PlutoError) {
 	jwt := &JWT{}
-	b, err := b64.RawStdEncoding.DecodeString(b64JWTToken)
-	if err != nil {
-		return nil, perror.InvalidJWTToekn
-	}
-	parts := strings.Split(string(b), ".")
+	parts := strings.Split(token, ".")
 	head, err := b64.RawStdEncoding.DecodeString(parts[0])
 	if err != nil {
 		return nil, perror.InvalidJWTToekn
@@ -180,5 +165,18 @@ func VerifyB64JWT(b64JWTToken string) (*JWT, *perror.PlutoError) {
 	if err := rsa.VerifySignWithPublicKey(append(head, payload...), sign, crypto.SHA256); err != nil {
 		return nil, perror.InvalidJWTToekn
 	}
+	return jwt, nil
+}
+
+func VerifyB64JWT(b64JWTToken string) (*JWT, *perror.PlutoError) {
+	b, err := b64.RawStdEncoding.DecodeString(b64JWTToken)
+	if err != nil {
+		return nil, perror.InvalidJWTToekn
+	}
+	jwt, perr := VerifyJWT(string(b))
+	if perr != nil {
+		return nil, perr
+	}
+
 	return jwt, nil
 }

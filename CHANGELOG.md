@@ -1,4 +1,64 @@
 
+<a name="0.2.7"></a>
+## [0.2.7](https://github.com/leeif/pluto/compare/v0.2.6...0.2.7)
+
+> 2019-11-23
+
+### Update
+
+* **view:** update html views
+
+
+<a name="v0.2.6"></a>
+## [v0.2.6](https://github.com/leeif/pluto/compare/v0.2.5...v0.2.6)
+
+> 2019-11-19
+
+### Fix
+
+* **login:** apple login allows empty name parameter
+
+
+<a name="v0.2.5"></a>
+## [v0.2.5](https://github.com/leeif/pluto/compare/v0.2.4...v0.2.5)
+
+> 2019-11-18
+
+### Fix
+
+* **api:** fix google login
+
+
+<a name="v0.2.4"></a>
+## [v0.2.4](https://github.com/leeif/pluto/compare/v0.2.3...v0.2.4)
+
+> 2019-11-18
+
+### Fix
+
+* **api:** fix get user info bug
+
+
+<a name="v0.2.3"></a>
+## [v0.2.3](https://github.com/leeif/pluto/compare/v0.2.2...v0.2.3)
+
+> 2019-11-16
+
+### Update
+
+* **api:** edit user info api verify jwt
+
+
+<a name="v0.2.2"></a>
+## [v0.2.2](https://github.com/leeif/pluto/compare/v0.2.1...v0.2.2)
+
+> 2019-11-16
+
+### Update
+
+* **api:** update user info jwt verify
+
+
 <a name="v0.2.1"></a>
 ## [v0.2.1](https://github.com/leeif/pluto/compare/v0.2.0...v0.2.1)
 

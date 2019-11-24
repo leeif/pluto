@@ -76,7 +76,7 @@ type AppleMobileLogin struct {
 }
 
 func (aml *AppleMobileLogin) Validation() bool {
-	if aml.Code == "" || aml.Name == "" {
+	if aml.Code == "" {
 		return false
 	}
 
@@ -111,13 +111,12 @@ func (rpm *ResetPasswordMail) Validation() bool {
 	return true
 }
 
-type ResetPassword struct {
-	Token    string `json:"token"`
-	Password string `json:"password"`
+type ResetPasswordWeb struct {
+	Password string `json:"password" schema:"password,required"`
 }
 
-func (rp *ResetPassword) Validation() bool {
-	if rp.Token == "" || rp.Password == "" {
+func (rp *ResetPasswordWeb) Validation() bool {
+	if rp.Password == "" {
 		return false
 	}
 

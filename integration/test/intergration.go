@@ -65,14 +65,6 @@ var testCases = []testCase{
 		Func: testNewPasswordLogin,
 	},
 	{
-		Name: "testPasswordResetResultFail",
-		Func: testPasswordResetResultFail,
-	},
-	{
-		Name: "testPasswordResetResultOK",
-		Func: testPasswordResetResultOK,
-	},
-	{
 		Name: "testPasswordResetFail",
 		Func: testPasswordResetFail,
 	},

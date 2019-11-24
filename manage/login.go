@@ -175,6 +175,7 @@ func (m *Manager) GoogleLoginMobile(login request.GoogleMobileLogin) (map[string
 		user.LoginType = GOOGLELOGIN
 		user.Avatar.SetValid(info.Picture)
 		user.Name = info.Name
+		user.Mail.SetValid(info.Email)
 		user.Verified.SetValid(true)
 		if err := user.Insert(tx, boil.Infer()); err != nil {
 			return nil, perror.ServerError.Wrapper(err)
@@ -493,6 +494,16 @@ func (m *Manager) AppleLoginMobile(login request.AppleMobileLogin) (map[string]s
 		user.Name = login.Name
 		user.Verified.SetValid(true)
 		if err := user.Insert(tx, boil.Infer()); err != nil {
+			return nil, perror.ServerError.Wrapper(err)
+		}
+	} else {
+		if login.Name != "" {
+			user.Name = login.Name
+		}
+		if info.Email != "" {
+			user.Mail.SetValid(info.Email)
+		}
+		if _, err := user.Update(tx, boil.Infer()); err != nil {
 			return nil, perror.ServerError.Wrapper(err)
 		}
 	}

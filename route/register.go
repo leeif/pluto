@@ -79,12 +79,12 @@ func registerRouter(router *mux.Router, db *sql.DB, config *config.Config, logge
 		}
 
 		go func() {
-			ml, perr := mail.NewMail(config)
-			if perr != nil {
-				logger.Error("send mail failed: " + perr.LogError.Error())
+			ml, err := mail.NewMail(config)
+			if err != nil {
+				logger.Error(err.LogError.Error())
 			}
-			if perr := ml.SendRegisterVerify(user.ID, user.Mail.String, getBaseURL(r)); perr != nil {
-				logger.Error("send mail failed: " + perr.LogError.Error())
+			if err := ml.SendRegisterVerify(user.ID, rvm.Mail, getBaseURL(r)); err != nil {
+				logger.Error(err.LogError.Error())
 			}
 		}()
 

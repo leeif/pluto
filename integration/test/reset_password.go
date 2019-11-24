@@ -19,9 +19,8 @@ func testResetPassword() error {
 		return fmt.Errorf("Expect no error, but %v", perror.LogError)
 	}
 
-	url := "http://localhost:8010/api/user/password/reset"
-	payload := request.ResetPassword{
-		Token:    token.B64String(),
+	url := "http://localhost:8010/password/reset/" + token.B64String()
+	payload := request.ResetPasswordWeb{
 		Password: "test_new",
 	}
 	b, err := json.Marshal(payload)

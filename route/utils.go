@@ -12,6 +12,7 @@ import (
 	"github.com/leeif/pluto/models"
 
 	"github.com/gorilla/mux"
+	"github.com/gorilla/schema"
 	"github.com/leeif/pluto/config"
 	"github.com/leeif/pluto/datatype/request"
 	"github.com/leeif/pluto/log"
@@ -77,20 +78,30 @@ func getBaseURL(r *http.Request) string {
 	return fmt.Sprintf("%s://%s", scheme, r.Host)
 }
 
-func getBody(r *http.Request, revicer interface{}) *perror.PlutoError {
-	body, err := ioutil.ReadAll(r.Body)
-	if err != nil {
-		return perror.ServerError.Wrapper(errors.New("Read body failed: " + err.Error()))
-	}
+func getBody(r *http.Request, reciver interface{}) *perror.PlutoError {
 
 	contentType := r.Header.Get("Content-type")
 	if strings.Contains(contentType, "application/json") {
-		err := json.Unmarshal(body, &revicer)
+		body, err := ioutil.ReadAll(r.Body)
+		if err != nil {
+			return perror.ServerError.Wrapper(errors.New("Read body failed: " + err.Error()))
+		}
+		err = json.Unmarshal(body, &reciver)
 		if err != nil {
 			return perror.BadRequest
 		}
+	} else if strings.Contains(contentType, "application/x-www-form-urlencoded") {
+		err := r.ParseForm()
+		if err != nil {
+			return perror.BadRequest
+		}
+		decoder := schema.NewDecoder()
+		err = decoder.Decode(reciver, r.PostForm)
+		if err != nil {
+			return perror.BadRequest.Wrapper(err)
+		}
 	}
-	pr, ok := revicer.(request.PlutoRequest)
+	pr, ok := reciver.(request.PlutoRequest)
 	// check request body validation
 	if ok && !pr.Validation() {
 		return perror.BadRequest
@@ -101,7 +112,7 @@ func getBody(r *http.Request, revicer interface{}) *perror.PlutoError {
 func formatUser(user *models.User) map[string]interface{} {
 	res := make(map[string]interface{})
 	res["id"] = user.ID
-	res["mail"] = user.ID
+	res["mail"] = user.Mail
 	res["name"] = user.Name
 	res["gender"] = user.Gender
 	res["avatar"] = user.Avatar

@@ -85,15 +85,15 @@ func (r *Router) registerAPIRoutes() {
 		{
 			path:        "/user/info/me",
 			description: "get user info",
-			method:      "POST",
-			middle:      r.mw.TokenVerifyMiddleware,
+			method:      "GET",
+			middle:      r.mw.AccessTokenAuthMiddleware,
 			handler:     r.userInfo,
 		},
 		{
 			path:        "/user/info/me/update",
 			description: "update user info",
 			method:      "POST",
-			middle:      r.mw.TokenVerifyMiddleware,
+			middle:      r.mw.AccessTokenAuthMiddleware,
 			handler:     r.updateUserInfo,
 		},
 		{
@@ -109,13 +109,6 @@ func (r *Router) registerAPIRoutes() {
 			method:      "GET",
 			middle:      r.mw.NoVerifyMiddleware,
 			handler:     r.publicKey,
-		},
-		{
-			path:        "/healthcheck",
-			description: "health check api",
-			method:      "GET",
-			middle:      r.mw.NoVerifyMiddleware,
-			handler:     r.healthCheck,
 		},
 	}
 	r.registerRoutes(routes, "/api")
@@ -148,6 +141,74 @@ func (r *Router) registerWebRoutes() {
 	r.registerRoutes(routes, "/")
 }
 
+func (r *Router) registerHealthRoutes() {
+	routes := []PlutoRoute{
+		{
+			path:        "/healthcheck",
+			description: "health check api",
+			method:      "GET",
+			middle:      r.mw.NoVerifyMiddleware,
+			handler:     r.healthCheck,
+		},
+	}
+	r.registerRoutes(routes, "/")
+}
+
+func (r *Router) registerAdminRoutes() {
+	routes := []PlutoRoute{
+		{
+			path:        "/admin/role/create",
+			description: "create role",
+			method:      "POST",
+			middle:      r.mw.NoVerifyMiddleware,
+			handler:     r.CreateRole,
+		},
+		{
+			path:        "/admin/role/attach",
+			description: "attach role to application",
+			method:      "POST",
+			middle:      r.mw.NoVerifyMiddleware,
+			handler:     r.AttachRole,
+		},
+		{
+			path:        "/admin/scope/create",
+			description: "create scope",
+			method:      "POST",
+			middle:      r.mw.NoVerifyMiddleware,
+			handler:     r.CreateScope,
+		},
+		{
+			path:        "/admin/scope/attach",
+			description: "attach scope to role",
+			method:      "POST",
+			middle:      r.mw.NoVerifyMiddleware,
+			handler:     r.AttachScope,
+		},
+		{
+			path:        "/admin/scope/detach",
+			description: "detach scope to role",
+			method:      "POST",
+			middle:      r.mw.NoVerifyMiddleware,
+			handler:     r.DetachScope,
+		},
+		{
+			path:        "/admin/application/create",
+			description: "create application",
+			method:      "POST",
+			middle:      r.mw.NoVerifyMiddleware,
+			handler:     r.CreateApplication,
+		},
+		{
+			path:        "/admin/application/role/default",
+			description: "set the default role of the application",
+			method:      "POST",
+			middle:      r.mw.NoVerifyMiddleware,
+			handler:     r.ApplicationDefaultRole,
+		},
+	}
+	r.registerRoutes(routes, "/admin")
+}
+
 func (router *Router) registerRoutes(routes []PlutoRoute, prefix string) {
 	sub := router.mux.PathPrefix(prefix).Subrouter()
 	for _, r := range routes {
@@ -158,6 +219,7 @@ func (router *Router) registerRoutes(routes []PlutoRoute, prefix string) {
 func (r *Router) Register() {
 	r.registerAPIRoutes()
 	r.registerWebRoutes()
+	r.registerHealthRoutes()
 }
 
 func NewRouter(mux *mux.Router, manager *manage.Manager, config *config.Config, logger *log.PlutoLog) *Router {

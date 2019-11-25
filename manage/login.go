@@ -129,7 +129,7 @@ func (m *Manager) EmailLogin(login request.MailLogin) (map[string]string, *perro
 	}
 
 	// generate jwt token
-	up := jwt.NewUserPayload(user.ID, deviceApp.DeviceID, deviceApp.AppID, MAILLOGIN, m.config.JWT.AccessTokenExpire)
+	up := jwt.NewAccessPayload(user.ID, deviceApp.DeviceID, deviceApp.AppID, MAILLOGIN, m.config.JWT.AccessTokenExpire)
 	token, perr := jwt.GenerateRSAJWT(up)
 
 	if perr != nil {
@@ -191,7 +191,7 @@ func (m *Manager) GoogleLoginMobile(login request.GoogleMobileLogin) (map[string
 	}
 
 	// generate jwt token
-	up := jwt.NewUserPayload(user.ID, deviceApp.DeviceID, deviceApp.AppID, GOOGLELOGIN, m.config.JWT.AccessTokenExpire)
+	up := jwt.NewAccessPayload(user.ID, deviceApp.DeviceID, deviceApp.AppID, GOOGLELOGIN, m.config.JWT.AccessTokenExpire)
 	token, perr := jwt.GenerateRSAJWT(up)
 
 	if perr != nil {
@@ -304,7 +304,7 @@ func (m *Manager) WechatLoginMobile(login request.WechatMobileLogin) (map[string
 	}
 
 	// generate jwt token
-	up := jwt.NewUserPayload(user.ID, deviceApp.DeviceID, deviceApp.AppID, WECHATLOGIN, m.config.JWT.AccessTokenExpire)
+	up := jwt.NewAccessPayload(user.ID, deviceApp.DeviceID, deviceApp.AppID, WECHATLOGIN, m.config.JWT.AccessTokenExpire)
 	token, perr := jwt.GenerateRSAJWT(up)
 
 	if perr != nil {
@@ -507,7 +507,7 @@ func (m *Manager) AppleLoginMobile(login request.AppleMobileLogin) (map[string]s
 	}
 
 	// generate jwt token
-	up := jwt.NewUserPayload(user.ID, deviceApp.DeviceID, deviceApp.AppID, APPLELOGIN, m.config.JWT.AccessTokenExpire)
+	up := jwt.NewAccessPayload(user.ID, deviceApp.DeviceID, deviceApp.AppID, APPLELOGIN, m.config.JWT.AccessTokenExpire)
 	token, perr := jwt.GenerateRSAJWT(up)
 
 	if perr != nil {

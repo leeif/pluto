@@ -9,7 +9,9 @@ import (
 	"strings"
 
 	"github.com/leeif/pluto/models"
+	"github.com/leeif/pluto/utils/jwt"
 
+	"github.com/gorilla/context"
 	"github.com/gorilla/schema"
 	"github.com/leeif/pluto/datatype/request"
 	"github.com/leeif/pluto/utils/view"
@@ -69,6 +71,31 @@ func formatUser(user *models.User) map[string]interface{} {
 	res["created_at"] = user.CreatedAt.Time.Unix()
 	res["updated_at"] = user.UpdatedAt.Time.Unix()
 	return res
+}
+
+func getAccessPayload(r *http.Request) (*jwt.AccessPayload, *perror.PlutoError) {
+	perr := context.Get(r, "pluto_error")
+	if perr != nil {
+		err, ok := perr.(*perror.PlutoError)
+		if !ok {
+			err = perror.ServerError.Wrapper(fmt.Errorf("Unknow error"))
+		}
+		return nil, err
+	}
+
+	accessPayload := context.Get(r, "payload")
+
+	if accessPayload == nil {
+		err := perror.ServerError.Wrapper(fmt.Errorf("Access token payload is empty"))
+		return nil, err
+	}
+
+	payload, ok := accessPayload.(*jwt.AccessPayload)
+	if !ok {
+		err := perror.ServerError.Wrapper(fmt.Errorf("Not a access token payload"))
+		return nil, err
+	}
+	return payload, nil
 }
 
 func responseOK(body interface{}, w http.ResponseWriter) error {

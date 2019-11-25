@@ -52,7 +52,7 @@ type Payload struct {
 	Expire int64  `json:"expire_time"`
 }
 
-type UserPayload struct {
+type AccessPayload struct {
 	Payload
 	UserID    uint   `json:"userId"`
 	DeviceID  string `json:"deviceId"`
@@ -60,8 +60,8 @@ type UserPayload struct {
 	LoginType string `json:"login_type"`
 }
 
-func NewUserPayload(userID uint, deviceID, appID, loginType string, expire int64) *UserPayload {
-	up := &UserPayload{}
+func NewAccessPayload(userID uint, deviceID, appID, loginType string, expire int64) *AccessPayload {
+	up := &AccessPayload{}
 	up.UserID = userID
 	up.DeviceID = deviceID
 	up.AppID = appID

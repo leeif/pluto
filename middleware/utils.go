@@ -11,8 +11,9 @@ type Middleware struct {
 	Logger *log.PlutoLog
 }
 
-func (middleware *Middleware) TokenVerifyMiddleware(handlers ...negroni.HandlerFunc) http.Handler {
+func (middleware *Middleware) AccessTokenAuthMiddleware(handlers ...negroni.HandlerFunc) http.Handler {
 	ng := negroni.New()
+	ng.UseFunc(AccessTokenAuth)
 	for _, handler := range handlers {
 		ng.UseFunc(handler)
 	}
@@ -25,6 +26,16 @@ func (middleware *Middleware) SessionVerifyMiddleware(handlers ...negroni.Handle
 	for _, handler := range handlers {
 		ng.UseFunc(handler)
 	}
+	ng.UseFunc(NewLogger(middleware.Logger))
+	return ng
+}
+
+func (middleware *Middleware) AdminSessionMiddleware(handlers ...negroni.HandlerFunc) http.Handler {
+	ng := negroni.New()
+	for _, handler := range handlers {
+		ng.UseFunc(handler)
+	}
+	ng.UseFunc(NewLogger(middleware.Logger))
 	return ng
 }
 

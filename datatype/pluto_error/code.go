@@ -5,6 +5,7 @@ import "net/http"
 var (
 	ServerError = NewPlutoError(http.StatusInternalServerError, 1000, "Server Error", nil)
 	BadRequest  = NewPlutoError(http.StatusBadRequest, 1001, "Bad Request", nil)
+	Forbidden   = NewPlutoError(http.StatusForbidden, 1002, "Permission Forbidden", nil)
 
 	MailIsAlreadyRegister = NewPlutoError(http.StatusForbidden, 2001, "Mail is already been registered", nil)
 	MailIsNotExsit        = NewPlutoError(http.StatusForbidden, 2002, "Mail is not exist", nil)

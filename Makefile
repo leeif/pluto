@@ -39,7 +39,7 @@ unit-test:
 	GO111MODULE=on go test -v ./...
 
 integration-test:
-	docker-compose -f integration/docker/docker-compose.yml down || {return 0}
+	docker-compose -f integration/docker/docker-compose.yml down || true
 	docker-compose -f integration/docker/docker-compose.yml up --build -d
 	GO111MODULE=on go run integration/main.go
 	docker-compose -f integration/docker/docker-compose.yml down

@@ -59,6 +59,15 @@ func getBody(r *http.Request, reciver interface{}) *perror.PlutoError {
 	return nil
 }
 
+func getQuery(r *http.Request, reciver interface{}) *perror.PlutoError {
+	decoder := schema.NewDecoder()
+	if err := decoder.Decode(reciver, r.URL.Query()); err != nil {
+		return perror.BadRequest.Wrapper(err)
+	}
+
+	return nil
+}
+
 func formatUser(user *models.User) map[string]interface{} {
 	res := make(map[string]interface{})
 	res["id"] = user.ID

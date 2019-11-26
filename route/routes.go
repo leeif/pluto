@@ -154,56 +154,70 @@ func (r *Router) registerHealthRoutes() {
 	r.registerRoutes(routes, "/")
 }
 
-func (r *Router) registerAdminRoutes() {
+func (r *Router) registerRBACRoutes() {
 	routes := []PlutoRoute{
 		{
-			path:        "/admin/role/create",
+			path:        "/rbac/role/create",
 			description: "create role",
 			method:      "POST",
 			middle:      r.mw.NoVerifyMiddleware,
 			handler:     r.CreateRole,
 		},
 		{
-			path:        "/admin/role/attach",
-			description: "attach role to application",
-			method:      "POST",
-			middle:      r.mw.NoVerifyMiddleware,
-			handler:     r.AttachRole,
-		},
-		{
-			path:        "/admin/scope/create",
+			path:        "/rbac/scope/create",
 			description: "create scope",
 			method:      "POST",
 			middle:      r.mw.NoVerifyMiddleware,
 			handler:     r.CreateScope,
 		},
 		{
-			path:        "/admin/scope/attach",
+			path:        "/rbac/scope/attach",
 			description: "attach scope to role",
 			method:      "POST",
 			middle:      r.mw.NoVerifyMiddleware,
 			handler:     r.AttachScope,
 		},
 		{
-			path:        "/admin/scope/detach",
+			path:        "/rbac/scope/detach",
 			description: "detach scope to role",
 			method:      "POST",
 			middle:      r.mw.NoVerifyMiddleware,
 			handler:     r.DetachScope,
 		},
 		{
-			path:        "/admin/application/create",
+			path:        "/rbac/application/create",
 			description: "create application",
 			method:      "POST",
 			middle:      r.mw.NoVerifyMiddleware,
 			handler:     r.CreateApplication,
 		},
 		{
-			path:        "/admin/application/role/default",
+			path:        "/rbac/application/role/default",
 			description: "set the default role of the application",
 			method:      "POST",
 			middle:      r.mw.NoVerifyMiddleware,
 			handler:     r.ApplicationDefaultRole,
+		},
+		{
+			path:        "/rbac/application/list",
+			description: "list all the applications",
+			method:      "GET",
+			middle:      r.mw.NoVerifyMiddleware,
+			handler:     r.ListApplications,
+		},
+		{
+			path:        "/rbac/role/list",
+			description: "list all the roles in the application",
+			method:      "GET",
+			middle:      r.mw.NoVerifyMiddleware,
+			handler:     r.ListRoles,
+		},
+		{
+			path:        "/rbac/scope/list",
+			description: "list all the scopes in the application",
+			method:      "GET",
+			middle:      r.mw.NoVerifyMiddleware,
+			handler:     r.ListScopes,
 		},
 	}
 	r.registerRoutes(routes, "/admin")

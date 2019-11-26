@@ -1,20 +1,5 @@
 package request
 
-type CreateRole struct {
-}
-
-type CreateScope struct {
-
-}
-
-type CreateApplication struct {
-
-}
-
-type RoleScope struct {
-
-}
-
-type ApplicationRole struct {
-
+type FindUser struct {
+	Keyword string `json:"keyword"`
 }

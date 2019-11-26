@@ -25,10 +25,6 @@ func (m *Manager) DetachScope(as request.RoleScope) *perror.PlutoError {
 	return nil
 }
 
-func (m *Manager) AttachRole(ar request.ApplicationRole) *perror.PlutoError {
-	return nil
-}
-
 func (m *Manager) ApplicationDefaultRole(ar request.ApplicationRole) *perror.PlutoError {
 	return nil
 }

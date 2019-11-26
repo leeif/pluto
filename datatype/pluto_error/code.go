@@ -8,7 +8,7 @@ var (
 	Forbidden   = NewPlutoError(http.StatusForbidden, 1002, "Permission Forbidden", nil)
 
 	MailIsAlreadyRegister = NewPlutoError(http.StatusForbidden, 2001, "Mail is already been registered", nil)
-	MailIsNotExsit        = NewPlutoError(http.StatusForbidden, 2002, "Mail is not exist", nil)
+	MailNotExist          = NewPlutoError(http.StatusForbidden, 2002, "Mail does not exist", nil)
 	MailIsNotVerified     = NewPlutoError(http.StatusForbidden, 2003, "Mail is not verified", nil)
 	MailAlreadyVerified   = NewPlutoError(http.StatusBadRequest, 2004, "Mail is already verified", nil)
 
@@ -21,4 +21,9 @@ var (
 	InvalidAppleIDToken  = NewPlutoError(http.StatusForbidden, 3007, "Invalid Apple ID Token", nil)
 
 	JWTTokenExpired = NewPlutoError(http.StatusForbidden, 3008, "JWT Token Expired", nil)
+
+	ScopeExists         = NewPlutoError(http.StatusForbidden, 4001, "Scope already exists", nil)
+	ScopeAttached       = NewPlutoError(http.StatusForbidden, 4002, "Scope already attached", nil)
+	ApplicationNotExist = NewPlutoError(http.StatusForbidden, 4003, "Application does not exist", nil)
+	RoleNotExist        = NewPlutoError(http.StatusForbidden, 4004, "Role does not exist", nil)
 )

@@ -21,99 +21,99 @@ import (
 	"github.com/volatiletech/sqlboiler/strmangle"
 )
 
-// Scope is an object representing the database table.
-type Scope struct {
+// RbacScope is an object representing the database table.
+type RbacScope struct {
 	ID        uint      `boil:"id" json:"id" toml:"id" yaml:"id"`
 	CreatedAt null.Time `boil:"created_at" json:"created_at,omitempty" toml:"created_at" yaml:"created_at,omitempty"`
 	UpdatedAt null.Time `boil:"updated_at" json:"updated_at,omitempty" toml:"updated_at" yaml:"updated_at,omitempty"`
 	DeletedAt null.Time `boil:"deleted_at" json:"deleted_at,omitempty" toml:"deleted_at" yaml:"deleted_at,omitempty"`
 	Name      string    `boil:"name" json:"name" toml:"name" yaml:"name"`
-	RoleID    uint      `boil:"role_id" json:"role_id" toml:"role_id" yaml:"role_id"`
+	AppID     uint      `boil:"app_id" json:"app_id" toml:"app_id" yaml:"app_id"`
 
-	R *scopeR `boil:"-" json:"-" toml:"-" yaml:"-"`
-	L scopeL  `boil:"-" json:"-" toml:"-" yaml:"-"`
+	R *rbacScopeR `boil:"-" json:"-" toml:"-" yaml:"-"`
+	L rbacScopeL  `boil:"-" json:"-" toml:"-" yaml:"-"`
 }
 
-var ScopeColumns = struct {
+var RbacScopeColumns = struct {
 	ID        string
 	CreatedAt string
 	UpdatedAt string
 	DeletedAt string
 	Name      string
-	RoleID    string
+	AppID     string
 }{
 	ID:        "id",
 	CreatedAt: "created_at",
 	UpdatedAt: "updated_at",
 	DeletedAt: "deleted_at",
 	Name:      "name",
-	RoleID:    "role_id",
+	AppID:     "app_id",
 }
 
 // Generated where
 
-var ScopeWhere = struct {
+var RbacScopeWhere = struct {
 	ID        whereHelperuint
 	CreatedAt whereHelpernull_Time
 	UpdatedAt whereHelpernull_Time
 	DeletedAt whereHelpernull_Time
 	Name      whereHelperstring
-	RoleID    whereHelperuint
+	AppID     whereHelperuint
 }{
-	ID:        whereHelperuint{field: "`scopes`.`id`"},
-	CreatedAt: whereHelpernull_Time{field: "`scopes`.`created_at`"},
-	UpdatedAt: whereHelpernull_Time{field: "`scopes`.`updated_at`"},
-	DeletedAt: whereHelpernull_Time{field: "`scopes`.`deleted_at`"},
-	Name:      whereHelperstring{field: "`scopes`.`name`"},
-	RoleID:    whereHelperuint{field: "`scopes`.`role_id`"},
+	ID:        whereHelperuint{field: "`rbac_scopes`.`id`"},
+	CreatedAt: whereHelpernull_Time{field: "`rbac_scopes`.`created_at`"},
+	UpdatedAt: whereHelpernull_Time{field: "`rbac_scopes`.`updated_at`"},
+	DeletedAt: whereHelpernull_Time{field: "`rbac_scopes`.`deleted_at`"},
+	Name:      whereHelperstring{field: "`rbac_scopes`.`name`"},
+	AppID:     whereHelperuint{field: "`rbac_scopes`.`app_id`"},
 }
 
-// ScopeRels is where relationship names are stored.
-var ScopeRels = struct {
+// RbacScopeRels is where relationship names are stored.
+var RbacScopeRels = struct {
 }{}
 
-// scopeR is where relationships are stored.
-type scopeR struct {
+// rbacScopeR is where relationships are stored.
+type rbacScopeR struct {
 }
 
 // NewStruct creates a new relationship struct
-func (*scopeR) NewStruct() *scopeR {
-	return &scopeR{}
+func (*rbacScopeR) NewStruct() *rbacScopeR {
+	return &rbacScopeR{}
 }
 
-// scopeL is where Load methods for each relationship are stored.
-type scopeL struct{}
+// rbacScopeL is where Load methods for each relationship are stored.
+type rbacScopeL struct{}
 
 var (
-	scopeAllColumns            = []string{"id", "created_at", "updated_at", "deleted_at", "name", "role_id"}
-	scopeColumnsWithoutDefault = []string{"created_at", "updated_at", "deleted_at", "name", "role_id"}
-	scopeColumnsWithDefault    = []string{"id"}
-	scopePrimaryKeyColumns     = []string{"id"}
+	rbacScopeAllColumns            = []string{"id", "created_at", "updated_at", "deleted_at", "name", "app_id"}
+	rbacScopeColumnsWithoutDefault = []string{"created_at", "updated_at", "deleted_at", "name", "app_id"}
+	rbacScopeColumnsWithDefault    = []string{"id"}
+	rbacScopePrimaryKeyColumns     = []string{"id"}
 )
 
 type (
-	// ScopeSlice is an alias for a slice of pointers to Scope.
-	// This should generally be used opposed to []Scope.
-	ScopeSlice []*Scope
-	// ScopeHook is the signature for custom Scope hook methods
-	ScopeHook func(boil.Executor, *Scope) error
+	// RbacScopeSlice is an alias for a slice of pointers to RbacScope.
+	// This should generally be used opposed to []RbacScope.
+	RbacScopeSlice []*RbacScope
+	// RbacScopeHook is the signature for custom RbacScope hook methods
+	RbacScopeHook func(boil.Executor, *RbacScope) error
 
-	scopeQuery struct {
+	rbacScopeQuery struct {
 		*queries.Query
 	}
 )
 
 // Cache for insert, update and upsert
 var (
-	scopeType                 = reflect.TypeOf(&Scope{})
-	scopeMapping              = queries.MakeStructMapping(scopeType)
-	scopePrimaryKeyMapping, _ = queries.BindMapping(scopeType, scopeMapping, scopePrimaryKeyColumns)
-	scopeInsertCacheMut       sync.RWMutex
-	scopeInsertCache          = make(map[string]insertCache)
-	scopeUpdateCacheMut       sync.RWMutex
-	scopeUpdateCache          = make(map[string]updateCache)
-	scopeUpsertCacheMut       sync.RWMutex
-	scopeUpsertCache          = make(map[string]insertCache)
+	rbacScopeType                 = reflect.TypeOf(&RbacScope{})
+	rbacScopeMapping              = queries.MakeStructMapping(rbacScopeType)
+	rbacScopePrimaryKeyMapping, _ = queries.BindMapping(rbacScopeType, rbacScopeMapping, rbacScopePrimaryKeyColumns)
+	rbacScopeInsertCacheMut       sync.RWMutex
+	rbacScopeInsertCache          = make(map[string]insertCache)
+	rbacScopeUpdateCacheMut       sync.RWMutex
+	rbacScopeUpdateCache          = make(map[string]updateCache)
+	rbacScopeUpsertCacheMut       sync.RWMutex
+	rbacScopeUpsertCache          = make(map[string]insertCache)
 )
 
 var (
@@ -124,20 +124,20 @@ var (
 	_ = qmhelper.Where
 )
 
-var scopeBeforeInsertHooks []ScopeHook
-var scopeBeforeUpdateHooks []ScopeHook
-var scopeBeforeDeleteHooks []ScopeHook
-var scopeBeforeUpsertHooks []ScopeHook
+var rbacScopeBeforeInsertHooks []RbacScopeHook
+var rbacScopeBeforeUpdateHooks []RbacScopeHook
+var rbacScopeBeforeDeleteHooks []RbacScopeHook
+var rbacScopeBeforeUpsertHooks []RbacScopeHook
 
-var scopeAfterInsertHooks []ScopeHook
-var scopeAfterSelectHooks []ScopeHook
-var scopeAfterUpdateHooks []ScopeHook
-var scopeAfterDeleteHooks []ScopeHook
-var scopeAfterUpsertHooks []ScopeHook
+var rbacScopeAfterInsertHooks []RbacScopeHook
+var rbacScopeAfterSelectHooks []RbacScopeHook
+var rbacScopeAfterUpdateHooks []RbacScopeHook
+var rbacScopeAfterDeleteHooks []RbacScopeHook
+var rbacScopeAfterUpsertHooks []RbacScopeHook
 
 // doBeforeInsertHooks executes all "before insert" hooks.
-func (o *Scope) doBeforeInsertHooks(exec boil.Executor) (err error) {
-	for _, hook := range scopeBeforeInsertHooks {
+func (o *RbacScope) doBeforeInsertHooks(exec boil.Executor) (err error) {
+	for _, hook := range rbacScopeBeforeInsertHooks {
 		if err := hook(exec, o); err != nil {
 			return err
 		}
@@ -147,8 +147,8 @@ func (o *Scope) doBeforeInsertHooks(exec boil.Executor) (err error) {
 }
 
 // doBeforeUpdateHooks executes all "before Update" hooks.
-func (o *Scope) doBeforeUpdateHooks(exec boil.Executor) (err error) {
-	for _, hook := range scopeBeforeUpdateHooks {
+func (o *RbacScope) doBeforeUpdateHooks(exec boil.Executor) (err error) {
+	for _, hook := range rbacScopeBeforeUpdateHooks {
 		if err := hook(exec, o); err != nil {
 			return err
 		}
@@ -158,8 +158,8 @@ func (o *Scope) doBeforeUpdateHooks(exec boil.Executor) (err error) {
 }
 
 // doBeforeDeleteHooks executes all "before Delete" hooks.
-func (o *Scope) doBeforeDeleteHooks(exec boil.Executor) (err error) {
-	for _, hook := range scopeBeforeDeleteHooks {
+func (o *RbacScope) doBeforeDeleteHooks(exec boil.Executor) (err error) {
+	for _, hook := range rbacScopeBeforeDeleteHooks {
 		if err := hook(exec, o); err != nil {
 			return err
 		}
@@ -169,8 +169,8 @@ func (o *Scope) doBeforeDeleteHooks(exec boil.Executor) (err error) {
 }
 
 // doBeforeUpsertHooks executes all "before Upsert" hooks.
-func (o *Scope) doBeforeUpsertHooks(exec boil.Executor) (err error) {
-	for _, hook := range scopeBeforeUpsertHooks {
+func (o *RbacScope) doBeforeUpsertHooks(exec boil.Executor) (err error) {
+	for _, hook := range rbacScopeBeforeUpsertHooks {
 		if err := hook(exec, o); err != nil {
 			return err
 		}
@@ -180,8 +180,8 @@ func (o *Scope) doBeforeUpsertHooks(exec boil.Executor) (err error) {
 }
 
 // doAfterInsertHooks executes all "after Insert" hooks.
-func (o *Scope) doAfterInsertHooks(exec boil.Executor) (err error) {
-	for _, hook := range scopeAfterInsertHooks {
+func (o *RbacScope) doAfterInsertHooks(exec boil.Executor) (err error) {
+	for _, hook := range rbacScopeAfterInsertHooks {
 		if err := hook(exec, o); err != nil {
 			return err
 		}
@@ -191,8 +191,8 @@ func (o *Scope) doAfterInsertHooks(exec boil.Executor) (err error) {
 }
 
 // doAfterSelectHooks executes all "after Select" hooks.
-func (o *Scope) doAfterSelectHooks(exec boil.Executor) (err error) {
-	for _, hook := range scopeAfterSelectHooks {
+func (o *RbacScope) doAfterSelectHooks(exec boil.Executor) (err error) {
+	for _, hook := range rbacScopeAfterSelectHooks {
 		if err := hook(exec, o); err != nil {
 			return err
 		}
@@ -202,8 +202,8 @@ func (o *Scope) doAfterSelectHooks(exec boil.Executor) (err error) {
 }
 
 // doAfterUpdateHooks executes all "after Update" hooks.
-func (o *Scope) doAfterUpdateHooks(exec boil.Executor) (err error) {
-	for _, hook := range scopeAfterUpdateHooks {
+func (o *RbacScope) doAfterUpdateHooks(exec boil.Executor) (err error) {
+	for _, hook := range rbacScopeAfterUpdateHooks {
 		if err := hook(exec, o); err != nil {
 			return err
 		}
@@ -213,8 +213,8 @@ func (o *Scope) doAfterUpdateHooks(exec boil.Executor) (err error) {
 }
 
 // doAfterDeleteHooks executes all "after Delete" hooks.
-func (o *Scope) doAfterDeleteHooks(exec boil.Executor) (err error) {
-	for _, hook := range scopeAfterDeleteHooks {
+func (o *RbacScope) doAfterDeleteHooks(exec boil.Executor) (err error) {
+	for _, hook := range rbacScopeAfterDeleteHooks {
 		if err := hook(exec, o); err != nil {
 			return err
 		}
@@ -224,8 +224,8 @@ func (o *Scope) doAfterDeleteHooks(exec boil.Executor) (err error) {
 }
 
 // doAfterUpsertHooks executes all "after Upsert" hooks.
-func (o *Scope) doAfterUpsertHooks(exec boil.Executor) (err error) {
-	for _, hook := range scopeAfterUpsertHooks {
+func (o *RbacScope) doAfterUpsertHooks(exec boil.Executor) (err error) {
+	for _, hook := range rbacScopeAfterUpsertHooks {
 		if err := hook(exec, o); err != nil {
 			return err
 		}
@@ -234,33 +234,33 @@ func (o *Scope) doAfterUpsertHooks(exec boil.Executor) (err error) {
 	return nil
 }
 
-// AddScopeHook registers your hook function for all future operations.
-func AddScopeHook(hookPoint boil.HookPoint, scopeHook ScopeHook) {
+// AddRbacScopeHook registers your hook function for all future operations.
+func AddRbacScopeHook(hookPoint boil.HookPoint, rbacScopeHook RbacScopeHook) {
 	switch hookPoint {
 	case boil.BeforeInsertHook:
-		scopeBeforeInsertHooks = append(scopeBeforeInsertHooks, scopeHook)
+		rbacScopeBeforeInsertHooks = append(rbacScopeBeforeInsertHooks, rbacScopeHook)
 	case boil.BeforeUpdateHook:
-		scopeBeforeUpdateHooks = append(scopeBeforeUpdateHooks, scopeHook)
+		rbacScopeBeforeUpdateHooks = append(rbacScopeBeforeUpdateHooks, rbacScopeHook)
 	case boil.BeforeDeleteHook:
-		scopeBeforeDeleteHooks = append(scopeBeforeDeleteHooks, scopeHook)
+		rbacScopeBeforeDeleteHooks = append(rbacScopeBeforeDeleteHooks, rbacScopeHook)
 	case boil.BeforeUpsertHook:
-		scopeBeforeUpsertHooks = append(scopeBeforeUpsertHooks, scopeHook)
+		rbacScopeBeforeUpsertHooks = append(rbacScopeBeforeUpsertHooks, rbacScopeHook)
 	case boil.AfterInsertHook:
-		scopeAfterInsertHooks = append(scopeAfterInsertHooks, scopeHook)
+		rbacScopeAfterInsertHooks = append(rbacScopeAfterInsertHooks, rbacScopeHook)
 	case boil.AfterSelectHook:
-		scopeAfterSelectHooks = append(scopeAfterSelectHooks, scopeHook)
+		rbacScopeAfterSelectHooks = append(rbacScopeAfterSelectHooks, rbacScopeHook)
 	case boil.AfterUpdateHook:
-		scopeAfterUpdateHooks = append(scopeAfterUpdateHooks, scopeHook)
+		rbacScopeAfterUpdateHooks = append(rbacScopeAfterUpdateHooks, rbacScopeHook)
 	case boil.AfterDeleteHook:
-		scopeAfterDeleteHooks = append(scopeAfterDeleteHooks, scopeHook)
+		rbacScopeAfterDeleteHooks = append(rbacScopeAfterDeleteHooks, rbacScopeHook)
 	case boil.AfterUpsertHook:
-		scopeAfterUpsertHooks = append(scopeAfterUpsertHooks, scopeHook)
+		rbacScopeAfterUpsertHooks = append(rbacScopeAfterUpsertHooks, rbacScopeHook)
 	}
 }
 
-// One returns a single scope record from the query.
-func (q scopeQuery) One(exec boil.Executor) (*Scope, error) {
-	o := &Scope{}
+// One returns a single rbacScope record from the query.
+func (q rbacScopeQuery) One(exec boil.Executor) (*RbacScope, error) {
+	o := &RbacScope{}
 
 	queries.SetLimit(q.Query, 1)
 
@@ -269,7 +269,7 @@ func (q scopeQuery) One(exec boil.Executor) (*Scope, error) {
 		if errors.Cause(err) == sql.ErrNoRows {
 			return nil, sql.ErrNoRows
 		}
-		return nil, errors.Wrap(err, "models: failed to execute a one query for scopes")
+		return nil, errors.Wrap(err, "models: failed to execute a one query for rbac_scopes")
 	}
 
 	if err := o.doAfterSelectHooks(exec); err != nil {
@@ -279,16 +279,16 @@ func (q scopeQuery) One(exec boil.Executor) (*Scope, error) {
 	return o, nil
 }
 
-// All returns all Scope records from the query.
-func (q scopeQuery) All(exec boil.Executor) (ScopeSlice, error) {
-	var o []*Scope
+// All returns all RbacScope records from the query.
+func (q rbacScopeQuery) All(exec boil.Executor) (RbacScopeSlice, error) {
+	var o []*RbacScope
 
 	err := q.Bind(nil, exec, &o)
 	if err != nil {
-		return nil, errors.Wrap(err, "models: failed to assign all query results to Scope slice")
+		return nil, errors.Wrap(err, "models: failed to assign all query results to RbacScope slice")
 	}
 
-	if len(scopeAfterSelectHooks) != 0 {
+	if len(rbacScopeAfterSelectHooks) != 0 {
 		for _, obj := range o {
 			if err := obj.doAfterSelectHooks(exec); err != nil {
 				return o, err
@@ -299,8 +299,8 @@ func (q scopeQuery) All(exec boil.Executor) (ScopeSlice, error) {
 	return o, nil
 }
 
-// Count returns the count of all Scope records in the query.
-func (q scopeQuery) Count(exec boil.Executor) (int64, error) {
+// Count returns the count of all RbacScope records in the query.
+func (q rbacScopeQuery) Count(exec boil.Executor) (int64, error) {
 	var count int64
 
 	queries.SetSelect(q.Query, nil)
@@ -308,14 +308,14 @@ func (q scopeQuery) Count(exec boil.Executor) (int64, error) {
 
 	err := q.Query.QueryRow(exec).Scan(&count)
 	if err != nil {
-		return 0, errors.Wrap(err, "models: failed to count scopes rows")
+		return 0, errors.Wrap(err, "models: failed to count rbac_scopes rows")
 	}
 
 	return count, nil
 }
 
 // Exists checks if the row exists in the table.
-func (q scopeQuery) Exists(exec boil.Executor) (bool, error) {
+func (q rbacScopeQuery) Exists(exec boil.Executor) (bool, error) {
 	var count int64
 
 	queries.SetSelect(q.Query, nil)
@@ -324,49 +324,49 @@ func (q scopeQuery) Exists(exec boil.Executor) (bool, error) {
 
 	err := q.Query.QueryRow(exec).Scan(&count)
 	if err != nil {
-		return false, errors.Wrap(err, "models: failed to check if scopes exists")
+		return false, errors.Wrap(err, "models: failed to check if rbac_scopes exists")
 	}
 
 	return count > 0, nil
 }
 
-// Scopes retrieves all the records using an executor.
-func Scopes(mods ...qm.QueryMod) scopeQuery {
-	mods = append(mods, qm.From("`scopes`"))
-	return scopeQuery{NewQuery(mods...)}
+// RbacScopes retrieves all the records using an executor.
+func RbacScopes(mods ...qm.QueryMod) rbacScopeQuery {
+	mods = append(mods, qm.From("`rbac_scopes`"))
+	return rbacScopeQuery{NewQuery(mods...)}
 }
 
-// FindScope retrieves a single record by ID with an executor.
+// FindRbacScope retrieves a single record by ID with an executor.
 // If selectCols is empty Find will return all columns.
-func FindScope(exec boil.Executor, iD uint, selectCols ...string) (*Scope, error) {
-	scopeObj := &Scope{}
+func FindRbacScope(exec boil.Executor, iD uint, selectCols ...string) (*RbacScope, error) {
+	rbacScopeObj := &RbacScope{}
 
 	sel := "*"
 	if len(selectCols) > 0 {
 		sel = strings.Join(strmangle.IdentQuoteSlice(dialect.LQ, dialect.RQ, selectCols), ",")
 	}
 	query := fmt.Sprintf(
-		"select %s from `scopes` where `id`=?", sel,
+		"select %s from `rbac_scopes` where `id`=?", sel,
 	)
 
 	q := queries.Raw(query, iD)
 
-	err := q.Bind(nil, exec, scopeObj)
+	err := q.Bind(nil, exec, rbacScopeObj)
 	if err != nil {
 		if errors.Cause(err) == sql.ErrNoRows {
 			return nil, sql.ErrNoRows
 		}
-		return nil, errors.Wrap(err, "models: unable to select from scopes")
+		return nil, errors.Wrap(err, "models: unable to select from rbac_scopes")
 	}
 
-	return scopeObj, nil
+	return rbacScopeObj, nil
 }
 
 // Insert a single record using an executor.
 // See boil.Columns.InsertColumnSet documentation to understand column list inference for inserts.
-func (o *Scope) Insert(exec boil.Executor, columns boil.Columns) error {
+func (o *RbacScope) Insert(exec boil.Executor, columns boil.Columns) error {
 	if o == nil {
-		return errors.New("models: no scopes provided for insertion")
+		return errors.New("models: no rbac_scopes provided for insertion")
 	}
 
 	var err error
@@ -383,39 +383,39 @@ func (o *Scope) Insert(exec boil.Executor, columns boil.Columns) error {
 		return err
 	}
 
-	nzDefaults := queries.NonZeroDefaultSet(scopeColumnsWithDefault, o)
+	nzDefaults := queries.NonZeroDefaultSet(rbacScopeColumnsWithDefault, o)
 
 	key := makeCacheKey(columns, nzDefaults)
-	scopeInsertCacheMut.RLock()
-	cache, cached := scopeInsertCache[key]
-	scopeInsertCacheMut.RUnlock()
+	rbacScopeInsertCacheMut.RLock()
+	cache, cached := rbacScopeInsertCache[key]
+	rbacScopeInsertCacheMut.RUnlock()
 
 	if !cached {
 		wl, returnColumns := columns.InsertColumnSet(
-			scopeAllColumns,
-			scopeColumnsWithDefault,
-			scopeColumnsWithoutDefault,
+			rbacScopeAllColumns,
+			rbacScopeColumnsWithDefault,
+			rbacScopeColumnsWithoutDefault,
 			nzDefaults,
 		)
 
-		cache.valueMapping, err = queries.BindMapping(scopeType, scopeMapping, wl)
+		cache.valueMapping, err = queries.BindMapping(rbacScopeType, rbacScopeMapping, wl)
 		if err != nil {
 			return err
 		}
-		cache.retMapping, err = queries.BindMapping(scopeType, scopeMapping, returnColumns)
+		cache.retMapping, err = queries.BindMapping(rbacScopeType, rbacScopeMapping, returnColumns)
 		if err != nil {
 			return err
 		}
 		if len(wl) != 0 {
-			cache.query = fmt.Sprintf("INSERT INTO `scopes` (`%s`) %%sVALUES (%s)%%s", strings.Join(wl, "`,`"), strmangle.Placeholders(dialect.UseIndexPlaceholders, len(wl), 1, 1))
+			cache.query = fmt.Sprintf("INSERT INTO `rbac_scopes` (`%s`) %%sVALUES (%s)%%s", strings.Join(wl, "`,`"), strmangle.Placeholders(dialect.UseIndexPlaceholders, len(wl), 1, 1))
 		} else {
-			cache.query = "INSERT INTO `scopes` () VALUES ()%s%s"
+			cache.query = "INSERT INTO `rbac_scopes` () VALUES ()%s%s"
 		}
 
 		var queryOutput, queryReturning string
 
 		if len(cache.retMapping) != 0 {
-			cache.retQuery = fmt.Sprintf("SELECT `%s` FROM `scopes` WHERE %s", strings.Join(returnColumns, "`,`"), strmangle.WhereClause("`", "`", 0, scopePrimaryKeyColumns))
+			cache.retQuery = fmt.Sprintf("SELECT `%s` FROM `rbac_scopes` WHERE %s", strings.Join(returnColumns, "`,`"), strmangle.WhereClause("`", "`", 0, rbacScopePrimaryKeyColumns))
 		}
 
 		cache.query = fmt.Sprintf(cache.query, queryOutput, queryReturning)
@@ -431,7 +431,7 @@ func (o *Scope) Insert(exec boil.Executor, columns boil.Columns) error {
 	result, err := exec.Exec(cache.query, vals...)
 
 	if err != nil {
-		return errors.Wrap(err, "models: unable to insert into scopes")
+		return errors.Wrap(err, "models: unable to insert into rbac_scopes")
 	}
 
 	var lastID int64
@@ -447,7 +447,7 @@ func (o *Scope) Insert(exec boil.Executor, columns boil.Columns) error {
 	}
 
 	o.ID = uint(lastID)
-	if lastID != 0 && len(cache.retMapping) == 1 && cache.retMapping[0] == scopeMapping["id"] {
+	if lastID != 0 && len(cache.retMapping) == 1 && cache.retMapping[0] == rbacScopeMapping["id"] {
 		goto CacheNoHooks
 	}
 
@@ -461,23 +461,23 @@ func (o *Scope) Insert(exec boil.Executor, columns boil.Columns) error {
 	}
 	err = exec.QueryRow(cache.retQuery, identifierCols...).Scan(queries.PtrsFromMapping(value, cache.retMapping)...)
 	if err != nil {
-		return errors.Wrap(err, "models: unable to populate default values for scopes")
+		return errors.Wrap(err, "models: unable to populate default values for rbac_scopes")
 	}
 
 CacheNoHooks:
 	if !cached {
-		scopeInsertCacheMut.Lock()
-		scopeInsertCache[key] = cache
-		scopeInsertCacheMut.Unlock()
+		rbacScopeInsertCacheMut.Lock()
+		rbacScopeInsertCache[key] = cache
+		rbacScopeInsertCacheMut.Unlock()
 	}
 
 	return o.doAfterInsertHooks(exec)
 }
 
-// Update uses an executor to update the Scope.
+// Update uses an executor to update the RbacScope.
 // See boil.Columns.UpdateColumnSet documentation to understand column list inference for updates.
 // Update does not automatically update the record in case of default values. Use .Reload() to refresh the records.
-func (o *Scope) Update(exec boil.Executor, columns boil.Columns) (int64, error) {
+func (o *RbacScope) Update(exec boil.Executor, columns boil.Columns) (int64, error) {
 	currTime := time.Now().In(boil.GetLocation())
 
 	queries.SetScanner(&o.UpdatedAt, currTime)
@@ -487,28 +487,28 @@ func (o *Scope) Update(exec boil.Executor, columns boil.Columns) (int64, error) 
 		return 0, err
 	}
 	key := makeCacheKey(columns, nil)
-	scopeUpdateCacheMut.RLock()
-	cache, cached := scopeUpdateCache[key]
-	scopeUpdateCacheMut.RUnlock()
+	rbacScopeUpdateCacheMut.RLock()
+	cache, cached := rbacScopeUpdateCache[key]
+	rbacScopeUpdateCacheMut.RUnlock()
 
 	if !cached {
 		wl := columns.UpdateColumnSet(
-			scopeAllColumns,
-			scopePrimaryKeyColumns,
+			rbacScopeAllColumns,
+			rbacScopePrimaryKeyColumns,
 		)
 
 		if !columns.IsWhitelist() {
 			wl = strmangle.SetComplement(wl, []string{"created_at"})
 		}
 		if len(wl) == 0 {
-			return 0, errors.New("models: unable to update scopes, could not build whitelist")
+			return 0, errors.New("models: unable to update rbac_scopes, could not build whitelist")
 		}
 
-		cache.query = fmt.Sprintf("UPDATE `scopes` SET %s WHERE %s",
+		cache.query = fmt.Sprintf("UPDATE `rbac_scopes` SET %s WHERE %s",
 			strmangle.SetParamNames("`", "`", 0, wl),
-			strmangle.WhereClause("`", "`", 0, scopePrimaryKeyColumns),
+			strmangle.WhereClause("`", "`", 0, rbacScopePrimaryKeyColumns),
 		)
-		cache.valueMapping, err = queries.BindMapping(scopeType, scopeMapping, append(wl, scopePrimaryKeyColumns...))
+		cache.valueMapping, err = queries.BindMapping(rbacScopeType, rbacScopeMapping, append(wl, rbacScopePrimaryKeyColumns...))
 		if err != nil {
 			return 0, err
 		}
@@ -523,42 +523,42 @@ func (o *Scope) Update(exec boil.Executor, columns boil.Columns) (int64, error) 
 	var result sql.Result
 	result, err = exec.Exec(cache.query, values...)
 	if err != nil {
-		return 0, errors.Wrap(err, "models: unable to update scopes row")
+		return 0, errors.Wrap(err, "models: unable to update rbac_scopes row")
 	}
 
 	rowsAff, err := result.RowsAffected()
 	if err != nil {
-		return 0, errors.Wrap(err, "models: failed to get rows affected by update for scopes")
+		return 0, errors.Wrap(err, "models: failed to get rows affected by update for rbac_scopes")
 	}
 
 	if !cached {
-		scopeUpdateCacheMut.Lock()
-		scopeUpdateCache[key] = cache
-		scopeUpdateCacheMut.Unlock()
+		rbacScopeUpdateCacheMut.Lock()
+		rbacScopeUpdateCache[key] = cache
+		rbacScopeUpdateCacheMut.Unlock()
 	}
 
 	return rowsAff, o.doAfterUpdateHooks(exec)
 }
 
 // UpdateAll updates all rows with the specified column values.
-func (q scopeQuery) UpdateAll(exec boil.Executor, cols M) (int64, error) {
+func (q rbacScopeQuery) UpdateAll(exec boil.Executor, cols M) (int64, error) {
 	queries.SetUpdate(q.Query, cols)
 
 	result, err := q.Query.Exec(exec)
 	if err != nil {
-		return 0, errors.Wrap(err, "models: unable to update all for scopes")
+		return 0, errors.Wrap(err, "models: unable to update all for rbac_scopes")
 	}
 
 	rowsAff, err := result.RowsAffected()
 	if err != nil {
-		return 0, errors.Wrap(err, "models: unable to retrieve rows affected for scopes")
+		return 0, errors.Wrap(err, "models: unable to retrieve rows affected for rbac_scopes")
 	}
 
 	return rowsAff, nil
 }
 
 // UpdateAll updates all rows with the specified column values, using an executor.
-func (o ScopeSlice) UpdateAll(exec boil.Executor, cols M) (int64, error) {
+func (o RbacScopeSlice) UpdateAll(exec boil.Executor, cols M) (int64, error) {
 	ln := int64(len(o))
 	if ln == 0 {
 		return 0, nil
@@ -580,13 +580,13 @@ func (o ScopeSlice) UpdateAll(exec boil.Executor, cols M) (int64, error) {
 
 	// Append all of the primary key values for each column
 	for _, obj := range o {
-		pkeyArgs := queries.ValuesFromMapping(reflect.Indirect(reflect.ValueOf(obj)), scopePrimaryKeyMapping)
+		pkeyArgs := queries.ValuesFromMapping(reflect.Indirect(reflect.ValueOf(obj)), rbacScopePrimaryKeyMapping)
 		args = append(args, pkeyArgs...)
 	}
 
-	sql := fmt.Sprintf("UPDATE `scopes` SET %s WHERE %s",
+	sql := fmt.Sprintf("UPDATE `rbac_scopes` SET %s WHERE %s",
 		strmangle.SetParamNames("`", "`", 0, colNames),
-		strmangle.WhereClauseRepeated(string(dialect.LQ), string(dialect.RQ), 0, scopePrimaryKeyColumns, len(o)))
+		strmangle.WhereClauseRepeated(string(dialect.LQ), string(dialect.RQ), 0, rbacScopePrimaryKeyColumns, len(o)))
 
 	if boil.DebugMode {
 		fmt.Fprintln(boil.DebugWriter, sql)
@@ -594,26 +594,26 @@ func (o ScopeSlice) UpdateAll(exec boil.Executor, cols M) (int64, error) {
 	}
 	result, err := exec.Exec(sql, args...)
 	if err != nil {
-		return 0, errors.Wrap(err, "models: unable to update all in scope slice")
+		return 0, errors.Wrap(err, "models: unable to update all in rbacScope slice")
 	}
 
 	rowsAff, err := result.RowsAffected()
 	if err != nil {
-		return 0, errors.Wrap(err, "models: unable to retrieve rows affected all in update all scope")
+		return 0, errors.Wrap(err, "models: unable to retrieve rows affected all in update all rbacScope")
 	}
 	return rowsAff, nil
 }
 
-var mySQLScopeUniqueColumns = []string{
+var mySQLRbacScopeUniqueColumns = []string{
 	"id",
 	"name",
 }
 
 // Upsert attempts an insert using an executor, and does an update or ignore on conflict.
 // See boil.Columns documentation for how to properly use updateColumns and insertColumns.
-func (o *Scope) Upsert(exec boil.Executor, updateColumns, insertColumns boil.Columns) error {
+func (o *RbacScope) Upsert(exec boil.Executor, updateColumns, insertColumns boil.Columns) error {
 	if o == nil {
-		return errors.New("models: no scopes provided for upsert")
+		return errors.New("models: no rbac_scopes provided for upsert")
 	}
 	currTime := time.Now().In(boil.GetLocation())
 
@@ -626,8 +626,8 @@ func (o *Scope) Upsert(exec boil.Executor, updateColumns, insertColumns boil.Col
 		return err
 	}
 
-	nzDefaults := queries.NonZeroDefaultSet(scopeColumnsWithDefault, o)
-	nzUniques := queries.NonZeroDefaultSet(mySQLScopeUniqueColumns, o)
+	nzDefaults := queries.NonZeroDefaultSet(rbacScopeColumnsWithDefault, o)
+	nzUniques := queries.NonZeroDefaultSet(mySQLRbacScopeUniqueColumns, o)
 
 	if len(nzUniques) == 0 {
 		return errors.New("cannot upsert with a table that cannot conflict on a unique column")
@@ -655,42 +655,42 @@ func (o *Scope) Upsert(exec boil.Executor, updateColumns, insertColumns boil.Col
 	key := buf.String()
 	strmangle.PutBuffer(buf)
 
-	scopeUpsertCacheMut.RLock()
-	cache, cached := scopeUpsertCache[key]
-	scopeUpsertCacheMut.RUnlock()
+	rbacScopeUpsertCacheMut.RLock()
+	cache, cached := rbacScopeUpsertCache[key]
+	rbacScopeUpsertCacheMut.RUnlock()
 
 	var err error
 
 	if !cached {
 		insert, ret := insertColumns.InsertColumnSet(
-			scopeAllColumns,
-			scopeColumnsWithDefault,
-			scopeColumnsWithoutDefault,
+			rbacScopeAllColumns,
+			rbacScopeColumnsWithDefault,
+			rbacScopeColumnsWithoutDefault,
 			nzDefaults,
 		)
 		update := updateColumns.UpdateColumnSet(
-			scopeAllColumns,
-			scopePrimaryKeyColumns,
+			rbacScopeAllColumns,
+			rbacScopePrimaryKeyColumns,
 		)
 
 		if len(update) == 0 {
-			return errors.New("models: unable to upsert scopes, could not build update column list")
+			return errors.New("models: unable to upsert rbac_scopes, could not build update column list")
 		}
 
 		ret = strmangle.SetComplement(ret, nzUniques)
-		cache.query = buildUpsertQueryMySQL(dialect, "scopes", update, insert)
+		cache.query = buildUpsertQueryMySQL(dialect, "rbac_scopes", update, insert)
 		cache.retQuery = fmt.Sprintf(
-			"SELECT %s FROM `scopes` WHERE %s",
+			"SELECT %s FROM `rbac_scopes` WHERE %s",
 			strings.Join(strmangle.IdentQuoteSlice(dialect.LQ, dialect.RQ, ret), ","),
 			strmangle.WhereClause("`", "`", 0, nzUniques),
 		)
 
-		cache.valueMapping, err = queries.BindMapping(scopeType, scopeMapping, insert)
+		cache.valueMapping, err = queries.BindMapping(rbacScopeType, rbacScopeMapping, insert)
 		if err != nil {
 			return err
 		}
 		if len(ret) != 0 {
-			cache.retMapping, err = queries.BindMapping(scopeType, scopeMapping, ret)
+			cache.retMapping, err = queries.BindMapping(rbacScopeType, rbacScopeMapping, ret)
 			if err != nil {
 				return err
 			}
@@ -711,7 +711,7 @@ func (o *Scope) Upsert(exec boil.Executor, updateColumns, insertColumns boil.Col
 	result, err := exec.Exec(cache.query, vals...)
 
 	if err != nil {
-		return errors.Wrap(err, "models: unable to upsert for scopes")
+		return errors.Wrap(err, "models: unable to upsert for rbac_scopes")
 	}
 
 	var lastID int64
@@ -728,13 +728,13 @@ func (o *Scope) Upsert(exec boil.Executor, updateColumns, insertColumns boil.Col
 	}
 
 	o.ID = uint(lastID)
-	if lastID != 0 && len(cache.retMapping) == 1 && cache.retMapping[0] == scopeMapping["id"] {
+	if lastID != 0 && len(cache.retMapping) == 1 && cache.retMapping[0] == rbacScopeMapping["id"] {
 		goto CacheNoHooks
 	}
 
-	uniqueMap, err = queries.BindMapping(scopeType, scopeMapping, nzUniques)
+	uniqueMap, err = queries.BindMapping(rbacScopeType, rbacScopeMapping, nzUniques)
 	if err != nil {
-		return errors.Wrap(err, "models: unable to retrieve unique values for scopes")
+		return errors.Wrap(err, "models: unable to retrieve unique values for rbac_scopes")
 	}
 	nzUniqueCols = queries.ValuesFromMapping(reflect.Indirect(reflect.ValueOf(o)), uniqueMap)
 
@@ -744,32 +744,32 @@ func (o *Scope) Upsert(exec boil.Executor, updateColumns, insertColumns boil.Col
 	}
 	err = exec.QueryRow(cache.retQuery, nzUniqueCols...).Scan(returns...)
 	if err != nil {
-		return errors.Wrap(err, "models: unable to populate default values for scopes")
+		return errors.Wrap(err, "models: unable to populate default values for rbac_scopes")
 	}
 
 CacheNoHooks:
 	if !cached {
-		scopeUpsertCacheMut.Lock()
-		scopeUpsertCache[key] = cache
-		scopeUpsertCacheMut.Unlock()
+		rbacScopeUpsertCacheMut.Lock()
+		rbacScopeUpsertCache[key] = cache
+		rbacScopeUpsertCacheMut.Unlock()
 	}
 
 	return o.doAfterUpsertHooks(exec)
 }
 
-// Delete deletes a single Scope record with an executor.
+// Delete deletes a single RbacScope record with an executor.
 // Delete will match against the primary key column to find the record to delete.
-func (o *Scope) Delete(exec boil.Executor) (int64, error) {
+func (o *RbacScope) Delete(exec boil.Executor) (int64, error) {
 	if o == nil {
-		return 0, errors.New("models: no Scope provided for delete")
+		return 0, errors.New("models: no RbacScope provided for delete")
 	}
 
 	if err := o.doBeforeDeleteHooks(exec); err != nil {
 		return 0, err
 	}
 
-	args := queries.ValuesFromMapping(reflect.Indirect(reflect.ValueOf(o)), scopePrimaryKeyMapping)
-	sql := "DELETE FROM `scopes` WHERE `id`=?"
+	args := queries.ValuesFromMapping(reflect.Indirect(reflect.ValueOf(o)), rbacScopePrimaryKeyMapping)
+	sql := "DELETE FROM `rbac_scopes` WHERE `id`=?"
 
 	if boil.DebugMode {
 		fmt.Fprintln(boil.DebugWriter, sql)
@@ -777,12 +777,12 @@ func (o *Scope) Delete(exec boil.Executor) (int64, error) {
 	}
 	result, err := exec.Exec(sql, args...)
 	if err != nil {
-		return 0, errors.Wrap(err, "models: unable to delete from scopes")
+		return 0, errors.Wrap(err, "models: unable to delete from rbac_scopes")
 	}
 
 	rowsAff, err := result.RowsAffected()
 	if err != nil {
-		return 0, errors.Wrap(err, "models: failed to get rows affected by delete for scopes")
+		return 0, errors.Wrap(err, "models: failed to get rows affected by delete for rbac_scopes")
 	}
 
 	if err := o.doAfterDeleteHooks(exec); err != nil {
@@ -793,33 +793,33 @@ func (o *Scope) Delete(exec boil.Executor) (int64, error) {
 }
 
 // DeleteAll deletes all matching rows.
-func (q scopeQuery) DeleteAll(exec boil.Executor) (int64, error) {
+func (q rbacScopeQuery) DeleteAll(exec boil.Executor) (int64, error) {
 	if q.Query == nil {
-		return 0, errors.New("models: no scopeQuery provided for delete all")
+		return 0, errors.New("models: no rbacScopeQuery provided for delete all")
 	}
 
 	queries.SetDelete(q.Query)
 
 	result, err := q.Query.Exec(exec)
 	if err != nil {
-		return 0, errors.Wrap(err, "models: unable to delete all from scopes")
+		return 0, errors.Wrap(err, "models: unable to delete all from rbac_scopes")
 	}
 
 	rowsAff, err := result.RowsAffected()
 	if err != nil {
-		return 0, errors.Wrap(err, "models: failed to get rows affected by deleteall for scopes")
+		return 0, errors.Wrap(err, "models: failed to get rows affected by deleteall for rbac_scopes")
 	}
 
 	return rowsAff, nil
 }
 
 // DeleteAll deletes all rows in the slice, using an executor.
-func (o ScopeSlice) DeleteAll(exec boil.Executor) (int64, error) {
+func (o RbacScopeSlice) DeleteAll(exec boil.Executor) (int64, error) {
 	if len(o) == 0 {
 		return 0, nil
 	}
 
-	if len(scopeBeforeDeleteHooks) != 0 {
+	if len(rbacScopeBeforeDeleteHooks) != 0 {
 		for _, obj := range o {
 			if err := obj.doBeforeDeleteHooks(exec); err != nil {
 				return 0, err
@@ -829,12 +829,12 @@ func (o ScopeSlice) DeleteAll(exec boil.Executor) (int64, error) {
 
 	var args []interface{}
 	for _, obj := range o {
-		pkeyArgs := queries.ValuesFromMapping(reflect.Indirect(reflect.ValueOf(obj)), scopePrimaryKeyMapping)
+		pkeyArgs := queries.ValuesFromMapping(reflect.Indirect(reflect.ValueOf(obj)), rbacScopePrimaryKeyMapping)
 		args = append(args, pkeyArgs...)
 	}
 
-	sql := "DELETE FROM `scopes` WHERE " +
-		strmangle.WhereClauseRepeated(string(dialect.LQ), string(dialect.RQ), 0, scopePrimaryKeyColumns, len(o))
+	sql := "DELETE FROM `rbac_scopes` WHERE " +
+		strmangle.WhereClauseRepeated(string(dialect.LQ), string(dialect.RQ), 0, rbacScopePrimaryKeyColumns, len(o))
 
 	if boil.DebugMode {
 		fmt.Fprintln(boil.DebugWriter, sql)
@@ -842,15 +842,15 @@ func (o ScopeSlice) DeleteAll(exec boil.Executor) (int64, error) {
 	}
 	result, err := exec.Exec(sql, args...)
 	if err != nil {
-		return 0, errors.Wrap(err, "models: unable to delete all from scope slice")
+		return 0, errors.Wrap(err, "models: unable to delete all from rbacScope slice")
 	}
 
 	rowsAff, err := result.RowsAffected()
 	if err != nil {
-		return 0, errors.Wrap(err, "models: failed to get rows affected by deleteall for scopes")
+		return 0, errors.Wrap(err, "models: failed to get rows affected by deleteall for rbac_scopes")
 	}
 
-	if len(scopeAfterDeleteHooks) != 0 {
+	if len(rbacScopeAfterDeleteHooks) != 0 {
 		for _, obj := range o {
 			if err := obj.doAfterDeleteHooks(exec); err != nil {
 				return 0, err
@@ -863,8 +863,8 @@ func (o ScopeSlice) DeleteAll(exec boil.Executor) (int64, error) {
 
 // Reload refetches the object from the database
 // using the primary keys with an executor.
-func (o *Scope) Reload(exec boil.Executor) error {
-	ret, err := FindScope(exec, o.ID)
+func (o *RbacScope) Reload(exec boil.Executor) error {
+	ret, err := FindRbacScope(exec, o.ID)
 	if err != nil {
 		return err
 	}
@@ -875,26 +875,26 @@ func (o *Scope) Reload(exec boil.Executor) error {
 
 // ReloadAll refetches every row with matching primary key column values
 // and overwrites the original object slice with the newly updated slice.
-func (o *ScopeSlice) ReloadAll(exec boil.Executor) error {
+func (o *RbacScopeSlice) ReloadAll(exec boil.Executor) error {
 	if o == nil || len(*o) == 0 {
 		return nil
 	}
 
-	slice := ScopeSlice{}
+	slice := RbacScopeSlice{}
 	var args []interface{}
 	for _, obj := range *o {
-		pkeyArgs := queries.ValuesFromMapping(reflect.Indirect(reflect.ValueOf(obj)), scopePrimaryKeyMapping)
+		pkeyArgs := queries.ValuesFromMapping(reflect.Indirect(reflect.ValueOf(obj)), rbacScopePrimaryKeyMapping)
 		args = append(args, pkeyArgs...)
 	}
 
-	sql := "SELECT `scopes`.* FROM `scopes` WHERE " +
-		strmangle.WhereClauseRepeated(string(dialect.LQ), string(dialect.RQ), 0, scopePrimaryKeyColumns, len(*o))
+	sql := "SELECT `rbac_scopes`.* FROM `rbac_scopes` WHERE " +
+		strmangle.WhereClauseRepeated(string(dialect.LQ), string(dialect.RQ), 0, rbacScopePrimaryKeyColumns, len(*o))
 
 	q := queries.Raw(sql, args...)
 
 	err := q.Bind(nil, exec, &slice)
 	if err != nil {
-		return errors.Wrap(err, "models: unable to reload all in ScopeSlice")
+		return errors.Wrap(err, "models: unable to reload all in RbacScopeSlice")
 	}
 
 	*o = slice
@@ -902,10 +902,10 @@ func (o *ScopeSlice) ReloadAll(exec boil.Executor) error {
 	return nil
 }
 
-// ScopeExists checks if the Scope row exists.
-func ScopeExists(exec boil.Executor, iD uint) (bool, error) {
+// RbacScopeExists checks if the RbacScope row exists.
+func RbacScopeExists(exec boil.Executor, iD uint) (bool, error) {
 	var exists bool
-	sql := "select exists(select 1 from `scopes` where `id`=? limit 1)"
+	sql := "select exists(select 1 from `rbac_scopes` where `id`=? limit 1)"
 
 	if boil.DebugMode {
 		fmt.Fprintln(boil.DebugWriter, sql)
@@ -915,7 +915,7 @@ func ScopeExists(exec boil.Executor, iD uint) (bool, error) {
 
 	err := row.Scan(&exists)
 	if err != nil {
-		return false, errors.Wrap(err, "models: unable to check if scopes exists")
+		return false, errors.Wrap(err, "models: unable to check if rbac_scopes exists")
 	}
 
 	return exists, nil

@@ -30,7 +30,7 @@ func (m *Manager) ResetPasswordMail(rpm request.ResetPasswordMail) (*models.User
 	identifyToken := b64.RawStdEncoding.EncodeToString([]byte(rpm.Mail))
 	user, err := models.Users(qm.Where("login_type = ? and identify_token = ?", MAILLOGIN, identifyToken)).One(m.db)
 	if err != nil && err == sql.ErrNoRows {
-		return nil, perror.MailIsNotExsit
+		return nil, perror.MailNotExist
 	} else if err != nil {
 		return nil, perror.ServerError.Wrapper(err)
 	}

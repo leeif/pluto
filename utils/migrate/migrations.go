@@ -32,8 +32,8 @@ var migrations = []Migrations{
 		function: dropHistoryOperationsTable,
 	},
 	{
-		name:     "create_rbac_user_roles_table",
-		function: createRBACUserRoleTable,
+		name:     "create_rbac_user_application_roles_table",
+		function: createRBACUserApplicationRoleTable,
 	},
 	{
 		name:     "create_rbac_roles_table",
@@ -192,17 +192,17 @@ func dropHistoryOperationsTable(db *sql.DB, name string) error {
 	return nil
 }
 
-func createRBACUserRoleTable(db *sql.DB, name string) error {
-	sql := "CREATE TABLE IF NOT EXISTS `rbac_user_roles` (" +
+func createRBACUserApplicationRoleTable(db *sql.DB, name string) error {
+	sql := "CREATE TABLE IF NOT EXISTS `rbac_user_application_roles` (" +
 		"`id` int(10) unsigned NOT NULL AUTO_INCREMENT," +
 		"`created_at` timestamp NULL DEFAULT NULL," +
 		"`updated_at` timestamp NULL DEFAULT NULL," +
 		"`deleted_at` timestamp NULL DEFAULT NULL," +
 		"`user_id` int(10) unsigned NOT NULL," +
+		"`app_id` int(10) unsigned NOT NULL," +
 		"`role_id` int(10) unsigned NOT NULL," +
 		"PRIMARY KEY (`id`)," +
-		"UNIQUE KEY `user_id` (`user_id`)," +
-		"KEY `role_id_user_id` (`role_id`)," +
+		"UNIQUE KEY `user_id_app_id` (`user_id`, `app_id`)," +
 		"KEY `idx_user_roles_deleted_at` (`deleted_at`)" +
 		")"
 	_, err := db.Exec(sql)
@@ -240,8 +240,7 @@ func createRBACRoleScopeTable(db *sql.DB, name string) error {
 		"`role_id` int(10) unsigned NOT NULL," +
 		"`scope_id` int(10) unsigned NOT NULL," +
 		"PRIMARY KEY (`id`)," +
-		"KEY `role_id` (`role_id`)," +
-		"KEY `scope_id` (`scope_id`)," +
+		"UNIQUE KEY `role_id_scope_id` (`role_id`, `scope_id`)," +
 		"KEY `idx_roles_deleted_at` (`deleted_at`)" +
 		")"
 	_, err := db.Exec(sql)
@@ -252,15 +251,16 @@ func createRBACRoleScopeTable(db *sql.DB, name string) error {
 }
 
 func createRBACScopeTable(db *sql.DB, name string) error {
-	sql := "CREATE TABLE IF NOT EXISTS `scopes` (" +
+	sql := "CREATE TABLE IF NOT EXISTS `rbac_scopes` (" +
 		"`id` int(10) unsigned NOT NULL AUTO_INCREMENT," +
 		"`created_at` timestamp NULL DEFAULT NULL," +
 		"`updated_at` timestamp NULL DEFAULT NULL," +
 		"`deleted_at` timestamp NULL DEFAULT NULL," +
 		"`name` varchar(20) NOT NULL," +
-		"`role_id` int(10) unsigned NOT NULL," +
+		"`app_id` int(10) unsigned NOT NULL," +
 		"PRIMARY KEY (`id`)," +
-		"UNIQUE KEY `name` (`name`)" +
+		"UNIQUE KEY `name` (`name`)," +
+		"KEY `app_id` (`app_id`)" +
 		")"
 	_, err := db.Exec(sql)
 	if err != nil {

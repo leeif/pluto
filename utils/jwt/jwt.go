@@ -57,6 +57,7 @@ type AccessPayload struct {
 	UserID    uint   `json:"userId"`
 	DeviceID  string `json:"deviceId"`
 	AppID     string `json:"appId"`
+	Scope     string `json:"scope"`
 	LoginType string `json:"login_type"`
 }
 

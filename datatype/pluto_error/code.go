@@ -23,7 +23,9 @@ var (
 	JWTTokenExpired = NewPlutoError(http.StatusForbidden, 3008, "JWT Token Expired", nil)
 
 	ScopeExists         = NewPlutoError(http.StatusForbidden, 4001, "Scope already exists", nil)
-	ScopeAttached       = NewPlutoError(http.StatusForbidden, 4002, "Scope already attached", nil)
-	ApplicationNotExist = NewPlutoError(http.StatusForbidden, 4003, "Application does not exist", nil)
-	RoleNotExist        = NewPlutoError(http.StatusForbidden, 4004, "Role does not exist", nil)
+	ScopeNotExist       = NewPlutoError(http.StatusForbidden, 4002, "Scope not exist", nil)
+	ScopeAttached       = NewPlutoError(http.StatusForbidden, 4003, "Scope already attached", nil)
+	ApplicationNotExist = NewPlutoError(http.StatusForbidden, 4004, "Application does not exist", nil)
+	RoleNotExist        = NewPlutoError(http.StatusForbidden, 4005, "Role does not exist", nil)
+	NotPlutoAdmin       = NewPlutoError(http.StatusForbidden, 4006, "Not the pluto admin", nil)
 )

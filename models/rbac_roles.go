@@ -23,49 +23,54 @@ import (
 
 // RbacRole is an object representing the database table.
 type RbacRole struct {
-	ID        uint      `boil:"id" json:"id" toml:"id" yaml:"id"`
-	CreatedAt null.Time `boil:"created_at" json:"created_at,omitempty" toml:"created_at" yaml:"created_at,omitempty"`
-	UpdatedAt null.Time `boil:"updated_at" json:"updated_at,omitempty" toml:"updated_at" yaml:"updated_at,omitempty"`
-	DeletedAt null.Time `boil:"deleted_at" json:"deleted_at,omitempty" toml:"deleted_at" yaml:"deleted_at,omitempty"`
-	Name      string    `boil:"name" json:"name" toml:"name" yaml:"name"`
-	AppID     uint      `boil:"app_id" json:"app_id" toml:"app_id" yaml:"app_id"`
+	ID           uint      `boil:"id" json:"id" toml:"id" yaml:"id"`
+	CreatedAt    null.Time `boil:"created_at" json:"created_at,omitempty" toml:"created_at" yaml:"created_at,omitempty"`
+	UpdatedAt    null.Time `boil:"updated_at" json:"updated_at,omitempty" toml:"updated_at" yaml:"updated_at,omitempty"`
+	DeletedAt    null.Time `boil:"deleted_at" json:"deleted_at,omitempty" toml:"deleted_at" yaml:"deleted_at,omitempty"`
+	Name         string    `boil:"name" json:"name" toml:"name" yaml:"name"`
+	AppID        uint      `boil:"app_id" json:"app_id" toml:"app_id" yaml:"app_id"`
+	DefaultScope null.Uint `boil:"default_scope" json:"default_scope,omitempty" toml:"default_scope" yaml:"default_scope,omitempty"`
 
 	R *rbacRoleR `boil:"-" json:"-" toml:"-" yaml:"-"`
 	L rbacRoleL  `boil:"-" json:"-" toml:"-" yaml:"-"`
 }
 
 var RbacRoleColumns = struct {
-	ID        string
-	CreatedAt string
-	UpdatedAt string
-	DeletedAt string
-	Name      string
-	AppID     string
+	ID           string
+	CreatedAt    string
+	UpdatedAt    string
+	DeletedAt    string
+	Name         string
+	AppID        string
+	DefaultScope string
 }{
-	ID:        "id",
-	CreatedAt: "created_at",
-	UpdatedAt: "updated_at",
-	DeletedAt: "deleted_at",
-	Name:      "name",
-	AppID:     "app_id",
+	ID:           "id",
+	CreatedAt:    "created_at",
+	UpdatedAt:    "updated_at",
+	DeletedAt:    "deleted_at",
+	Name:         "name",
+	AppID:        "app_id",
+	DefaultScope: "default_scope",
 }
 
 // Generated where
 
 var RbacRoleWhere = struct {
-	ID        whereHelperuint
-	CreatedAt whereHelpernull_Time
-	UpdatedAt whereHelpernull_Time
-	DeletedAt whereHelpernull_Time
-	Name      whereHelperstring
-	AppID     whereHelperuint
+	ID           whereHelperuint
+	CreatedAt    whereHelpernull_Time
+	UpdatedAt    whereHelpernull_Time
+	DeletedAt    whereHelpernull_Time
+	Name         whereHelperstring
+	AppID        whereHelperuint
+	DefaultScope whereHelpernull_Uint
 }{
-	ID:        whereHelperuint{field: "`rbac_roles`.`id`"},
-	CreatedAt: whereHelpernull_Time{field: "`rbac_roles`.`created_at`"},
-	UpdatedAt: whereHelpernull_Time{field: "`rbac_roles`.`updated_at`"},
-	DeletedAt: whereHelpernull_Time{field: "`rbac_roles`.`deleted_at`"},
-	Name:      whereHelperstring{field: "`rbac_roles`.`name`"},
-	AppID:     whereHelperuint{field: "`rbac_roles`.`app_id`"},
+	ID:           whereHelperuint{field: "`rbac_roles`.`id`"},
+	CreatedAt:    whereHelpernull_Time{field: "`rbac_roles`.`created_at`"},
+	UpdatedAt:    whereHelpernull_Time{field: "`rbac_roles`.`updated_at`"},
+	DeletedAt:    whereHelpernull_Time{field: "`rbac_roles`.`deleted_at`"},
+	Name:         whereHelperstring{field: "`rbac_roles`.`name`"},
+	AppID:        whereHelperuint{field: "`rbac_roles`.`app_id`"},
+	DefaultScope: whereHelpernull_Uint{field: "`rbac_roles`.`default_scope`"},
 }
 
 // RbacRoleRels is where relationship names are stored.
@@ -85,8 +90,8 @@ func (*rbacRoleR) NewStruct() *rbacRoleR {
 type rbacRoleL struct{}
 
 var (
-	rbacRoleAllColumns            = []string{"id", "created_at", "updated_at", "deleted_at", "name", "app_id"}
-	rbacRoleColumnsWithoutDefault = []string{"created_at", "updated_at", "deleted_at", "name", "app_id"}
+	rbacRoleAllColumns            = []string{"id", "created_at", "updated_at", "deleted_at", "name", "app_id", "default_scope"}
+	rbacRoleColumnsWithoutDefault = []string{"created_at", "updated_at", "deleted_at", "name", "app_id", "default_scope"}
 	rbacRoleColumnsWithDefault    = []string{"id"}
 	rbacRolePrimaryKeyColumns     = []string{"id"}
 )

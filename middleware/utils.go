@@ -3,11 +3,14 @@ package middleware
 import (
 	"net/http"
 
+	"github.com/leeif/pluto/config"
+
 	"github.com/leeif/pluto/log"
 	"github.com/urfave/negroni"
 )
 
 type Middleware struct {
+	Config *config.Config
 	Logger *log.PlutoLog
 }
 
@@ -17,34 +20,26 @@ func (middleware *Middleware) AccessTokenAuthMiddleware(handlers ...negroni.Hand
 	for _, handler := range handlers {
 		ng.UseFunc(handler)
 	}
-	ng.UseFunc(NewLogger(middleware.Logger))
+	ng.UseFunc(Logger(middleware.Logger))
 	return ng
 }
 
-func (middleware *Middleware) SessionVerifyMiddleware(handlers ...negroni.HandlerFunc) http.Handler {
+func (middleware *Middleware) AdminAuthMiddleware(handlers ...negroni.HandlerFunc) http.Handler {
+	ng := negroni.New()
+	ng.UseFunc(PlutoAdmin(middleware.Config.Admin))
+	for _, handler := range handlers {
+		ng.UseFunc(handler)
+	}
+	ng.UseFunc(Logger(middleware.Logger))
+	return ng
+}
+
+func (middleware *Middleware) NoAuthMiddleware(handlers ...negroni.HandlerFunc) http.Handler {
 	ng := negroni.New()
 	for _, handler := range handlers {
 		ng.UseFunc(handler)
 	}
-	ng.UseFunc(NewLogger(middleware.Logger))
-	return ng
-}
-
-func (middleware *Middleware) AdminSessionMiddleware(handlers ...negroni.HandlerFunc) http.Handler {
-	ng := negroni.New()
-	for _, handler := range handlers {
-		ng.UseFunc(handler)
-	}
-	ng.UseFunc(NewLogger(middleware.Logger))
-	return ng
-}
-
-func (middleware *Middleware) NoVerifyMiddleware(handlers ...negroni.HandlerFunc) http.Handler {
-	ng := negroni.New()
-	for _, handler := range handlers {
-		ng.UseFunc(handler)
-	}
-	ng.UseFunc(NewLogger(middleware.Logger))
+	ng.UseFunc(Logger(middleware.Logger))
 	return ng
 }
 

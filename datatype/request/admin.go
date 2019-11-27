@@ -36,7 +36,7 @@ type ListScopes struct {
 	AppID uint `json:"app_id" schema:"app_id,required"`
 }
 
-type UpdateUserRole struct {
+type UserRole struct {
 	UserID uint `json:"user_id" schema:"user_id,required"`
 	AppID  uint `json:"app_id" schema:"app_id,required"`
 	RoleID uint `json:"role_id" schema:"role_id,required"`

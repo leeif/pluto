@@ -9,6 +9,14 @@ import (
 )
 
 func (router *Router) CreateRole(w http.ResponseWriter, r *http.Request, next http.HandlerFunc) {
+	_, perr := getAccessPayload(r)
+	if perr != nil {
+		// set err to context for log
+		context.Set(r, "pluto_error", perr)
+		responseError(perr, w)
+		next(w, r)
+		return
+	}
 	cr := request.CreateRole{}
 	if err := getBody(r, &cr); err != nil {
 		context.Set(r, "pluto_error", err)
@@ -28,6 +36,14 @@ func (router *Router) CreateRole(w http.ResponseWriter, r *http.Request, next ht
 }
 
 func (router *Router) CreateScope(w http.ResponseWriter, r *http.Request, next http.HandlerFunc) {
+	_, perr := getAccessPayload(r)
+	if perr != nil {
+		// set err to context for log
+		context.Set(r, "pluto_error", perr)
+		responseError(perr, w)
+		next(w, r)
+		return
+	}
 	cs := request.CreateScope{}
 	if err := getBody(r, &cs); err != nil {
 		context.Set(r, "pluto_error", err)
@@ -47,6 +63,14 @@ func (router *Router) CreateScope(w http.ResponseWriter, r *http.Request, next h
 }
 
 func (router *Router) AttachScope(w http.ResponseWriter, r *http.Request, next http.HandlerFunc) {
+	_, perr := getAccessPayload(r)
+	if perr != nil {
+		// set err to context for log
+		context.Set(r, "pluto_error", perr)
+		responseError(perr, w)
+		next(w, r)
+		return
+	}
 	rs := request.RoleScope{}
 	if err := getBody(r, &rs); err != nil {
 		context.Set(r, "pluto_error", err)
@@ -66,6 +90,14 @@ func (router *Router) AttachScope(w http.ResponseWriter, r *http.Request, next h
 }
 
 func (router *Router) DetachScope(w http.ResponseWriter, r *http.Request, next http.HandlerFunc) {
+	_, perr := getAccessPayload(r)
+	if perr != nil {
+		// set err to context for log
+		context.Set(r, "pluto_error", perr)
+		responseError(perr, w)
+		next(w, r)
+		return
+	}
 	rs := request.RoleScope{}
 	if err := getBody(r, &rs); err != nil {
 		context.Set(r, "pluto_error", err)
@@ -85,6 +117,14 @@ func (router *Router) DetachScope(w http.ResponseWriter, r *http.Request, next h
 }
 
 func (router *Router) CreateApplication(w http.ResponseWriter, r *http.Request, next http.HandlerFunc) {
+	_, perr := getAccessPayload(r)
+	if perr != nil {
+		// set err to context for log
+		context.Set(r, "pluto_error", perr)
+		responseError(perr, w)
+		next(w, r)
+		return
+	}
 	ca := request.CreateApplication{}
 	if err := getBody(r, &ca); err != nil {
 		context.Set(r, "pluto_error", err)
@@ -107,6 +147,14 @@ func (router *Router) CreateApplication(w http.ResponseWriter, r *http.Request, 
 }
 
 func (router *Router) ApplicationDefaultRole(w http.ResponseWriter, r *http.Request, next http.HandlerFunc) {
+	_, perr := getAccessPayload(r)
+	if perr != nil {
+		// set err to context for log
+		context.Set(r, "pluto_error", perr)
+		responseError(perr, w)
+		next(w, r)
+		return
+	}
 	ar := request.ApplicationRole{}
 	if err := getBody(r, &ar); err != nil {
 		context.Set(r, "pluto_error", err)
@@ -115,6 +163,33 @@ func (router *Router) ApplicationDefaultRole(w http.ResponseWriter, r *http.Requ
 		return
 	}
 	if err := router.manager.ApplicationDefaultRole(ar); err != nil {
+		context.Set(r, "pluto_error", err)
+		responseError(err, w)
+		next(w, r)
+		return
+	}
+	if err := responseOK(nil, w); err != nil {
+		router.logger.Error(err.Error())
+	}
+}
+
+func (router *Router) RoleDefaultScope(w http.ResponseWriter, r *http.Request, next http.HandlerFunc) {
+	_, perr := getAccessPayload(r)
+	if perr != nil {
+		// set err to context for log
+		context.Set(r, "pluto_error", perr)
+		responseError(perr, w)
+		next(w, r)
+		return
+	}
+	rs := request.RoleScope{}
+	if err := getBody(r, &rs); err != nil {
+		context.Set(r, "pluto_error", err)
+		responseError(err, w)
+		next(w, r)
+		return
+	}
+	if err := router.manager.RoleDefaultScope(rs); err != nil {
 		context.Set(r, "pluto_error", err)
 		responseError(err, w)
 		next(w, r)
@@ -194,7 +269,6 @@ func (router *Router) ListScopes(w http.ResponseWriter, r *http.Request, next ht
 	}
 
 	scopes, err := router.manager.ListScopes(ls.AppID)
-
 	if err != nil {
 		context.Set(r, "pluto_error", err)
 		responseError(err, w)
@@ -216,17 +290,25 @@ func (router *Router) ListScopes(w http.ResponseWriter, r *http.Request, next ht
 	}
 }
 
-func (router *Router) UpdateUserRole(w http.ResponseWriter, r *http.Request, next http.HandlerFunc) {
-	uur := request.UpdateUserRole{}
+func (router *Router) SetUserRole(w http.ResponseWriter, r *http.Request, next http.HandlerFunc) {
+	_, perr := getAccessPayload(r)
+	if perr != nil {
+		// set err to context for log
+		context.Set(r, "pluto_error", perr)
+		responseError(perr, w)
+		next(w, r)
+		return
+	}
 
-	if err := getBody(r, &uur); err != nil {
+	ur := request.UserRole{}
+	if err := getBody(r, &ur); err != nil {
 		context.Set(r, "pluto_error", err)
 		responseError(err, w)
 		next(w, r)
 		return
 	}
 
-	err := router.manager.UpdateUserRole(uur)
+	err := router.manager.SetUserRole(ur)
 
 	if err != nil {
 		context.Set(r, "pluto_error", err)
@@ -241,6 +323,14 @@ func (router *Router) UpdateUserRole(w http.ResponseWriter, r *http.Request, nex
 }
 
 func (router *Router) FindUser(w http.ResponseWriter, r *http.Request, next http.HandlerFunc) {
+	_, perr := getAccessPayload(r)
+	if perr != nil {
+		// set err to context for log
+		context.Set(r, "pluto_error", perr)
+		responseError(perr, w)
+		next(w, r)
+		return
+	}
 	fu := request.FindUser{}
 	if err := getQuery(r, &fu); err != nil {
 		context.Set(r, "pluto_error", err)

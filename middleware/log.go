@@ -12,7 +12,7 @@ import (
 	"github.com/gorilla/context"
 )
 
-func NewLogger(logger *log.PlutoLog) negroni.HandlerFunc {
+func Logger(logger *log.PlutoLog) negroni.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request, next http.HandlerFunc) {
 		plutoError := context.Get(r, "pluto_error")
 		if plutoError == nil {

@@ -171,6 +171,45 @@ func (m *Manager) ApplicationDefaultRole(ar request.ApplicationRole) *perror.Plu
 	return nil
 }
 
+func (m *Manager) RoleDefaultScope(rs request.RoleScope) *perror.PlutoError {
+	tx, err := m.db.Begin()
+	if err != nil {
+		return perror.ServerError.Wrapper(err)
+	}
+
+	defer func() {
+		tx.Rollback()
+	}()
+
+	role, err := models.RbacRoles(qm.Where("id = ?", rs.RoleID)).One(tx)
+
+	if err != nil && err == sql.ErrNoRows {
+		return perror.RoleNotExist
+	} else if err != nil {
+		return perror.ServerError.Wrapper(err)
+	}
+
+	scope, err := models.RbacScopes(qm.Where("id = ?", rs.ScopeID)).One(tx)
+
+	if err != nil && err == sql.ErrNoRows {
+		return perror.ScopeNotExist
+	} else if err != nil {
+		return perror.ServerError.Wrapper(err)
+	}
+
+	if scope.AppID != role.AppID {
+		return perror.ScopeNotExist
+	}
+
+	role.DefaultScope.SetValid(rs.ScopeID)
+	if _, err := role.Update(tx, boil.Infer()); err != nil {
+		return perror.ServerError.Wrapper(err)
+	}
+
+	tx.Commit()
+	return nil
+}
+
 func (m *Manager) ListApplications() (models.ApplicationSlice, *perror.PlutoError) {
 
 	applications, err := models.Applications().All(m.db)
@@ -202,7 +241,7 @@ func (m *Manager) ListScopes(appID uint) (models.RbacScopeSlice, *perror.PlutoEr
 	return scopes, nil
 }
 
-func (m *Manager) UpdateUserRole(uur request.UpdateUserRole) *perror.PlutoError {
+func (m *Manager) SetUserRole(ur request.UserRole) *perror.PlutoError {
 	tx, err := m.db.Begin()
 	if err != nil {
 		return perror.ServerError.Wrapper(err)
@@ -212,33 +251,33 @@ func (m *Manager) UpdateUserRole(uur request.UpdateUserRole) *perror.PlutoError 
 		tx.Rollback()
 	}()
 
-	userAppRole, err := models.RbacUserApplicationRoles(qm.Where("user_id = ? and app_id = ?", uur.UserID, uur.AppID)).One(tx)
+	userAppRole, err := models.RbacUserApplicationRoles(qm.Where("user_id = ? and app_id = ?", ur.UserID, ur.AppID)).One(tx)
 
 	if err != nil && err != sql.ErrNoRows {
 		return perror.ServerError.Wrapper(err)
 	} else if err != nil && err == sql.ErrNoRows {
 		userAppRole = &models.RbacUserApplicationRole{}
-		userAppRole.UserID = uur.UserID
-		userAppRole.AppID = uur.AppID
-		userAppRole.RoleID = uur.RoleID
+		userAppRole.UserID = ur.UserID
+		userAppRole.AppID = ur.AppID
+		userAppRole.RoleID = ur.RoleID
 		if err := userAppRole.Insert(tx, boil.Infer()); err != nil {
 			return perror.ServerError.Wrapper(err)
 		}
 		return nil
 	}
 
-	role, err := models.RbacRoles(qm.Where("id = ?", uur.RoleID)).One(tx)
+	role, err := models.RbacRoles(qm.Where("id = ?", ur.RoleID)).One(tx)
 	if err != nil && err != sql.ErrNoRows {
 		return perror.ServerError.Wrapper(err)
 	} else if err != nil && err == sql.ErrNoRows {
 		return perror.RoleNotExist
 	}
 
-	if role.AppID != uur.AppID {
+	if role.AppID != ur.AppID {
 		return perror.RoleNotExist
 	}
 
-	userAppRole.RoleID = uur.RoleID
+	userAppRole.RoleID = ur.RoleID
 	if _, err := userAppRole.Update(tx, boil.Infer()); err != nil {
 		return perror.ServerError.Wrapper(err)
 	}

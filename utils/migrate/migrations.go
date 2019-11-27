@@ -220,6 +220,7 @@ func createRBACRoleTable(db *sql.DB, name string) error {
 		"`deleted_at` timestamp NULL DEFAULT NULL," +
 		"`name` varchar(20) NOT NULL," +
 		"`app_id` int(10) unsigned NOT NULL," +
+		"`default_scope` int(10) unsigned," +
 		"PRIMARY KEY (`id`)," +
 		"KEY `app_id` (`app_id`)," +
 		"KEY `idx_roles_deleted_at` (`deleted_at`)" +

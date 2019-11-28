@@ -51,10 +51,10 @@ var migrations = []Migrations{
 		name:     "add_default_role_column_for_applications_table",
 		function: addDefaultRoleColumnForApplicationTable,
 	},
-	{
-		name:     "add_identifier_column_for_applications_table",
-		function: addIdentifierColumnForApplicationTable,
-	},
+	// {
+	// 	name:     "add_identifier_column_for_applications_table",
+	// 	function: addIdentifierColumnForApplicationTable,
+	// },
 	{
 		name:     "add_identifier_index_for_applications_table",
 		function: addIdentifierIndexForApplicationTable,
@@ -279,14 +279,14 @@ func addDefaultRoleColumnForApplicationTable(db *sql.DB, name string) error {
 	return nil
 }
 
-func addIdentifierColumnForApplicationTable(db *sql.DB, name string) error {
-	sql := "ALTER TABLE `applications` ADD `identifier` varchar(255) NOT NULL;"
-	_, err := db.Exec(sql)
-	if err != nil {
-		return err
-	}
-	return nil
-}
+// func addIdentifierColumnForApplicationTable(db *sql.DB, name string) error {
+// 	sql := "ALTER TABLE `applications` ADD `identifier` varchar(255) NOT NULL;"
+// 	_, err := db.Exec(sql)
+// 	if err != nil {
+// 		return err
+// 	}
+// 	return nil
+// }
 
 func addIdentifierIndexForApplicationTable(db *sql.DB, name string) error {
 	sql := "CREATE INDEX `identifier` ON `applications` (`identifier`)"

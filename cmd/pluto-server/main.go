@@ -1,7 +1,6 @@
 package main
 
 import (
-	"github.com/leeif/pluto/manage"
 	"context"
 	"database/sql"
 	"fmt"
@@ -9,6 +8,9 @@ import (
 	"os"
 	"os/signal"
 	"time"
+
+	"github.com/leeif/pluto/manage"
+	"github.com/leeif/pluto/utils/admin"
 
 	"github.com/leeif/pluto/server"
 
@@ -46,6 +48,12 @@ func register(router *route.Router, db *sql.DB, config *config.Config, logger *p
 	if err := view.Init(config, logger); err != nil {
 		logger.Error(err.Error())
 		return err
+	}
+
+	if randomToken, err := admin.Init(db, config); err != nil {
+		logger.Error(err.Error())
+	} else if randomToken != "" {
+		logger.Info(fmt.Sprintf("Use token %s to register the pluto admin user", randomToken))
 	}
 
 	// register routes

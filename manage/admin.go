@@ -74,17 +74,18 @@ func (m *Manager) CreateApplication(ca request.CreateApplication) (*models.Appli
 		tx.Rollback()
 	}()
 
-	app := &models.Application{}
-	app.Name = ca.Name
-	app.Identifier = ca.Name + "." + randomToken(6)
-
-	if err := app.Insert(tx, boil.Infer()); err != nil {
+	if app, err := models.Applications(qm.Where("name = ?", ca.Name)).One(tx); err == nil {
+		return nil, perror.ApplicationExists
+	} else if err != sql.ErrNoRows {
 		return nil, perror.ServerError.Wrapper(err)
+	} else {
+		app.Name = ca.Name
+		if err := app.Insert(tx, boil.Infer()); err != nil {
+			return nil, perror.ServerError.Wrapper(err)
+		}
+		tx.Commit()
+		return app, nil
 	}
-
-	tx.Commit()
-
-	return app, nil
 }
 
 func (m *Manager) AttachScope(rs request.RoleScope) *perror.PlutoError {

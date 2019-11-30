@@ -10,58 +10,74 @@ import (
 	"github.com/volatiletech/sqlboiler/queries/qm"
 )
 
-func (m *Manager) CreateRole(cr request.CreateRole) *perror.PlutoError {
+func (m *Manager) CreateRole(cr request.CreateRole) (*models.RbacRole, *perror.PlutoError) {
 	tx, err := m.db.Begin()
 	if err != nil {
-		return perror.ServerError.Wrapper(err)
+		return nil, perror.ServerError.Wrapper(err)
 	}
 
 	defer func() {
 		tx.Rollback()
 	}()
 
-	role := &models.RbacRole{}
-	role.Name = cr.Name
-	role.AppID = cr.AppID
+	if _, err := models.Applications(qm.Where("id = ?", cr.AppID)).One(tx); err != nil {
+		if err == sql.ErrNoRows {
+			return nil, perror.ApplicationNotExist
+		}
+		return nil, perror.ServerError.Wrapper(err)
+	}
 
-	if err := role.Insert(tx, boil.Infer()); err != nil {
-		return perror.ServerError.Wrapper(err)
+	role, err := models.RbacRoles(qm.Where("name = ?", cr.Name)).One(tx)
+	if err == nil {
+		return role, perror.RoleExists
+	} else if err != nil && err != sql.ErrNoRows {
+		return nil, perror.ServerError.Wrapper(err)
+	} else if err != nil && err == sql.ErrNoRows {
+		role = &models.RbacRole{}
+		role.Name = cr.Name
+		role.AppID = cr.AppID
+		if err := role.Insert(tx, boil.Infer()); err != nil {
+			return nil, perror.ServerError.Wrapper(err)
+		}
 	}
 
 	tx.Commit()
-	return nil
+	return role, nil
 }
 
-func (m *Manager) CreateScope(cs request.CreateScope) *perror.PlutoError {
+func (m *Manager) CreateScope(cs request.CreateScope) (*models.RbacScope, *perror.PlutoError) {
 	tx, err := m.db.Begin()
 	if err != nil {
-		return perror.ServerError.Wrapper(err)
+		return nil, perror.ServerError.Wrapper(err)
 	}
 
 	defer func() {
 		tx.Rollback()
 	}()
 
-	scope, err := models.RbacScopes(qm.Where("name = ?", APPLELOGIN, cs.Name)).One(tx)
-
-	if err != nil && err != sql.ErrNoRows {
-		return perror.ServerError.Wrapper(err)
+	if _, err := models.Applications(qm.Where("id = ?", cs.AppID)).One(tx); err != nil {
+		if err == sql.ErrNoRows {
+			return nil, perror.ApplicationNotExist
+		}
+		return nil, perror.ServerError.Wrapper(err)
 	}
 
+	scope, err := models.RbacScopes(qm.Where("name = ?", cs.Name)).One(tx)
 	if err == nil {
-		return perror.ScopeExists
-	}
-
-	scope = &models.RbacScope{}
-	scope.Name = cs.Name
-	scope.AppID = cs.AppID
-
-	if err := scope.Insert(tx, boil.Infer()); err != nil {
-		return perror.ServerError.Wrapper(err)
+		return scope, perror.ScopeExists
+	} else if err != nil && err != sql.ErrNoRows {
+		return nil, perror.ServerError.Wrapper(err)
+	} else if err != nil && err == sql.ErrNoRows {
+		scope = &models.RbacScope{}
+		scope.Name = cs.Name
+		scope.AppID = cs.AppID
+		if err := scope.Insert(tx, boil.Infer()); err != nil {
+			return nil, perror.ServerError.Wrapper(err)
+		}
 	}
 
 	tx.Commit()
-	return nil
+	return scope, nil
 }
 
 func (m *Manager) CreateApplication(ca request.CreateApplication) (*models.Application, *perror.PlutoError) {
@@ -74,18 +90,21 @@ func (m *Manager) CreateApplication(ca request.CreateApplication) (*models.Appli
 		tx.Rollback()
 	}()
 
-	if app, err := models.Applications(qm.Where("name = ?", ca.Name)).One(tx); err == nil {
-		return nil, perror.ApplicationExists
+	app, err := models.Applications(qm.Where("name = ?", ca.Name)).One(tx)
+	if err == nil {
+		return app, perror.ApplicationExists
 	} else if err != sql.ErrNoRows {
 		return nil, perror.ServerError.Wrapper(err)
 	} else {
+		app = &models.Application{}
 		app.Name = ca.Name
 		if err := app.Insert(tx, boil.Infer()); err != nil {
 			return nil, perror.ServerError.Wrapper(err)
 		}
-		tx.Commit()
-		return app, nil
 	}
+
+	tx.Commit()
+	return app, nil
 }
 
 func (m *Manager) AttachScope(rs request.RoleScope) *perror.PlutoError {
@@ -264,6 +283,7 @@ func (m *Manager) SetUserRole(ur request.UserRole) *perror.PlutoError {
 		if err := userAppRole.Insert(tx, boil.Infer()); err != nil {
 			return perror.ServerError.Wrapper(err)
 		}
+		tx.Commit()
 		return nil
 	}
 

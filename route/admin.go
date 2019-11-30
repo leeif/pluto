@@ -24,7 +24,7 @@ func (router *Router) CreateRole(w http.ResponseWriter, r *http.Request, next ht
 		next(w, r)
 		return
 	}
-	if err := router.manager.CreateRole(cr); err != nil {
+	if _, err := router.manager.CreateRole(cr); err != nil {
 		context.Set(r, "pluto_error", err)
 		responseError(err, w)
 		next(w, r)
@@ -51,7 +51,7 @@ func (router *Router) CreateScope(w http.ResponseWriter, r *http.Request, next h
 		next(w, r)
 		return
 	}
-	if err := router.manager.CreateScope(cs); err != nil {
+	if _, err := router.manager.CreateScope(cs); err != nil {
 		context.Set(r, "pluto_error", err)
 		responseError(err, w)
 		next(w, r)
@@ -139,8 +139,8 @@ func (router *Router) CreateApplication(w http.ResponseWriter, r *http.Request, 
 		next(w, r)
 		return
 	}
-	res := make(map[string]string)
-	res["application_identifier"] = application.Identifier
+	res := make(map[string]interface{})
+	res["application"] = application
 	if err := responseOK(res, w); err != nil {
 		router.logger.Error(err.Error())
 	}
@@ -214,9 +214,7 @@ func (router *Router) ListApplications(w http.ResponseWriter, r *http.Request, n
 
 	for _, application := range applications {
 		m := make(map[string]interface{})
-		m["id"] = application.ID
-		m["identifier"] = application.Identifier
-		m["name"] = application.Name
+		m["application"] = application.Name
 		apps = append(apps, m)
 	}
 

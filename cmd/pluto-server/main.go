@@ -23,6 +23,7 @@ import (
 	"github.com/leeif/pluto/database"
 
 	_ "github.com/go-sql-driver/mysql"
+	perror "github.com/leeif/pluto/datatype/pluto_error"
 	"github.com/leeif/pluto/utils/rsa"
 	"github.com/leeif/pluto/utils/view"
 )
@@ -50,10 +51,13 @@ func register(router *route.Router, db *sql.DB, config *config.Config, logger *p
 		return err
 	}
 
-	if randomToken, err := admin.Init(db, config); err != nil {
-		logger.Error(err.Error())
-	} else if randomToken != "" {
-		logger.Info(fmt.Sprintf("Use token %s to register the pluto admin user", randomToken))
+	if err := admin.Init(db, config, logger); err != nil {
+		if err.PlutoCode == perror.ServerError.PlutoCode {
+			logger.Error(err.LogError.Error())
+		} else {
+			logger.Warn(err.LogError.Error())
+		}
+		return err.LogError
 	}
 
 	// register routes

@@ -55,10 +55,10 @@ var migrations = []Migrations{
 	// 	name:     "add_identifier_column_for_applications_table",
 	// 	function: addIdentifierColumnForApplicationTable,
 	// },
-	{
-		name:     "add_identifier_index_for_applications_table",
-		function: addIdentifierIndexForApplicationTable,
-	},
+	// {
+	// 	name:     "add_identifier_index_for_applications_table",
+	// 	function: addIdentifierIndexForApplicationTable,
+	// },
 }
 
 func changeUsersTable(db *sql.DB, name string) error {
@@ -223,6 +223,7 @@ func createRBACRoleTable(db *sql.DB, name string) error {
 		"`default_scope` int(10) unsigned," +
 		"PRIMARY KEY (`id`)," +
 		"KEY `app_id` (`app_id`)," +
+		"UNIQUE KEY `name` (`name`)," +
 		"KEY `idx_roles_deleted_at` (`deleted_at`)" +
 		")"
 	_, err := db.Exec(sql)
@@ -288,11 +289,11 @@ func addDefaultRoleColumnForApplicationTable(db *sql.DB, name string) error {
 // 	return nil
 // }
 
-func addIdentifierIndexForApplicationTable(db *sql.DB, name string) error {
-	sql := "CREATE INDEX `identifier` ON `applications` (`identifier`)"
-	_, err := db.Exec(sql)
-	if err != nil {
-		return err
-	}
-	return nil
-}
+// func addIdentifierIndexForApplicationTable(db *sql.DB, name string) error {
+// 	sql := "CREATE INDEX `identifier` ON `applications` (`identifier`)"
+// 	_, err := db.Exec(sql)
+// 	if err != nil {
+// 		return err
+// 	}
+// 	return nil
+// }

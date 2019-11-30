@@ -61,12 +61,13 @@ type AccessPayload struct {
 	LoginType string `json:"login_type"`
 }
 
-func NewAccessPayload(userID uint, deviceID, appID, loginType string, expire int64) *AccessPayload {
+func NewAccessPayload(userID uint, scope, deviceID, appID, loginType string, expire int64) *AccessPayload {
 	up := &AccessPayload{}
 	up.UserID = userID
 	up.DeviceID = deviceID
 	up.AppID = appID
 	up.LoginType = loginType
+	up.Scope = scope
 
 	up.Payload.Type = ACCESS
 	up.Payload.Create = time.Now().Unix()

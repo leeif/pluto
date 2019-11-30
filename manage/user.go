@@ -191,7 +191,7 @@ func (m *Manager) RefreshAccessToken(rat request.RefreshAccessToken) (map[string
 	}
 
 	// generate jwt token
-	up := jwt.NewAccessPayload(rat.UseID, rat.DeviceID, rat.AppID, user.LoginType, m.config.JWT.AccessTokenExpire)
+	up := jwt.NewAccessPayload(rat.UseID, "", rat.DeviceID, rat.AppID, user.LoginType, m.config.JWT.AccessTokenExpire)
 	token, perr := jwt.GenerateRSAJWT(up)
 
 	if perr != nil {

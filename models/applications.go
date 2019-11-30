@@ -30,7 +30,6 @@ type Application struct {
 	Name        string    `boil:"name" json:"name" toml:"name" yaml:"name"`
 	Webhook     string    `boil:"webhook" json:"webhook" toml:"webhook" yaml:"webhook"`
 	DefaultRole null.Uint `boil:"default_role" json:"default_role,omitempty" toml:"default_role" yaml:"default_role,omitempty"`
-	Identifier  string    `boil:"identifier" json:"identifier" toml:"identifier" yaml:"identifier"`
 
 	R *applicationR `boil:"-" json:"-" toml:"-" yaml:"-"`
 	L applicationL  `boil:"-" json:"-" toml:"-" yaml:"-"`
@@ -44,7 +43,6 @@ var ApplicationColumns = struct {
 	Name        string
 	Webhook     string
 	DefaultRole string
-	Identifier  string
 }{
 	ID:          "id",
 	CreatedAt:   "created_at",
@@ -53,7 +51,6 @@ var ApplicationColumns = struct {
 	Name:        "name",
 	Webhook:     "webhook",
 	DefaultRole: "default_role",
-	Identifier:  "identifier",
 }
 
 // Generated where
@@ -137,7 +134,6 @@ var ApplicationWhere = struct {
 	Name        whereHelperstring
 	Webhook     whereHelperstring
 	DefaultRole whereHelpernull_Uint
-	Identifier  whereHelperstring
 }{
 	ID:          whereHelperuint{field: "`applications`.`id`"},
 	CreatedAt:   whereHelpernull_Time{field: "`applications`.`created_at`"},
@@ -146,7 +142,6 @@ var ApplicationWhere = struct {
 	Name:        whereHelperstring{field: "`applications`.`name`"},
 	Webhook:     whereHelperstring{field: "`applications`.`webhook`"},
 	DefaultRole: whereHelpernull_Uint{field: "`applications`.`default_role`"},
-	Identifier:  whereHelperstring{field: "`applications`.`identifier`"},
 }
 
 // ApplicationRels is where relationship names are stored.
@@ -166,8 +161,8 @@ func (*applicationR) NewStruct() *applicationR {
 type applicationL struct{}
 
 var (
-	applicationAllColumns            = []string{"id", "created_at", "updated_at", "deleted_at", "name", "webhook", "default_role", "identifier"}
-	applicationColumnsWithoutDefault = []string{"created_at", "updated_at", "deleted_at", "name", "webhook", "default_role", "identifier"}
+	applicationAllColumns            = []string{"id", "created_at", "updated_at", "deleted_at", "name", "webhook", "default_role"}
+	applicationColumnsWithoutDefault = []string{"created_at", "updated_at", "deleted_at", "name", "webhook", "default_role"}
 	applicationColumnsWithDefault    = []string{"id"}
 	applicationPrimaryKeyColumns     = []string{"id"}
 )

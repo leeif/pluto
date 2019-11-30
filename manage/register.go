@@ -31,13 +31,13 @@ func (m *Manager) RegisterWithEmail(register request.MailRegister) (*models.User
 	}()
 
 	identifyToken := b64.RawStdEncoding.EncodeToString([]byte(register.Mail))
-	exists, err := models.Users(qm.Where("login_type = ? and identify_token = ?", MAILLOGIN, identifyToken)).Exists(tx)
-	if err != nil {
+	user, err := models.Users(qm.Where("login_type = ? and identify_token = ?", MAILLOGIN, identifyToken)).One(tx)
+	if err != nil && err != sql.ErrNoRows {
 		return nil, perror.ServerError.Wrapper(err)
 	}
 
-	if exists {
-		return nil, perror.MailIsAlreadyRegister
+	if user != nil {
+		return user, perror.MailIsAlreadyRegister
 	}
 
 	salt := saltUtil.RandomSalt(identifyToken)
@@ -46,7 +46,7 @@ func (m *Manager) RegisterWithEmail(register request.MailRegister) (*models.User
 	if perr != nil {
 		return nil, perr
 	}
-	user := models.User{}
+	user = &models.User{}
 	user.Mail.SetValid(register.Mail)
 	user.Name = register.Name
 	user.IdentifyToken = identifyToken
@@ -86,7 +86,7 @@ func (m *Manager) RegisterWithEmail(register request.MailRegister) (*models.User
 
 	tx.Commit()
 
-	return &user, nil
+	return user, nil
 }
 
 func (m *Manager) RegisterVerifyMail(rvm request.RegisterVerifyMail) (*models.User, *perror.PlutoError) {

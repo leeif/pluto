@@ -1,9 +1,8 @@
 package config
 
 type AdminConfig struct {
-	Application string `kiper_value:"name:application;help:default admin application for pluto;default:pluto"`
-	Role        string `kiper_value:"name:user;help:default role of admin application;default:root"`
-	Scope       string `kiper_value:"name:scope;help:default role of admin application;default:admin"`
+	Mail string `kiper_value:"name:mail;help:default mail register for pluto admin"`
+	Name string `kiper_value:"name:name;help:default user name of pluto admin;default:root"`
 }
 
 func newAdminConfig() *AdminConfig {

@@ -6,6 +6,8 @@ import (
 	"strings"
 	"time"
 
+	"github.com/leeif/pluto/utils/admin"
+
 	"github.com/leeif/pluto/config"
 	"github.com/urfave/negroni"
 
@@ -47,7 +49,7 @@ func PlutoAdmin(adminConfig *config.AdminConfig) negroni.HandlerFunc {
 			next(w, r)
 		}
 
-		if accessPayload.AppID != adminConfig.Application {
+		if accessPayload.AppID != admin.Application {
 			context.Set(r, "pluto_error", perror.JWTTokenExpired)
 			next(w, r)
 		}

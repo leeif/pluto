@@ -255,7 +255,7 @@ func NewRouter(mux *mux.Router, manager *manage.Manager, config *config.Config, 
 		manager: manager,
 		config:  config,
 		logger:  logger,
-		mw:      middleware.NewMiddle(logger),
+		mw:      middleware.NewMiddle(logger, config),
 		mux:     mux,
 	}
 }

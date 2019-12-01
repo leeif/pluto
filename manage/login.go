@@ -52,7 +52,7 @@ func (m *Manager) addDeviceApp(tx *sql.Tx, deviceID, appID string) (*models.Devi
 	return deviceApp, nil
 }
 
-func (m *Manager) updateRefreshToken(tx *sql.Tx, userID uint, deviceApp *models.DeviceApp) (string, *perror.PlutoError) {
+func (m *Manager) updateRefreshToken(tx *sql.Tx, userID uint, deviceApp *models.DeviceApp, scopes string) (string, *perror.PlutoError) {
 	refreshToken := refresh.GenerateRefreshToken(string(userID) + string(deviceApp.ID))
 
 	rt, err := models.RefreshTokens(qm.Where("user_id = ? and device_app_id = ?", userID, deviceApp.ID)).One(tx)
@@ -63,6 +63,7 @@ func (m *Manager) updateRefreshToken(tx *sql.Tx, userID uint, deviceApp *models.
 		rt.DeviceAppID = deviceApp.ID
 		rt.UserID = userID
 		rt.RefreshToken = refreshToken
+		rt.Scopes.SetValid(scopes)
 		if err := rt.Insert(tx, boil.Infer()); err != nil {
 			return "", perror.ServerError.Wrapper(err)
 		}
@@ -121,19 +122,20 @@ func (m *Manager) EmailLogin(login request.MailLogin) (map[string]string, *perro
 		return nil, perr
 	}
 
-	// update refresh token
-	refreshToken, perr := m.updateRefreshToken(tx, user.ID, deviceApp)
-
-	if perr != nil {
-		return nil, perr
-	}
-
 	// generate jwt token
-	scope, perr := getScope(tx, user.ID, login.AppID)
+	scope, perr := getUserScopes(user.ID, login.AppID, tx)
 	if perr != nil {
 		return nil, perr
 	}
-	up := jwt.NewAccessPayload(user.ID, scope, deviceApp.DeviceID, deviceApp.AppID, MAILLOGIN, m.config.JWT.AccessTokenExpire)
+
+	// update refresh token
+	refreshToken, perr := m.updateRefreshToken(tx, user.ID, deviceApp, strings.Join([]string{scope.Name}, ","))
+
+	if perr != nil {
+		return nil, perr
+	}
+
+	up := jwt.NewAccessPayload(user.ID, []string{scope.Name}, deviceApp.DeviceID, deviceApp.AppID, MAILLOGIN, m.config.JWT.AccessTokenExpire)
 	token, perr := jwt.GenerateRSAJWT(up)
 
 	if perr != nil {
@@ -188,14 +190,14 @@ func (m *Manager) GoogleLoginMobile(login request.GoogleMobileLogin) (map[string
 	}
 
 	// update refresh token
-	refreshToken, perr := m.updateRefreshToken(tx, user.ID, deviceApp)
+	refreshToken, perr := m.updateRefreshToken(tx, user.ID, deviceApp, "")
 
 	if perr != nil {
 		return nil, perr
 	}
 
 	// generate jwt token
-	up := jwt.NewAccessPayload(user.ID, "", deviceApp.DeviceID, deviceApp.AppID, GOOGLELOGIN, m.config.JWT.AccessTokenExpire)
+	up := jwt.NewAccessPayload(user.ID, nil, deviceApp.DeviceID, deviceApp.AppID, GOOGLELOGIN, m.config.JWT.AccessTokenExpire)
 	token, perr := jwt.GenerateRSAJWT(up)
 
 	if perr != nil {
@@ -301,14 +303,14 @@ func (m *Manager) WechatLoginMobile(login request.WechatMobileLogin) (map[string
 	}
 
 	// update refresh token
-	refreshToken, perr := m.updateRefreshToken(tx, user.ID, deviceApp)
+	refreshToken, perr := m.updateRefreshToken(tx, user.ID, deviceApp, "")
 
 	if perr != nil {
 		return nil, perr
 	}
 
 	// generate jwt token
-	up := jwt.NewAccessPayload(user.ID, "", deviceApp.DeviceID, deviceApp.AppID, WECHATLOGIN, m.config.JWT.AccessTokenExpire)
+	up := jwt.NewAccessPayload(user.ID, nil, deviceApp.DeviceID, deviceApp.AppID, WECHATLOGIN, m.config.JWT.AccessTokenExpire)
 	token, perr := jwt.GenerateRSAJWT(up)
 
 	if perr != nil {
@@ -504,14 +506,14 @@ func (m *Manager) AppleLoginMobile(login request.AppleMobileLogin) (map[string]s
 	}
 
 	// update refresh token
-	refreshToken, perr := m.updateRefreshToken(tx, user.ID, deviceApp)
+	refreshToken, perr := m.updateRefreshToken(tx, user.ID, deviceApp, "")
 
 	if perr != nil {
 		return nil, perr
 	}
 
 	// generate jwt token
-	up := jwt.NewAccessPayload(user.ID, "", deviceApp.DeviceID, deviceApp.AppID, APPLELOGIN, m.config.JWT.AccessTokenExpire)
+	up := jwt.NewAccessPayload(user.ID, nil, deviceApp.DeviceID, deviceApp.AppID, APPLELOGIN, m.config.JWT.AccessTokenExpire)
 	token, perr := jwt.GenerateRSAJWT(up)
 
 	if perr != nil {
@@ -577,37 +579,4 @@ func parseAppleIDToken(idToken string) (*appleIdTokenInfo, *perror.PlutoError) {
 		return nil, perror.InvalidAppleIDToken
 	}
 	return info, nil
-}
-
-func getScope(tx *sql.Tx, userID uint, appID string) (string, *perror.PlutoError) {
-	application, err := models.Applications(qm.Where("name = ?", appID)).One(tx)
-	if err != nil && err != sql.ErrNoRows {
-		return "", perror.ServerError.Wrapper(err)
-	} else if err != nil && err == sql.ErrNoRows {
-		return "", perror.ApplicationNotExist
-	}
-
-	userAppRole, err := models.RbacUserApplicationRoles(qm.Where("user_id = ? and app_id = ?", userID, application.ID)).One(tx)
-
-	if err != nil && err != sql.ErrNoRows {
-		return "", perror.ServerError.Wrapper(err)
-	} else if err != nil && err == sql.ErrNoRows {
-		return "", perror.RoleNotExist
-	}
-
-	role, err := models.RbacRoles(qm.Where("id = ?", userAppRole.RoleID)).One(tx)
-	if err != nil {
-		return "", perror.ServerError.Wrapper(err)
-	}
-
-	if role.DefaultScope.IsZero() {
-		return "", perror.ScopeNotExist
-	}
-
-	scope, err := models.RbacScopes(qm.Where("id = ?", role.DefaultScope.Uint)).One(tx)
-	if err != nil {
-		return "", perror.ServerError.Wrapper(err)
-	}
-
-	return scope.Name, nil
 }

@@ -97,6 +97,13 @@ func (r *Router) registerAPIRoutes() {
 			handler:     r.updateUserInfo,
 		},
 		{
+			path:        "/user/count",
+			description: "get the count of the total users",
+			method:      "GET",
+			middle:      r.mw.AdminAuthMiddleware,
+			handler:     r.UsersCount,
+		},
+		{
 			path:        "/auth/refresh",
 			description: "refresh access token",
 			method:      "POST",
@@ -226,7 +233,7 @@ func (r *Router) registerRBACRoutes() {
 			handler:     r.ListScopes,
 		},
 	}
-	r.registerRoutes(routes, "/admin")
+	r.registerRoutes(routes, "/api")
 }
 
 func (router *Router) registerRoutes(routes []PlutoRoute, prefix string) {
@@ -240,6 +247,7 @@ func (r *Router) Register() {
 	r.registerAPIRoutes()
 	r.registerWebRoutes()
 	r.registerHealthRoutes()
+	r.registerRBACRoutes()
 }
 
 func NewRouter(mux *mux.Router, manager *manage.Manager, config *config.Config, logger *log.PlutoLog) *Router {

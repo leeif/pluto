@@ -306,3 +306,26 @@ func (m *Manager) SetUserRole(ur request.UserRole) *perror.PlutoError {
 	tx.Commit()
 	return nil
 }
+
+func (m *Manager) UsersCount() (map[string]int, *perror.PlutoError) {
+	users, err := models.Users(qm.SQL("select login_type from users")).All(m.db)
+	if err != nil && err != sql.ErrNoRows {
+		return nil, perror.ServerError.Wrapper(err)
+	}
+	res := make(map[string]int)
+	res["total"] = len(users)
+	google, apple, mail := 0, 0, 0
+	for _, user := range users {
+		if user.LoginType == GOOGLELOGIN {
+			google++
+		} else if user.LoginType == APPLELOGIN {
+			apple++
+		} else if user.LoginType == MAILLOGIN {
+			mail++
+		}
+	}
+	res["google"] = google
+	res["apple"] = apple
+	res["mail"] = mail
+	return res, nil
+}

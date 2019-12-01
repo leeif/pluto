@@ -6,6 +6,7 @@ import (
 
 	"github.com/volatiletech/sqlboiler/boil"
 
+	"github.com/leeif/pluto/utils/constants"
 	"github.com/leeif/pluto/utils/mail"
 	"github.com/leeif/pluto/utils/salt"
 
@@ -18,12 +19,6 @@ import (
 	"github.com/leeif/pluto/log"
 )
 
-const (
-	Application = "pluto"
-	Role        = "admin"
-	Scope       = "pluto.admin"
-)
-
 func Init(db *sql.DB, config *config.Config, logger *log.PlutoLog) *perror.PlutoError {
 
 	if config.Admin.Mail == "" || config.Admin.Name == "" {
@@ -33,14 +28,14 @@ func Init(db *sql.DB, config *config.Config, logger *log.PlutoLog) *perror.Pluto
 	manager := manage.NewManager(db, config, logger)
 
 	ca := request.CreateApplication{}
-	ca.Name = Application
+	ca.Name = constants.PlutoAdminApplication
 	application, err := manager.CreateApplication(ca)
 	if err != nil && err.PlutoCode == perror.ServerError.PlutoCode {
 		return err
 	}
 
 	cr := request.CreateRole{}
-	cr.Name = Role
+	cr.Name = constants.PlutoAdminRole
 	cr.AppID = application.ID
 
 	role, err := manager.CreateRole(cr)
@@ -49,7 +44,7 @@ func Init(db *sql.DB, config *config.Config, logger *log.PlutoLog) *perror.Pluto
 	}
 
 	cs := request.CreateScope{}
-	cs.Name = Scope
+	cs.Name = constants.PlutoAdminScope
 	cs.AppID = application.ID
 	scope, err := manager.CreateScope(cs)
 	if err != nil && err.PlutoCode == perror.ServerError.PlutoCode {
@@ -85,6 +80,7 @@ func Init(db *sql.DB, config *config.Config, logger *log.PlutoLog) *perror.Pluto
 			if err := ml.SendPlainText(mr.Mail, "[Pluto]Admin Password", mailBody); err != nil {
 				logger.Error("send mail failed: " + err.LogError.Error())
 			}
+			logger.Info("Mail with your admin login info is send")
 		}()
 	}
 

@@ -214,11 +214,16 @@ func (router *Router) ListApplications(w http.ResponseWriter, r *http.Request, n
 
 	for _, application := range applications {
 		m := make(map[string]interface{})
-		m["application"] = application.Name
+		m["id"] = application.ID
+		m["name"] = application.Name
+		m["default_role"] = application.DefaultRole
 		apps = append(apps, m)
 	}
 
-	if err := responseOK(apps, w); err != nil {
+	res := make(map[string]interface{})
+	res["applications"] = apps
+
+	if err := responseOK(res, w); err != nil {
 		router.logger.Error(err.Error())
 	}
 }
@@ -242,14 +247,18 @@ func (router *Router) ListRoles(w http.ResponseWriter, r *http.Request, next htt
 		return
 	}
 
-	res := make([]map[string]interface{}, 0)
+	rs := make([]map[string]interface{}, 0)
 
 	for _, role := range roles {
 		m := make(map[string]interface{})
 		m["id"] = role.ID
 		m["name"] = role.Name
-		res = append(res, m)
+		m["default_scope"] = role.DefaultScope
+		rs = append(rs, m)
 	}
+
+	res := make(map[string]interface{})
+	res["roles"] = rs
 
 	if err := responseOK(res, w); err != nil {
 		router.logger.Error(err.Error())
@@ -335,5 +344,26 @@ func (router *Router) FindUser(w http.ResponseWriter, r *http.Request, next http
 		responseError(err, w)
 		next(w, r)
 		return
+	}
+}
+
+func (router *Router) UsersCount(w http.ResponseWriter, r *http.Request, next http.HandlerFunc) {
+	_, perr := getAccessPayload(r)
+	if perr != nil {
+		// set err to context for log
+		context.Set(r, "pluto_error", perr)
+		responseError(perr, w)
+		next(w, r)
+		return
+	}
+	res, perr := router.manager.UsersCount()
+	if perr != nil {
+		context.Set(r, "pluto_error", perr)
+		responseError(perr, w)
+		next(w, r)
+		return
+	}
+	if err := responseOK(res, w); err != nil {
+		router.logger.Error(err.Error())
 	}
 }

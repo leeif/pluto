@@ -3,14 +3,11 @@ package middleware
 import (
 	"net/http"
 
-	"github.com/leeif/pluto/config"
-
 	"github.com/leeif/pluto/log"
 	"github.com/urfave/negroni"
 )
 
 type Middleware struct {
-	Config *config.Config
 	Logger *log.PlutoLog
 }
 
@@ -26,7 +23,7 @@ func (middleware *Middleware) AccessTokenAuthMiddleware(handlers ...negroni.Hand
 
 func (middleware *Middleware) AdminAuthMiddleware(handlers ...negroni.HandlerFunc) http.Handler {
 	ng := negroni.New()
-	ng.UseFunc(PlutoAdmin(middleware.Config.Admin))
+	ng.UseFunc(PlutoAdmin())
 	for _, handler := range handlers {
 		ng.UseFunc(handler)
 	}

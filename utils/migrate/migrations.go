@@ -48,8 +48,12 @@ var migrations = []Migrations{
 		function: createRBACScopeTable,
 	},
 	{
-		name:     "add_default_role_column_for_applications_table",
-		function: addDefaultRoleColumnForApplicationTable,
+		name:     "add_default_role_column_in_applications_table",
+		function: addDefaultRoleColumnInApplicationTable,
+	},
+	{
+		name:     "add_scopes_column_in_refresh_token_table",
+		function: addScopesColumnInRefreshTokenTable,
 	},
 	// {
 	// 	name:     "add_identifier_column_for_applications_table",
@@ -271,8 +275,17 @@ func createRBACScopeTable(db *sql.DB, name string) error {
 	return nil
 }
 
-func addDefaultRoleColumnForApplicationTable(db *sql.DB, name string) error {
+func addDefaultRoleColumnInApplicationTable(db *sql.DB, name string) error {
 	sql := "ALTER TABLE `applications` ADD `default_role` int(10) unsigned;"
+	_, err := db.Exec(sql)
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
+func addScopesColumnInRefreshTokenTable(db *sql.DB, name string) error {
+	sql := "ALTER TABLE `refresh_tokens` ADD `scopes` varchar(255);"
 	_, err := db.Exec(sql)
 	if err != nil {
 		return err

@@ -14,7 +14,7 @@ import (
 func AccessTokenAuth(w http.ResponseWriter, r *http.Request, next http.HandlerFunc) {
 	auth := strings.Fields(r.Header.Get("Authorization"))
 
-	if len(auth) < 2 && strings.ToLower(auth[0]) != "jwt" {
+	if len(auth) != 2 || strings.ToLower(auth[0]) != "jwt" {
 		context.Set(r, "pluto_error", perror.Forbidden)
 		next(w, r)
 		return
@@ -24,6 +24,7 @@ func AccessTokenAuth(w http.ResponseWriter, r *http.Request, next http.HandlerFu
 	if perr != nil {
 		context.Set(r, "pluto_error", perr)
 		next(w, r)
+		return
 	}
 
 	accessPayload := &jwt.AccessPayload{}
@@ -31,16 +32,19 @@ func AccessTokenAuth(w http.ResponseWriter, r *http.Request, next http.HandlerFu
 	if err := json.Unmarshal(jwtToken.Payload, &accessPayload); err != nil {
 		context.Set(r, "pluto_error", perror.ServerError.Wrapper(err))
 		next(w, r)
+		return
 	}
 
 	if accessPayload.Type != jwt.ACCESS {
 		context.Set(r, "pluto_error", perror.InvalidJWTToekn)
 		next(w, r)
+		return
 	}
 
 	if time.Now().Unix() > accessPayload.Expire {
 		context.Set(r, "pluto_error", perror.JWTTokenExpired)
 		next(w, r)
+		return
 	}
 
 	context.Set(r, "payload", accessPayload)

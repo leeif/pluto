@@ -6,6 +6,7 @@ import (
 	"errors"
 	"fmt"
 	"net/url"
+	"strings"
 	"time"
 
 	"github.com/volatiletech/sqlboiler/boil"
@@ -15,6 +16,7 @@ import (
 	"github.com/leeif/pluto/utils/avatar"
 
 	perror "github.com/leeif/pluto/datatype/pluto_error"
+	"github.com/leeif/pluto/modelexts"
 	"github.com/leeif/pluto/models"
 
 	saltUtil "github.com/leeif/pluto/utils/salt"
@@ -140,7 +142,7 @@ func (m *Manager) ResetPassword(token string, rp request.ResetPasswordWeb) *perr
 	return nil
 }
 
-func (m *Manager) UserInfo(accessPayload *jwt.AccessPayload) (*models.User, *perror.PlutoError) {
+func (m *Manager) UserInfo(accessPayload *jwt.AccessPayload) (*modelexts.User, *perror.PlutoError) {
 
 	user, err := models.Users(qm.Where("id = ?", accessPayload.UserID)).One(m.db)
 	if err != nil && err == sql.ErrNoRows {
@@ -149,7 +151,20 @@ func (m *Manager) UserInfo(accessPayload *jwt.AccessPayload) (*models.User, *per
 		return nil, perror.ServerError.Wrapper(err)
 	}
 
-	return user, nil
+	role, perr := getUserRole(accessPayload.UserID, accessPayload.AppID, m.db)
+	if perr != nil {
+		return nil, perr
+	}
+
+	userExt := &modelexts.User{
+		User: user,
+	}
+
+	if role != nil {
+		userExt.Roles = []string{role.Name}
+	}
+
+	return userExt, nil
 }
 
 func (m *Manager) RefreshAccessToken(rat request.RefreshAccessToken) (map[string]string, *perror.PlutoError) {
@@ -190,8 +205,10 @@ func (m *Manager) RefreshAccessToken(rat request.RefreshAccessToken) (map[string
 		return nil, perror.ServerError.Wrapper(err)
 	}
 
+	scopes := strings.Split(rt.Scopes.String, ",")
+
 	// generate jwt token
-	up := jwt.NewAccessPayload(rat.UseID, "", rat.DeviceID, rat.AppID, user.LoginType, m.config.JWT.AccessTokenExpire)
+	up := jwt.NewAccessPayload(rat.UseID, scopes, rat.DeviceID, rat.AppID, user.LoginType, m.config.JWT.AccessTokenExpire)
 	token, perr := jwt.GenerateRSAJWT(up)
 
 	if perr != nil {

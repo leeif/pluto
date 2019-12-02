@@ -283,14 +283,17 @@ func (router *Router) ListScopes(w http.ResponseWriter, r *http.Request, next ht
 		return
 	}
 
-	res := make([]map[string]interface{}, 0)
+	s := make([]map[string]interface{}, 0)
 
 	for _, scope := range scopes {
 		m := make(map[string]interface{})
 		m["id"] = scope.ID
 		m["name"] = scope.Name
-		res = append(res, m)
+		s = append(s, m)
 	}
+
+	res := make(map[string]interface{})
+	res["scopes"] = s
 
 	if err := responseOK(res, w); err != nil {
 		router.logger.Error(err.Error())

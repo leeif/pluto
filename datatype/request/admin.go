@@ -18,6 +18,13 @@ type CreateApplication struct {
 	Name string `json:"name"`
 }
 
+func (ca *CreateApplication) Validation() bool {
+	if ca.Name == "" {
+		return false
+	}
+	return true
+}
+
 type RoleScope struct {
 	RoleID  uint `json:"role_id"`
 	ScopeID uint `json:"scope_id"`

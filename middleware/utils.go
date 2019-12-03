@@ -18,7 +18,7 @@ func (middleware *Middleware) AccessTokenAuthMiddleware(handlers ...negroni.Hand
 	ng := negroni.New()
 	// cors
 	c := cors.New(cors.Options{
-		AllowedOrigins: []string{middleware.Config.Cros.AllowedOrigins},
+		AllowedOrigins: middleware.Config.Cros.AllowedOrigins,
 	})
 	ng.Use(c)
 	ng.UseFunc(AccessTokenAuth)
@@ -33,7 +33,7 @@ func (middleware *Middleware) AdminAuthMiddleware(handlers ...negroni.HandlerFun
 	ng := negroni.New()
 	// cors
 	c := cors.New(cors.Options{
-		AllowedOrigins: []string{middleware.Config.Cros.AllowedOrigins},
+		AllowedOrigins: middleware.Config.Cros.AllowedOrigins,
 	})
 	ng.Use(c)
 	ng.UseFunc(PlutoAdmin())
@@ -48,7 +48,7 @@ func (middleware *Middleware) NoAuthMiddleware(handlers ...negroni.HandlerFunc) 
 	ng := negroni.New()
 	// cors
 	c := cors.New(cors.Options{
-		AllowedOrigins: []string{middleware.Config.Cros.AllowedOrigins},
+		AllowedOrigins: middleware.Config.Cros.AllowedOrigins,
 	})
 	ng.Use(c)
 	for _, handler := range handlers {

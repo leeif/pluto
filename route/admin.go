@@ -238,7 +238,7 @@ func (router *Router) ListRoles(w http.ResponseWriter, r *http.Request, next htt
 		return
 	}
 
-	roles, err := router.manager.ListRoles(lr.AppID)
+	er, err := router.manager.ListRoles(lr.AppID)
 
 	if err != nil {
 		context.Set(r, "pluto_error", err)
@@ -247,20 +247,7 @@ func (router *Router) ListRoles(w http.ResponseWriter, r *http.Request, next htt
 		return
 	}
 
-	rs := make([]map[string]interface{}, 0)
-
-	for _, role := range roles {
-		m := make(map[string]interface{})
-		m["id"] = role.ID
-		m["name"] = role.Name
-		m["default_scope"] = role.DefaultScope
-		rs = append(rs, m)
-	}
-
-	res := make(map[string]interface{})
-	res["roles"] = rs
-
-	if err := responseOK(res, w); err != nil {
+	if err := responseOK(er.Format(), w); err != nil {
 		router.logger.Error(err.Error())
 	}
 }
@@ -275,7 +262,7 @@ func (router *Router) ListScopes(w http.ResponseWriter, r *http.Request, next ht
 		return
 	}
 
-	scopes, err := router.manager.ListScopes(ls.AppID)
+	es, err := router.manager.ListScopes(ls.AppID)
 	if err != nil {
 		context.Set(r, "pluto_error", err)
 		responseError(err, w)
@@ -285,7 +272,12 @@ func (router *Router) ListScopes(w http.ResponseWriter, r *http.Request, next ht
 
 	s := make([]map[string]interface{}, 0)
 
-	for _, scope := range scopes {
+	app := make(map[string]interface{})
+	app["id"] = es.Application.ID
+	app["name"] = es.Application.Name
+	app["default_role"] = es.Application.DefaultRole
+
+	for _, scope := range es.Scopes {
 		m := make(map[string]interface{})
 		m["id"] = scope.ID
 		m["name"] = scope.Name
@@ -293,6 +285,7 @@ func (router *Router) ListScopes(w http.ResponseWriter, r *http.Request, next ht
 	}
 
 	res := make(map[string]interface{})
+	res["application"] = app
 	res["scopes"] = s
 
 	if err := responseOK(res, w); err != nil {

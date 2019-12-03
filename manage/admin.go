@@ -3,6 +3,8 @@ package manage
 import (
 	"database/sql"
 
+	"github.com/leeif/pluto/modelexts"
+
 	perror "github.com/leeif/pluto/datatype/pluto_error"
 	"github.com/leeif/pluto/datatype/request"
 	"github.com/leeif/pluto/models"
@@ -241,24 +243,93 @@ func (m *Manager) ListApplications() (models.ApplicationSlice, *perror.PlutoErro
 	return applications, nil
 }
 
-func (m *Manager) ListRoles(appID uint) (models.RbacRoleSlice, *perror.PlutoError) {
+func (m *Manager) ListRoles(appID uint) (*modelexts.Roles, *perror.PlutoError) {
+	application, err := models.Applications(qm.Where("id = ?", appID)).One(m.db)
+
+	if err != nil && err != sql.ErrNoRows {
+		return nil, perror.ServerError.Wrapper(err)
+	}
+
+	if err == sql.ErrNoRows {
+		return nil, perror.ApplicationNotExist
+	}
+
 	roles, err := models.RbacRoles(qm.Where("app_id = ?", appID)).All(m.db)
 
 	if err != nil && err != sql.ErrNoRows {
 		return nil, perror.ServerError.Wrapper(err)
 	}
 
-	return roles, nil
+	roleIDs := make([]interface{}, 0)
+	for _, role := range roles {
+		roleIDs = append(roleIDs, role.ID)
+	}
+
+	roleScopes, err := models.RbacRoleScopes(qm.WhereIn("role_id in ?", roleIDs...)).All(m.db)
+	if err != nil && err != sql.ErrNoRows {
+		return nil, perror.ServerError.Wrapper(err)
+	}
+
+	scopeIDs := make([]interface{}, 0)
+	for _, k := range roleScopes {
+		scopeIDs = append(scopeIDs, k.ScopeID)
+	}
+
+	scopes, err := models.RbacScopes(qm.WhereIn("id in ?", scopeIDs...)).All(m.db)
+	if err != nil && err != sql.ErrNoRows {
+		return nil, perror.ServerError.Wrapper(err)
+	}
+
+	scopeMap := make(map[uint]*models.RbacScope)
+	for _, scope := range scopes {
+		scopeMap[scope.ID] = scope
+	}
+
+	roleScopeMap := make(map[uint][]*models.RbacScope)
+
+	for _, rs := range roleScopes {
+		if _, ok := roleScopeMap[rs.RoleID]; !ok {
+			roleScopeMap[rs.RoleID] = make([]*models.RbacScope, 0)
+		}
+		roleScopeMap[rs.RoleID] = append(roleScopeMap[rs.RoleID], scopeMap[rs.ScopeID])
+	}
+
+	er := &modelexts.Roles{}
+	er.Application = application
+	er.Roles = make([]modelexts.Role, 0)
+
+	for _, role := range roles {
+		r := modelexts.Role{}
+		r.RbacRole = role
+		r.Scopes = roleScopeMap[r.ID]
+		er.Roles = append(er.Roles, r)
+	}
+
+	return er, nil
 }
 
-func (m *Manager) ListScopes(appID uint) (models.RbacScopeSlice, *perror.PlutoError) {
+func (m *Manager) ListScopes(appID uint) (*modelexts.Scopes, *perror.PlutoError) {
+	application, err := models.Applications(qm.Where("id = ?", appID)).One(m.db)
+
+	if err != nil && err != sql.ErrNoRows {
+		return nil, perror.ServerError.Wrapper(err)
+	}
+
+	if err == sql.ErrNoRows {
+		return nil, perror.ApplicationNotExist
+	}
+
 	scopes, err := models.RbacScopes(qm.Where("app_id = ?", appID)).All(m.db)
 
 	if err != nil && err != sql.ErrNoRows {
 		return nil, perror.ServerError.Wrapper(err)
 	}
 
-	return scopes, nil
+	es := &modelexts.Scopes{}
+	es.Application = application
+	es.Scopes = scopes
+
+	return es, nil
 }
 
 func (m *Manager) SetUserRole(ur request.UserRole) *perror.PlutoError {

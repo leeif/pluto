@@ -9,9 +9,23 @@ type CreateRole struct {
 	Name  string `json:"name"`
 }
 
+func (cr *CreateRole) Validation() bool {
+	if cr.AppID == 0 || cr.Name == "" {
+		return false
+	}
+	return true
+}
+
 type CreateScope struct {
 	AppID uint   `json:"app_id"`
 	Name  string `json:"name"`
+}
+
+func (cs *CreateScope) Validation() bool {
+	if cs.AppID == 0 || cs.Name == "" {
+		return false
+	}
+	return true
 }
 
 type CreateApplication struct {

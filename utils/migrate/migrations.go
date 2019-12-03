@@ -55,14 +55,6 @@ var migrations = []Migrations{
 		name:     "add_scopes_column_in_refresh_token_table",
 		function: addScopesColumnInRefreshTokenTable,
 	},
-	// {
-	// 	name:     "add_identifier_column_for_applications_table",
-	// 	function: addIdentifierColumnForApplicationTable,
-	// },
-	// {
-	// 	name:     "add_identifier_index_for_applications_table",
-	// 	function: addIdentifierIndexForApplicationTable,
-	// },
 }
 
 func changeUsersTable(db *sql.DB, name string) error {
@@ -292,21 +284,3 @@ func addScopesColumnInRefreshTokenTable(db *sql.DB, name string) error {
 	}
 	return nil
 }
-
-// func addIdentifierColumnForApplicationTable(db *sql.DB, name string) error {
-// 	sql := "ALTER TABLE `applications` ADD `identifier` varchar(255) NOT NULL;"
-// 	_, err := db.Exec(sql)
-// 	if err != nil {
-// 		return err
-// 	}
-// 	return nil
-// }
-
-// func addIdentifierIndexForApplicationTable(db *sql.DB, name string) error {
-// 	sql := "CREATE INDEX `identifier` ON `applications` (`identifier`)"
-// 	_, err := db.Exec(sql)
-// 	if err != nil {
-// 		return err
-// 	}
-// 	return nil
-// }

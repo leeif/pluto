@@ -30,4 +30,5 @@ var (
 	RoleExists          = NewPlutoError(http.StatusForbidden, 4006, "Role does not exist", nil)
 	RoleNotExist        = NewPlutoError(http.StatusForbidden, 4007, "Role already exists", nil)
 	NotPlutoAdmin       = NewPlutoError(http.StatusForbidden, 4008, "Not the pluto admin", nil)
+	UserNotExist        = NewPlutoError(http.StatusForbidden, 4009, "User is not exist", nil)
 )

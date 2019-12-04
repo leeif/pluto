@@ -1,4 +1,4 @@
-package constants
+package general
 
 const (
 	PlutoAdminApplication = "pluto"

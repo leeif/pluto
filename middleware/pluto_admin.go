@@ -6,7 +6,7 @@ import (
 	"strings"
 	"time"
 
-	"github.com/leeif/pluto/utils/constants"
+	"github.com/leeif/pluto/utils/general"
 
 	"github.com/urfave/negroni"
 
@@ -53,13 +53,13 @@ func PlutoAdmin() negroni.HandlerFunc {
 			return
 		}
 
-		if accessPayload.AppID != constants.PlutoAdminApplication {
+		if accessPayload.AppID != general.PlutoAdminApplication {
 			context.Set(r, "pluto_error", perror.Forbidden)
 			next(w, r)
 			return
 		}
 
-		if arrays.ContainsString(accessPayload.Scopes, constants.PlutoAdminScope) == -1 {
+		if arrays.ContainsString(accessPayload.Scopes, general.PlutoAdminScope) == -1 {
 			context.Set(r, "pluto_error", perror.NotPlutoAdmin)
 			next(w, r)
 			return

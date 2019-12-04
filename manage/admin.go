@@ -8,6 +8,7 @@ import (
 	perror "github.com/leeif/pluto/datatype/pluto_error"
 	"github.com/leeif/pluto/datatype/request"
 	"github.com/leeif/pluto/models"
+	"github.com/leeif/pluto/utils/general"
 	"github.com/volatiletech/sqlboiler/boil"
 	"github.com/volatiletech/sqlboiler/queries/qm"
 )
@@ -398,5 +399,76 @@ func (m *Manager) UsersCount() (map[string]int, *perror.PlutoError) {
 	res["google"] = google
 	res["apple"] = apple
 	res["mail"] = mail
+	return res, nil
+}
+
+func (m *Manager) FindUser(fu *request.FindUser) (*modelexts.FindUser, *perror.PlutoError) {
+
+	field := "name"
+	if general.ValidMail(fu.Keyword) {
+		field = "mail"
+	}
+
+	user, err := models.Users(qm.Where(field+" = ?", fu.Keyword)).One(m.db)
+	if err != nil && err == sql.ErrNoRows {
+		return nil, perror.UserNotExist
+	} else if err != nil {
+		return nil, perror.ServerError.Wrapper(err)
+	}
+
+	applications, err := models.Applications().All(m.db)
+	if err != nil {
+		return nil, perror.ServerError.Wrapper(err)
+	}
+
+	appMap := make(map[uint]*models.Application)
+
+	for _, application := range applications {
+		appMap[application.ID] = application
+	}
+
+	userAppRoles, err := models.RbacUserApplicationRoles(qm.Where("user_id = ?", user.ID)).All(m.db)
+	if err != nil {
+		return nil, perror.ServerError.Wrapper(err)
+	}
+
+	roles, err := models.RbacRoles(qm.AndIn("id in ?")).All(m.db)
+	if err != nil {
+		return nil, perror.ServerError.Wrapper(err)
+	}
+
+	roleMap := make(map[uint]*models.RbacRole)
+	for _, role := range roles {
+		roleMap[role.ID] = role
+	}
+
+	userAppRoleMap := make(map[uint]*modelexts.UserApplicationRole)
+	for _, userAppRole := range userAppRoles {
+		if _, ok := userAppRoleMap[userAppRole.AppID]; !ok {
+			userAppRoleMap[userAppRole.AppID] = &modelexts.UserApplicationRole{}
+			userAppRoleMap[userAppRole.AppID].Application = appMap[userAppRole.AppID]
+			userAppRoleMap[userAppRole.AppID].Roles = make([]*models.RbacRole, 0)
+		}
+
+		if role, ok := roleMap[userAppRole.RoleID]; ok {
+			userAppRoleMap[userAppRole.AppID].Roles = append(userAppRoleMap[userAppRole.AppID].Roles, role)
+		}
+	}
+
+	extApps := make([]*modelexts.UserApplicationRole, 0)
+
+	for _, application := range applications {
+		extApp := &modelexts.UserApplicationRole{}
+		if uar, ok := userAppRoleMap[application.ID]; ok {
+			extApp = uar
+		} else {
+			extApp.Application = application
+		}
+		extApps = append(extApps, extApp)
+	}
+
+	res := &modelexts.FindUser{}
+	res.User = user
+	res.Applications = extApps
 	return res, nil
 }

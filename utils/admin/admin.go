@@ -6,7 +6,7 @@ import (
 
 	"github.com/volatiletech/sqlboiler/boil"
 
-	"github.com/leeif/pluto/utils/constants"
+	"github.com/leeif/pluto/utils/general"
 	"github.com/leeif/pluto/utils/mail"
 	"github.com/leeif/pluto/utils/salt"
 
@@ -28,14 +28,14 @@ func Init(db *sql.DB, config *config.Config, logger *log.PlutoLog) *perror.Pluto
 	manager := manage.NewManager(db, config, logger)
 
 	ca := request.CreateApplication{}
-	ca.Name = constants.PlutoAdminApplication
+	ca.Name = general.PlutoAdminApplication
 	application, err := manager.CreateApplication(ca)
 	if err != nil && err.PlutoCode == perror.ServerError.PlutoCode {
 		return err
 	}
 
 	cr := request.CreateRole{}
-	cr.Name = constants.PlutoAdminRole
+	cr.Name = general.PlutoAdminRole
 	cr.AppID = application.ID
 
 	role, err := manager.CreateRole(cr)
@@ -44,7 +44,7 @@ func Init(db *sql.DB, config *config.Config, logger *log.PlutoLog) *perror.Pluto
 	}
 
 	cs := request.CreateScope{}
-	cs.Name = constants.PlutoAdminScope
+	cs.Name = general.PlutoAdminScope
 	cs.AppID = application.ID
 	scope, err := manager.CreateScope(cs)
 	if err != nil && err.PlutoCode == perror.ServerError.PlutoCode {

@@ -341,6 +341,9 @@ func (router *Router) FindUser(w http.ResponseWriter, r *http.Request, next http
 		next(w, r)
 		return
 	}
+	if err := responseOK(nil, w); err != nil {
+		router.logger.Error(err.Error())
+	}
 }
 
 func (router *Router) UsersCount(w http.ResponseWriter, r *http.Request, next http.HandlerFunc) {

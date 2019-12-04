@@ -76,3 +76,42 @@ func (roles Roles) Format() map[string]interface{} {
 
 	return res
 }
+
+type UserApplicationRole struct {
+	*models.Application
+	Roles []*models.RbacRole `json:"roles"`
+}
+
+type FindUser struct {
+	*models.User
+	Applications []*UserApplicationRole `json:"applications"`
+}
+
+func (findUser FindUser) Format() map[string]interface{} {
+	res := make(map[string]interface{})
+	res["id"] = findUser.ID
+	res["name"] = findUser.Name
+	res["mail"] = findUser.Mail.String
+	res["avatar"] = findUser.Avatar.String
+	res["login_type"] = findUser.LoginType
+
+	applications := make([]interface{}, 0)
+	for _, application := range findUser.Applications {
+		a := make(map[string]interface{})
+		a["id"] = application.ID
+		a["name"] = application.Name
+		rs := make([]interface{}, 0)
+		for _, role := range application.Roles {
+			r := make(map[string]interface{})
+			r["id"] = role.Name
+			r["name"] = role.ID
+			rs = append(rs, r)
+		}
+		a["roles"] = rs
+		applications = append(applications, a)
+	}
+
+	res["applications"] = applications
+
+	return res
+}

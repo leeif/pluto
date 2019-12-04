@@ -9,7 +9,7 @@ import (
 	perror "github.com/leeif/pluto/datatype/pluto_error"
 	"github.com/leeif/pluto/log"
 	"github.com/leeif/pluto/models"
-	"github.com/leeif/pluto/utils/constants"
+	"github.com/leeif/pluto/utils/general"
 	"github.com/volatiletech/sqlboiler/queries/qm"
 )
 
@@ -36,7 +36,7 @@ func getUserRole(userID uint, appID string, db boil.Executor) (*models.RbacRole,
 	}
 
 	// forbidd pluto admin application with default role assign
-	if !app.DefaultRole.IsZero() && app.Name != constants.PlutoAdminApplication {
+	if !app.DefaultRole.IsZero() && app.Name != general.PlutoAdminApplication {
 		role, err = models.RbacRoles(qm.Where("id = ?", app.DefaultRole.Uint)).One(db)
 		if err != nil {
 			return nil, perror.ServerError.Wrapper(err)

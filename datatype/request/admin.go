@@ -44,6 +44,31 @@ type RoleScope struct {
 	ScopeID uint `json:"scope_id"`
 }
 
+func (rs *RoleScope) Validation() bool {
+	if rs.RoleID == 0 {
+		return false
+	}
+	if rs.ScopeID == 0 {
+		return false
+	}
+	return true
+}
+
+type RoleScopeBatchUpdate struct {
+	RoleID uint   `json:"role_id"`
+	Scopes []uint `json:"scopes"`
+}
+
+func (rscu *RoleScopeBatchUpdate) Validation() bool {
+	if rscu.RoleID == 0 {
+		return false
+	}
+	if rscu.Scopes == nil || len(rscu.Scopes) == 0 {
+		return false
+	}
+	return true
+}
+
 type ApplicationRole struct {
 	AppID  uint `json:"app_id"`
 	RoleID uint `json:"role_id"`

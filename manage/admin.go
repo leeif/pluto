@@ -153,12 +153,84 @@ func (m *Manager) DetachScope(rs request.RoleScope) *perror.PlutoError {
 		tx.Rollback()
 	}()
 
-	roleScope := &models.RbacRoleScope{}
-	roleScope.RoleID = rs.RoleID
-	roleScope.ScopeID = rs.ScopeID
+	roleScope, err := models.RbacRoleScopes(qm.Where("role_id = ? and scope_id = ?", rs.RoleID, rs.ScopeID)).One(tx)
+
+	if err != nil && err != sql.ErrNoRows {
+		return perror.ServerError.Wrapper(err)
+	}
+
+	if err != nil && err == sql.ErrNoRows {
+		return perror.ScopeNotExist
+	}
 
 	if _, err := roleScope.Delete(tx); err != nil {
 		return perror.ServerError.Wrapper(err)
+	}
+
+	tx.Commit()
+
+	return nil
+}
+
+func (m *Manager) RoleScopeBatchUpdate(rscu request.RoleScopeBatchUpdate) *perror.PlutoError {
+	tx, err := m.db.Begin()
+	if err != nil {
+		return perror.ServerError.Wrapper(err)
+	}
+
+	defer func() {
+		tx.Rollback()
+	}()
+
+	role, err := models.RbacRoles(qm.Where("id = ?", rscu.RoleID)).One(tx)
+	if err != nil && err != sql.ErrNoRows {
+		return perror.ServerError.Wrapper(err)
+	} else if err != nil && err == sql.ErrNoRows {
+		return perror.RoleNotExist
+	}
+
+	in := make([]interface{}, 0)
+	for _, scope := range rscu.Scopes {
+		in = append(in, scope)
+	}
+
+	scopes, err := models.RbacScopes(qm.WhereIn("id in ?", in...)).All(tx)
+	if err != nil {
+		return perror.ServerError.Wrapper(err)
+	}
+
+	scopeMap := make(map[uint]*models.RbacScope)
+	for _, scope := range scopes {
+		scopeMap[scope.ID] = scope
+	}
+
+	roleScopes, err := models.RbacRoleScopes(qm.Where("role_id = ?", role.ID)).All(m.db)
+	if err != nil {
+		return perror.ServerError.Wrapper(err)
+	}
+
+	for _, roleScope := range roleScopes {
+		if _, ok := scopeMap[roleScope.ScopeID]; ok {
+			scopeMap[roleScope.ScopeID] = nil
+			continue
+		}
+
+		if _, err := roleScope.Delete(tx); err != nil {
+			return perror.ServerError.Wrapper(err)
+		}
+		scopeMap[roleScope.ScopeID] = nil
+	}
+
+	for _, v := range scopeMap {
+		if v == nil || v.AppID != role.AppID {
+			continue
+		}
+		roleScope := models.RbacRoleScope{}
+		roleScope.RoleID = role.ID
+		roleScope.ScopeID = v.ID
+		if err := roleScope.Insert(tx, boil.Infer()); err != nil {
+			return perror.ServerError.Wrapper(err)
+		}
 	}
 
 	tx.Commit()
@@ -257,18 +329,26 @@ func (m *Manager) ListRoles(appID uint) (*modelexts.Roles, *perror.PlutoError) {
 
 	roles, err := models.RbacRoles(qm.Where("app_id = ?", appID)).All(m.db)
 
-	if err != nil && err != sql.ErrNoRows {
+	if err != nil {
 		return nil, perror.ServerError.Wrapper(err)
 	}
+
+	er := &modelexts.Roles{}
+	er.Application = application
+	er.Roles = make([]modelexts.Role, 0)
 
 	roleIDs := make([]interface{}, 0)
 	for _, role := range roles {
 		roleIDs = append(roleIDs, role.ID)
 	}
 
-	roleScopes, err := models.RbacRoleScopes(qm.WhereIn("role_id in ?", roleIDs...)).All(m.db)
-	if err != nil && err != sql.ErrNoRows {
-		return nil, perror.ServerError.Wrapper(err)
+	var roleScopes models.RbacRoleScopeSlice
+
+	if len(roleIDs) > 0 {
+		roleScopes, err = models.RbacRoleScopes(qm.WhereIn("role_id in ?", roleIDs...)).All(m.db)
+		if err != nil && err != sql.ErrNoRows {
+			return nil, perror.ServerError.Wrapper(err)
+		}
 	}
 
 	scopeIDs := make([]interface{}, 0)
@@ -276,9 +356,13 @@ func (m *Manager) ListRoles(appID uint) (*modelexts.Roles, *perror.PlutoError) {
 		scopeIDs = append(scopeIDs, k.ScopeID)
 	}
 
-	scopes, err := models.RbacScopes(qm.WhereIn("id in ?", scopeIDs...)).All(m.db)
-	if err != nil && err != sql.ErrNoRows {
-		return nil, perror.ServerError.Wrapper(err)
+	var scopes models.RbacScopeSlice
+
+	if len(scopeIDs) > 0 {
+		scopes, err = models.RbacScopes(qm.WhereIn("id in ?", scopeIDs...)).All(m.db)
+		if err != nil && err != sql.ErrNoRows {
+			return nil, perror.ServerError.Wrapper(err)
+		}
 	}
 
 	scopeMap := make(map[uint]*models.RbacScope)
@@ -295,14 +379,12 @@ func (m *Manager) ListRoles(appID uint) (*modelexts.Roles, *perror.PlutoError) {
 		roleScopeMap[rs.RoleID] = append(roleScopeMap[rs.RoleID], scopeMap[rs.ScopeID])
 	}
 
-	er := &modelexts.Roles{}
-	er.Application = application
-	er.Roles = make([]modelexts.Role, 0)
-
 	for _, role := range roles {
 		r := modelexts.Role{}
 		r.RbacRole = role
-		r.Scopes = roleScopeMap[r.ID]
+		if scopes, ok := roleScopeMap[r.ID]; ok {
+			r.Scopes = scopes
+		}
 		er.Roles = append(er.Roles, r)
 	}
 
@@ -432,7 +514,12 @@ func (m *Manager) FindUser(fu *request.FindUser) (*modelexts.FindUser, *perror.P
 		return nil, perror.ServerError.Wrapper(err)
 	}
 
-	roles, err := models.RbacRoles(qm.AndIn("id in ?")).All(m.db)
+	ra := make([]interface{}, 0)
+	for _, userAppRole := range userAppRoles {
+		ra = append(ra, userAppRole.RoleID)
+	}
+
+	roles, err := models.RbacRoles(qm.AndIn("id in ?", ra...)).All(m.db)
 	if err != nil {
 		return nil, perror.ServerError.Wrapper(err)
 	}

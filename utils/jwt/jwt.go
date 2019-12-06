@@ -143,6 +143,9 @@ func GenerateRSAJWT(payload interface{}) (*JWT, *perror.PlutoError) {
 func VerifyJWT(token string) (*JWT, *perror.PlutoError) {
 	jwt := &JWT{}
 	parts := strings.Split(token, ".")
+	if len(parts) != 3 {
+		return nil, perror.InvalidJWTToekn
+	}
 	head, err := b64.RawStdEncoding.DecodeString(parts[0])
 	if err != nil {
 		return nil, perror.InvalidJWTToekn

@@ -122,7 +122,6 @@ func (m *Manager) EmailLogin(login request.MailLogin) (map[string]string, *perro
 		return nil, perr
 	}
 
-	// generate jwt token
 	scope, perr := getUserScopes(user.ID, login.AppID, tx)
 	if perr != nil {
 		return nil, perr
@@ -135,6 +134,7 @@ func (m *Manager) EmailLogin(login request.MailLogin) (map[string]string, *perro
 		return nil, perr
 	}
 
+	// generate jwt token
 	up := jwt.NewAccessPayload(user.ID, []string{scope.Name}, deviceApp.DeviceID, deviceApp.AppID, MAILLOGIN, m.config.JWT.AccessTokenExpire)
 	token, perr := jwt.GenerateRSAJWT(up)
 
@@ -189,15 +189,20 @@ func (m *Manager) GoogleLoginMobile(login request.GoogleMobileLogin) (map[string
 		return nil, perr
 	}
 
+	scope, perr := getUserScopes(user.ID, login.AppID, tx)
+	if perr != nil {
+		return nil, perr
+	}
+
 	// update refresh token
-	refreshToken, perr := m.updateRefreshToken(tx, user.ID, deviceApp, "")
+	refreshToken, perr := m.updateRefreshToken(tx, user.ID, deviceApp, strings.Join([]string{scope.Name}, ","))
 
 	if perr != nil {
 		return nil, perr
 	}
 
 	// generate jwt token
-	up := jwt.NewAccessPayload(user.ID, nil, deviceApp.DeviceID, deviceApp.AppID, GOOGLELOGIN, m.config.JWT.AccessTokenExpire)
+	up := jwt.NewAccessPayload(user.ID, []string{scope.Name}, deviceApp.DeviceID, deviceApp.AppID, GOOGLELOGIN, m.config.JWT.AccessTokenExpire)
 	token, perr := jwt.GenerateRSAJWT(up)
 
 	if perr != nil {
@@ -302,15 +307,20 @@ func (m *Manager) WechatLoginMobile(login request.WechatMobileLogin) (map[string
 		return nil, perr
 	}
 
+	scope, perr := getUserScopes(user.ID, login.AppID, tx)
+	if perr != nil {
+		return nil, perr
+	}
+
 	// update refresh token
-	refreshToken, perr := m.updateRefreshToken(tx, user.ID, deviceApp, "")
+	refreshToken, perr := m.updateRefreshToken(tx, user.ID, deviceApp, strings.Join([]string{scope.Name}, ","))
 
 	if perr != nil {
 		return nil, perr
 	}
 
 	// generate jwt token
-	up := jwt.NewAccessPayload(user.ID, nil, deviceApp.DeviceID, deviceApp.AppID, WECHATLOGIN, m.config.JWT.AccessTokenExpire)
+	up := jwt.NewAccessPayload(user.ID, []string{scope.Name}, deviceApp.DeviceID, deviceApp.AppID, WECHATLOGIN, m.config.JWT.AccessTokenExpire)
 	token, perr := jwt.GenerateRSAJWT(up)
 
 	if perr != nil {
@@ -505,15 +515,20 @@ func (m *Manager) AppleLoginMobile(login request.AppleMobileLogin) (map[string]s
 		return nil, perr
 	}
 
+	scope, perr := getUserScopes(user.ID, login.AppID, tx)
+	if perr != nil {
+		return nil, perr
+	}
+
 	// update refresh token
-	refreshToken, perr := m.updateRefreshToken(tx, user.ID, deviceApp, "")
+	refreshToken, perr := m.updateRefreshToken(tx, user.ID, deviceApp, strings.Join([]string{scope.Name}, ","))
 
 	if perr != nil {
 		return nil, perr
 	}
 
 	// generate jwt token
-	up := jwt.NewAccessPayload(user.ID, nil, deviceApp.DeviceID, deviceApp.AppID, APPLELOGIN, m.config.JWT.AccessTokenExpire)
+	up := jwt.NewAccessPayload(user.ID, []string{scope.Name}, deviceApp.DeviceID, deviceApp.AppID, APPLELOGIN, m.config.JWT.AccessTokenExpire)
 	token, perr := jwt.GenerateRSAJWT(up)
 
 	if perr != nil {

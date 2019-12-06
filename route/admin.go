@@ -89,6 +89,33 @@ func (router *Router) AttachScope(w http.ResponseWriter, r *http.Request, next h
 	}
 }
 
+func (router *Router) RoleScopeBatchUpdate(w http.ResponseWriter, r *http.Request, next http.HandlerFunc) {
+	_, perr := getAccessPayload(r)
+	if perr != nil {
+		// set err to context for log
+		context.Set(r, "pluto_error", perr)
+		responseError(perr, w)
+		next(w, r)
+		return
+	}
+	rsbu := request.RoleScopeBatchUpdate{}
+	if err := getBody(r, &rsbu); err != nil {
+		context.Set(r, "pluto_error", err)
+		responseError(err, w)
+		next(w, r)
+		return
+	}
+	if err := router.manager.RoleScopeBatchUpdate(rsbu); err != nil {
+		context.Set(r, "pluto_error", err)
+		responseError(err, w)
+		next(w, r)
+		return
+	}
+	if err := responseOK(nil, w); err != nil {
+		router.logger.Error(err.Error())
+	}
+}
+
 func (router *Router) DetachScope(w http.ResponseWriter, r *http.Request, next http.HandlerFunc) {
 	_, perr := getAccessPayload(r)
 	if perr != nil {
@@ -334,14 +361,22 @@ func (router *Router) FindUser(w http.ResponseWriter, r *http.Request, next http
 		next(w, r)
 		return
 	}
-	fu := request.FindUser{}
-	if err := getQuery(r, &fu); err != nil {
+	fu := &request.FindUser{}
+	if err := getQuery(r, fu); err != nil {
 		context.Set(r, "pluto_error", err)
 		responseError(err, w)
 		next(w, r)
 		return
 	}
-	if err := responseOK(nil, w); err != nil {
+
+	res, err := router.manager.FindUser(fu)
+	if err != nil {
+		context.Set(r, "pluto_error", err)
+		responseError(err, w)
+		next(w, r)
+		return
+	}
+	if err := responseOK(res.Format(), w); err != nil {
 		router.logger.Error(err.Error())
 	}
 }

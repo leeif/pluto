@@ -161,7 +161,7 @@ func (r *Router) registerHealthRoutes() {
 	r.registerRoutes(routes, "/")
 }
 
-func (r *Router) registerRBACRoutes() {
+func (r *Router) registerAdminRoutes() {
 	routes := []PlutoRoute{
 		{
 			path:        "/rbac/role/create",
@@ -178,24 +178,32 @@ func (r *Router) registerRBACRoutes() {
 			handler:     r.CreateScope,
 		},
 		{
-			path:        "/rbac/scope/attach",
+			path:        "/rbac/role/scope/attach",
 			description: "attach scope to role",
 			method:      "POST",
 			middle:      r.mw.AdminAuthMiddleware,
 			handler:     r.AttachScope,
 		},
 		{
-			path:        "/rbac/scope/detach",
+			path:        "/rbac/role/scope/detach",
 			description: "detach scope to role",
 			method:      "POST",
 			middle:      r.mw.AdminAuthMiddleware,
 			handler:     r.DetachScope,
 		},
 		{
+			path:        "/rbac/role/scope/batch",
+			description: "detach scope to role",
+			method:      "POST",
+			middle:      r.mw.AdminAuthMiddleware,
+			handler:     r.RoleScopeBatchUpdate,
+		},
+		{
 			path:        "/rbac/role/scope/default",
 			description: "set the default scope of the role",
 			method:      "POST",
 			middle:      r.mw.AdminAuthMiddleware,
+			handler:     r.RoleDefaultScope,
 		},
 		{
 			path:        "/rbac/application/create",
@@ -232,6 +240,13 @@ func (r *Router) registerRBACRoutes() {
 			middle:      r.mw.NoAuthMiddleware,
 			handler:     r.ListScopes,
 		},
+		{
+			path:        "/find/user",
+			description: "find the user through name or mail",
+			method:      "GET",
+			middle:      r.mw.AdminAuthMiddleware,
+			handler:     r.FindUser,
+		},
 	}
 	r.registerRoutes(routes, "/api")
 }
@@ -247,7 +262,7 @@ func (r *Router) Register() {
 	r.registerAPIRoutes()
 	r.registerWebRoutes()
 	r.registerHealthRoutes()
-	r.registerRBACRoutes()
+	r.registerAdminRoutes()
 }
 
 func NewRouter(mux *mux.Router, manager *manage.Manager, config *config.Config, logger *log.PlutoLog) *Router {

@@ -41,6 +41,8 @@ func getUserRole(userID uint, appID string, db boil.Executor) (*models.RbacRole,
 		if err != nil {
 			return nil, perror.ServerError.Wrapper(err)
 		}
+	} else if app.DefaultRole.IsZero() {
+		return nil, nil
 	}
 	return role, nil
 }
@@ -48,7 +50,7 @@ func getUserRole(userID uint, appID string, db boil.Executor) (*models.RbacRole,
 func getRoleScopes(role *models.RbacRole, db boil.Executor) (*models.RbacScope, *perror.PlutoError) {
 
 	if role.DefaultScope.IsZero() {
-		return nil, perror.ScopeNotExist
+		return nil, nil
 	}
 
 	scope, err := models.RbacScopes(qm.Where("id = ?", role.DefaultScope.Uint)).One(db)
@@ -59,7 +61,7 @@ func getRoleScopes(role *models.RbacRole, db boil.Executor) (*models.RbacScope, 
 	return scope, nil
 }
 
-func getUserScopes(userID uint, appID string, db boil.Executor) (*models.RbacScope, *perror.PlutoError) {
+func getUserScopes(userID uint, appID string, db boil.Executor) ([]string, *perror.PlutoError) {
 	role, err := getUserRole(userID, appID, db)
 	if err != nil {
 		return nil, err
@@ -71,7 +73,15 @@ func getUserScopes(userID uint, appID string, db boil.Executor) (*models.RbacSco
 
 	scope, err := getRoleScopes(role, db)
 
-	return scope, nil
+	if err != nil {
+		return nil, err
+	}
+
+	if scope == nil {
+		return nil, nil
+	}
+
+	return []string{scope.Name}, nil
 }
 
 type Manager struct {

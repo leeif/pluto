@@ -247,6 +247,13 @@ func (r *Router) registerAdminRoutes() {
 			middle:      r.mw.AdminAuthMiddleware,
 			handler:     r.FindUser,
 		},
+		{
+			path:        "/rbac/user/application/role",
+			description: "set the role of a user in application",
+			method:      "POST",
+			middle:      r.mw.AdminAuthMiddleware,
+			handler:     r.SetUserRole,
+		},
 	}
 	r.registerRoutes(routes, "/api")
 }
@@ -254,6 +261,7 @@ func (r *Router) registerAdminRoutes() {
 func (router *Router) registerRoutes(routes []PlutoRoute, prefix string) {
 	sub := router.mux.PathPrefix(prefix).Subrouter()
 	for _, r := range routes {
+		// options method for cors
 		sub.Handle(r.path, r.middle(r.handler)).Methods(r.method)
 	}
 }

@@ -25,6 +25,10 @@ var testCases = []testCase{
 		Func: testHealthCheck,
 	},
 	{
+		Name: "testDataInitCheck",
+		Func: dataInitCheck,
+	},
+	{
 		Name: "initRSA",
 		Func: initRSA,
 	},
@@ -88,6 +92,40 @@ func testHealthCheck() error {
 		}
 	}
 	return errors.New("Healthcheck failed")
+}
+
+func dataInitCheck() error {
+	// port := &config.Port{}
+	// typ := &config.DBType{}
+	// port.Set("3306")
+	// typ.Set("mysql")
+	// config := &config.Config{
+	// 	Database: &config.DatabaseConfig{
+	// 		Type:     typ,
+	// 		User:     "root",
+	// 		Host:     "127.0.0.1",
+	// 		Port:     port,
+	// 		Password: "root",
+	// 		DB:       "pluto_server",
+	// 	},
+	// }
+	// db, err := database.NewDatabase(config)
+	// if err != nil {
+	// 	return err
+	// }
+	// for i := 0; i < 100; i++ {
+	// 	_, err := models.Users(qm.Where("mail = ?", "geeklyf92610@gmail.com")).One(db)
+	// 	if err != nil && err != sql.ErrNoRows {
+	// 		return err
+	// 	}
+	// 	if err == nil {
+	// 		return nil
+	// 	}
+	// 	time.Sleep(time.Duration(5) * time.Second)
+	// }
+	time.Sleep(time.Duration(10) * time.Second)
+	// return errors.New("Data init failed")
+	return nil
 }
 
 var rsaDir string

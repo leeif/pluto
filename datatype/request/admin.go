@@ -4,6 +4,13 @@ type FindUser struct {
 	Keyword string `json:"keyword"`
 }
 
+func (fu *FindUser) Validation() bool {
+	if fu.Keyword == "" {
+		return false
+	}
+	return true
+}
+
 type CreateRole struct {
 	AppID uint   `json:"app_id"`
 	Name  string `json:"name"`

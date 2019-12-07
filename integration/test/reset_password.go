@@ -28,12 +28,13 @@ func testResetPassword() error {
 		return fmt.Errorf("Expect no error, but %v", err)
 	}
 
-	if resp, err := http.Post(url, "application/json", bytes.NewReader(b)); err != nil {
+	resp, err := http.Post(url, "application/json", bytes.NewReader(b))
+	if err != nil {
 		return fmt.Errorf("Expect no error, but %v", err)
-	} else {
-		if resp.StatusCode != http.StatusOK {
-			return fmt.Errorf("%v request expect ok (200) status code, but %v", url, resp.StatusCode)
-		}
+	}
+
+	if resp.StatusCode != http.StatusOK {
+		return fmt.Errorf("%v request expect ok (200) status code, but %v", url, resp.StatusCode)
 	}
 	return nil
 }
@@ -44,7 +45,7 @@ func testNewPasswordLogin() error {
 		Mail:     "test@gmail.com",
 		Password: "test",
 		DeviceID: "xxx",
-		AppID:    "xxx",
+		AppID:    "test",
 	}
 
 	// login with old password

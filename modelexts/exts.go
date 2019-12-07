@@ -103,8 +103,8 @@ func (findUser FindUser) Format() map[string]interface{} {
 		rs := make([]interface{}, 0)
 		for _, role := range application.Roles {
 			r := make(map[string]interface{})
-			r["id"] = role.Name
-			r["name"] = role.ID
+			r["id"] = role.ID
+			r["name"] = role.Name
 			rs = append(rs, r)
 		}
 		a["roles"] = rs

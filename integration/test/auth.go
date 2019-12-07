@@ -51,8 +51,8 @@ func testRefreshAccessToken() error {
 	url := "http://localhost:8010/api/auth/refresh"
 	payload := request.RefreshAccessToken{
 		RefreshToken: refreshToken,
-		UseID:        1,
-		AppID:        "xxx",
+		UseID:        2,
+		AppID:        "test",
 		DeviceID:     "xxx",
 	}
 

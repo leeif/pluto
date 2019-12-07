@@ -30,9 +30,13 @@ func getUserRole(userID uint, appID string, db boil.Executor) (*models.RbacRole,
 
 	if userAppRole != nil {
 		role, err = models.RbacRoles(qm.Where("id = ?", userAppRole.RoleID)).One(db)
-		if err != nil {
+		if err != nil && err != sql.ErrNoRows {
 			return nil, perror.ServerError.Wrapper(err)
 		}
+	}
+
+	if role != nil {
+		return role, nil
 	}
 
 	// forbidd pluto admin application with default role assign
@@ -41,9 +45,8 @@ func getUserRole(userID uint, appID string, db boil.Executor) (*models.RbacRole,
 		if err != nil {
 			return nil, perror.ServerError.Wrapper(err)
 		}
-	} else if app.DefaultRole.IsZero() {
-		return nil, nil
 	}
+
 	return role, nil
 }
 

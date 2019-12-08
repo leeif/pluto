@@ -263,10 +263,6 @@ func (m *Manager) UpdateUserInfo(accessPayload *jwt.AccessPayload, uui request.U
 		return perror.InvalidAvatarFormat
 	}
 
-	if uui.Gender != "" {
-		user.Gender.SetValid(uui.Gender)
-	}
-
 	if uui.Name != "" {
 		user.Name = uui.Name
 	}

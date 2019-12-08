@@ -1,4 +1,19 @@
 
+<a name="v0.4.0"></a>
+## [v0.4.0](https://github.com/leeif/pluto/compare/0.2.7...v0.4.0)
+
+> 2019-12-08
+
+### Feature
+
+* **rbac:** permission management using rbac
+
+### Update
+
+* **api:** async mail sending
+* **db:** drop history operation table
+
+
 <a name="0.2.7"></a>
 ## [0.2.7](https://github.com/leeif/pluto/compare/v0.2.6...0.2.7)
 

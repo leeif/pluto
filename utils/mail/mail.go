@@ -104,6 +104,14 @@ func (m *Mail) Send(recv, subj, contentType, body string) error {
 	return nil
 }
 
+func (m *Mail) SendPlainText(address, subject, text string) *perror.PlutoError {
+	if err := m.Send(address, subject, "text/plain", text); err != nil {
+		return perror.ServerError.Wrapper(errors.New("Mail sending failed: " + err.Error()))
+	}
+
+	return nil
+}
+
 func (m *Mail) SendRegisterVerify(userID uint, address string, baseURL string) *perror.PlutoError {
 	rvp := jwt.NewRegisterVerifyPayload(userID, m.config.JWT.RegisterVerifyTokenExpire)
 	token, perr := jwt.GenerateRSAJWT(rvp)

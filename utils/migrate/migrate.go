@@ -29,6 +29,7 @@ func Migrate(db *sql.DB) error {
 			continue
 		}
 
+		log.Println("Start " + m.name)
 		if err := m.function(db, m.name); err != nil {
 			return err
 		}
@@ -67,7 +68,6 @@ func migrationExists(db *sql.DB, name string) (bool, error) {
 }
 
 func saveMigration(db *sql.DB, name string) error {
-	log.Println("Start " + name)
 	createAt := time.Now()
 	res, err := db.Exec("insert into migrations (created_at, name) values (?, ?)", createAt, name)
 

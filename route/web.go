@@ -1,132 +1,119 @@
 package route
 
 import (
-	"database/sql"
 	"net/http"
 
 	"github.com/gorilla/context"
 	"github.com/gorilla/mux"
-	"github.com/leeif/pluto/config"
 	perror "github.com/leeif/pluto/datatype/pluto_error"
 	"github.com/leeif/pluto/datatype/request"
-	"github.com/leeif/pluto/log"
-	"github.com/leeif/pluto/manage"
-	"github.com/leeif/pluto/middleware"
 )
 
-func webRouter(router *mux.Router, db *sql.DB, config *config.Config, logger *log.PlutoLog) {
+func (router *Router) registrationVerifyPage(w http.ResponseWriter, r *http.Request, next http.HandlerFunc) {
+	vars := mux.Vars(r)
+	token := vars["token"]
 
-	mw := middleware.NewMiddle(logger)
-	manager := manage.NewManager(db, config, logger)
+	type Data struct {
+		Error *perror.PlutoError
+	}
+	data := &Data{}
 
-	router.Handle("/mail/verify/{token}", mw.NoVerifyMiddleware(func(w http.ResponseWriter, r *http.Request, next http.HandlerFunc) {
-		vars := mux.Vars(r)
-		token := vars["token"]
+	if err := router.manager.RegisterVerify(token); err != nil {
+		// set err to context for log
+		context.Set(r, "pluto_error", err)
+		next(w, r)
+		data.Error = err
+		goto responseHTML
+	}
 
-		type Data struct {
-			Error *perror.PlutoError
+responseHTML:
+
+	if data.Error != nil && data.Error.PlutoCode == perror.ServerError.PlutoCode {
+		if err := responseHTMLError("error.html", nil, w, data.Error.HTTPCode); err != nil {
+			router.logger.Error(err.Error())
 		}
-		data := &Data{}
-
-		if err := manager.RegisterVerify(token); err != nil {
-			// set err to context for log
-			context.Set(r, "pluto_error", err)
-			next(w, r)
-			data.Error = err
-			goto responseHTML
+	} else if data.Error != nil {
+		if err := responseHTMLError("register_verify_result.html", data, w, data.Error.HTTPCode); err != nil {
+			router.logger.Error(err.Error())
 		}
-
-	responseHTML:
-
-		if data.Error != nil && data.Error.PlutoCode == perror.ServerError.PlutoCode {
-			if err := responseHTMLError("error.html", nil, w, data.Error.HTTPCode); err != nil {
-				logger.Error(err.Error())
-			}
-		} else if data.Error != nil {
-			if err := responseHTMLError("register_verify_result.html", data, w, data.Error.HTTPCode); err != nil {
-				logger.Error(err.Error())
-			}
-		} else {
-			if err := responseHTMLOK("register_verify_result.html", data, w); err != nil {
-				logger.Error(err.Error())
-			}
+	} else {
+		if err := responseHTMLOK("register_verify_result.html", data, w); err != nil {
+			router.logger.Error(err.Error())
 		}
+	}
 
-	})).Methods("GET")
+}
 
-	router.Handle("/password/reset/{token}", mw.NoVerifyMiddleware(func(w http.ResponseWriter, r *http.Request, next http.HandlerFunc) {
-		vars := mux.Vars(r)
-		token := vars["token"]
+func (router *Router) resetPasswordPage(w http.ResponseWriter, r *http.Request, next http.HandlerFunc) {
+	vars := mux.Vars(r)
+	token := vars["token"]
 
-		type Data struct {
-			Error *perror.PlutoError
-			Token string
+	type Data struct {
+		Error *perror.PlutoError
+		Token string
+	}
+
+	data := &Data{Token: token}
+	if err := router.manager.ResetPasswordPage(token); err != nil {
+		context.Set(r, "pluto_error", err)
+		next(w, r)
+		data.Error = err
+		goto responseHTML
+	}
+
+responseHTML:
+	if data.Error != nil && data.Error.PlutoCode == perror.ServerError.PlutoCode {
+		if err := responseHTMLError("error.html", nil, w, data.Error.HTTPCode); err != nil {
+			router.logger.Error(err.Error())
 		}
-
-		data := &Data{Token: token}
-		if err := manager.ResetPasswordPage(token); err != nil {
-			context.Set(r, "pluto_error", err)
-			next(w, r)
-			data.Error = err
-			goto responseHTML
+	} else if data.Error != nil {
+		if err := responseHTMLError("password_reset.html", data, w, data.Error.HTTPCode); err != nil {
+			router.logger.Error(err.Error())
 		}
-
-	responseHTML:
-		if data.Error != nil && data.Error.PlutoCode == perror.ServerError.PlutoCode {
-			if err := responseHTMLError("error.html", nil, w, data.Error.HTTPCode); err != nil {
-				logger.Error(err.Error())
-			}
-		} else if data.Error != nil {
-			if err := responseHTMLError("password_reset.html", data, w, data.Error.HTTPCode); err != nil {
-				logger.Error(err.Error())
-			}
-		} else if data.Error == nil {
-			if err := responseHTMLOK("password_reset.html", data, w); err != nil {
-				logger.Error(err.Error())
-			}
+	} else if data.Error == nil {
+		if err := responseHTMLOK("password_reset.html", data, w); err != nil {
+			router.logger.Error(err.Error())
 		}
+	}
+}
 
-	})).Methods("GET")
+func (router *Router) resetPassword(w http.ResponseWriter, r *http.Request, next http.HandlerFunc) {
+	rpw := request.ResetPasswordWeb{}
+	vars := mux.Vars(r)
+	token := vars["token"]
 
-	router.Handle("/password/reset/{token}", mw.NoVerifyMiddleware(func(w http.ResponseWriter, r *http.Request, next http.HandlerFunc) {
-		rpw := request.ResetPasswordWeb{}
-		vars := mux.Vars(r)
-		token := vars["token"]
+	type Data struct {
+		Error *perror.PlutoError
+	}
 
-		type Data struct {
-			Error *perror.PlutoError
+	data := &Data{}
+
+	if err := getBody(r, &rpw); err != nil {
+		context.Set(r, "pluto_error", err)
+		next(w, r)
+		data.Error = err
+		goto responseHTML
+	}
+
+	if err := router.manager.ResetPassword(token, rpw); err != nil {
+		context.Set(r, "pluto_error", err)
+		next(w, r)
+		data.Error = err
+		goto responseHTML
+	}
+
+responseHTML:
+	if data.Error != nil && data.Error.PlutoCode == perror.ServerError.PlutoCode {
+		if err := responseHTMLError("error.html", nil, w, data.Error.HTTPCode); err != nil {
+			router.logger.Error(err.Error())
 		}
-
-		data := &Data{}
-
-		if err := getBody(r, &rpw); err != nil {
-			context.Set(r, "pluto_error", err)
-			next(w, r)
-			data.Error = err
-			goto responseHTML
+	} else if data.Error != nil {
+		if err := responseHTMLError("password_reset_result.html", data, w, data.Error.HTTPCode); err != nil {
+			router.logger.Error(err.Error())
 		}
-
-		if err := manager.ResetPassword(token, rpw); err != nil {
-			context.Set(r, "pluto_error", err)
-			next(w, r)
-			data.Error = err
-			goto responseHTML
+	} else {
+		if err := responseHTMLOK("password_reset_result.html", data, w); err != nil {
+			router.logger.Error(err.Error())
 		}
-
-	responseHTML:
-		if data.Error != nil && data.Error.PlutoCode == perror.ServerError.PlutoCode {
-			if err := responseHTMLError("error.html", nil, w, data.Error.HTTPCode); err != nil {
-				logger.Error(err.Error())
-			}
-		} else if data.Error != nil {
-			if err := responseHTMLError("password_reset_result.html", data, w, data.Error.HTTPCode); err != nil {
-				logger.Error(err.Error())
-			}
-		} else {
-			if err := responseHTMLOK("password_reset_result.html", data, w); err != nil {
-				logger.Error(err.Error())
-			}
-		}
-
-	})).Methods("POST")
+	}
 }

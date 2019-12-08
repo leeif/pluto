@@ -23,13 +23,14 @@ import (
 
 // RefreshToken is an object representing the database table.
 type RefreshToken struct {
-	ID           uint      `boil:"id" json:"id" toml:"id" yaml:"id"`
-	CreatedAt    null.Time `boil:"created_at" json:"created_at,omitempty" toml:"created_at" yaml:"created_at,omitempty"`
-	UpdatedAt    null.Time `boil:"updated_at" json:"updated_at,omitempty" toml:"updated_at" yaml:"updated_at,omitempty"`
-	DeletedAt    null.Time `boil:"deleted_at" json:"deleted_at,omitempty" toml:"deleted_at" yaml:"deleted_at,omitempty"`
-	UserID       uint      `boil:"user_id" json:"user_id" toml:"user_id" yaml:"user_id"`
-	RefreshToken string    `boil:"refresh_token" json:"refresh_token" toml:"refresh_token" yaml:"refresh_token"`
-	DeviceAppID  uint      `boil:"device_app_id" json:"device_app_id" toml:"device_app_id" yaml:"device_app_id"`
+	ID           uint        `boil:"id" json:"id" toml:"id" yaml:"id"`
+	CreatedAt    null.Time   `boil:"created_at" json:"created_at,omitempty" toml:"created_at" yaml:"created_at,omitempty"`
+	UpdatedAt    null.Time   `boil:"updated_at" json:"updated_at,omitempty" toml:"updated_at" yaml:"updated_at,omitempty"`
+	DeletedAt    null.Time   `boil:"deleted_at" json:"deleted_at,omitempty" toml:"deleted_at" yaml:"deleted_at,omitempty"`
+	UserID       uint        `boil:"user_id" json:"user_id" toml:"user_id" yaml:"user_id"`
+	RefreshToken string      `boil:"refresh_token" json:"refresh_token" toml:"refresh_token" yaml:"refresh_token"`
+	DeviceAppID  uint        `boil:"device_app_id" json:"device_app_id" toml:"device_app_id" yaml:"device_app_id"`
+	Scopes       null.String `boil:"scopes" json:"scopes,omitempty" toml:"scopes" yaml:"scopes,omitempty"`
 
 	R *refreshTokenR `boil:"-" json:"-" toml:"-" yaml:"-"`
 	L refreshTokenL  `boil:"-" json:"-" toml:"-" yaml:"-"`
@@ -43,6 +44,7 @@ var RefreshTokenColumns = struct {
 	UserID       string
 	RefreshToken string
 	DeviceAppID  string
+	Scopes       string
 }{
 	ID:           "id",
 	CreatedAt:    "created_at",
@@ -51,9 +53,33 @@ var RefreshTokenColumns = struct {
 	UserID:       "user_id",
 	RefreshToken: "refresh_token",
 	DeviceAppID:  "device_app_id",
+	Scopes:       "scopes",
 }
 
 // Generated where
+
+type whereHelpernull_String struct{ field string }
+
+func (w whereHelpernull_String) EQ(x null.String) qm.QueryMod {
+	return qmhelper.WhereNullEQ(w.field, false, x)
+}
+func (w whereHelpernull_String) NEQ(x null.String) qm.QueryMod {
+	return qmhelper.WhereNullEQ(w.field, true, x)
+}
+func (w whereHelpernull_String) IsNull() qm.QueryMod    { return qmhelper.WhereIsNull(w.field) }
+func (w whereHelpernull_String) IsNotNull() qm.QueryMod { return qmhelper.WhereIsNotNull(w.field) }
+func (w whereHelpernull_String) LT(x null.String) qm.QueryMod {
+	return qmhelper.Where(w.field, qmhelper.LT, x)
+}
+func (w whereHelpernull_String) LTE(x null.String) qm.QueryMod {
+	return qmhelper.Where(w.field, qmhelper.LTE, x)
+}
+func (w whereHelpernull_String) GT(x null.String) qm.QueryMod {
+	return qmhelper.Where(w.field, qmhelper.GT, x)
+}
+func (w whereHelpernull_String) GTE(x null.String) qm.QueryMod {
+	return qmhelper.Where(w.field, qmhelper.GTE, x)
+}
 
 var RefreshTokenWhere = struct {
 	ID           whereHelperuint
@@ -63,6 +89,7 @@ var RefreshTokenWhere = struct {
 	UserID       whereHelperuint
 	RefreshToken whereHelperstring
 	DeviceAppID  whereHelperuint
+	Scopes       whereHelpernull_String
 }{
 	ID:           whereHelperuint{field: "`refresh_tokens`.`id`"},
 	CreatedAt:    whereHelpernull_Time{field: "`refresh_tokens`.`created_at`"},
@@ -71,6 +98,7 @@ var RefreshTokenWhere = struct {
 	UserID:       whereHelperuint{field: "`refresh_tokens`.`user_id`"},
 	RefreshToken: whereHelperstring{field: "`refresh_tokens`.`refresh_token`"},
 	DeviceAppID:  whereHelperuint{field: "`refresh_tokens`.`device_app_id`"},
+	Scopes:       whereHelpernull_String{field: "`refresh_tokens`.`scopes`"},
 }
 
 // RefreshTokenRels is where relationship names are stored.
@@ -90,8 +118,8 @@ func (*refreshTokenR) NewStruct() *refreshTokenR {
 type refreshTokenL struct{}
 
 var (
-	refreshTokenAllColumns            = []string{"id", "created_at", "updated_at", "deleted_at", "user_id", "refresh_token", "device_app_id"}
-	refreshTokenColumnsWithoutDefault = []string{"created_at", "updated_at", "deleted_at", "user_id", "refresh_token", "device_app_id"}
+	refreshTokenAllColumns            = []string{"id", "created_at", "updated_at", "deleted_at", "user_id", "refresh_token", "device_app_id", "scopes"}
+	refreshTokenColumnsWithoutDefault = []string{"created_at", "updated_at", "deleted_at", "user_id", "refresh_token", "device_app_id", "scopes"}
 	refreshTokenColumnsWithDefault    = []string{"id"}
 	refreshTokenPrimaryKeyColumns     = []string{"id"}
 )

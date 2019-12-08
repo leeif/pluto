@@ -29,6 +29,8 @@ type Config struct {
 	AppleLogin  *AppleLoginConfig  `kiper_config:"name:apple_login"`
 	JWT         *JWTConfig         `kiper_config:"name:jwt"`
 	View        *ViewConfig        `kiper_config:"name:view"`
+	Admin       *AdminConfig       `kiper_config:"name:admin"`
+	Cors        *CorsConfig        `kiper_config:"name:cors"`
 }
 
 func NewConfig(args []string, version string) (*Config, error) {
@@ -44,6 +46,8 @@ func NewConfig(args []string, version string) (*Config, error) {
 		AppleLogin:  newAppleLoginConfig(),
 		JWT:         newJWTConfig(),
 		View:        newViewConfig(),
+		Admin:       newAdminConfig(),
+		Cors:        newCorsConfig(),
 	}
 	kiper := kiper.NewKiper(filepath.Base(args[0]), "Pluto server")
 	kiper.Kingpin.Version(version)

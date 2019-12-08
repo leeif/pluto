@@ -9,18 +9,21 @@ import (
 	"os/signal"
 	"time"
 
+	"github.com/leeif/pluto/manage"
+	"github.com/leeif/pluto/utils/admin"
+
 	"github.com/leeif/pluto/server"
 
 	plog "github.com/leeif/pluto/log"
 	"github.com/leeif/pluto/route"
 
-	"github.com/gorilla/mux"
 	"github.com/leeif/pluto/config"
 	"go.uber.org/fx"
 
 	"github.com/leeif/pluto/database"
 
 	_ "github.com/go-sql-driver/mysql"
+	perror "github.com/leeif/pluto/datatype/pluto_error"
 	"github.com/leeif/pluto/utils/rsa"
 	"github.com/leeif/pluto/utils/view"
 )
@@ -34,7 +37,7 @@ func printConfig(config *config.Config, logger *plog.PlutoLog) {
 	logger.Info(fmt.Sprintf("ResetPasswordTokenExpire: %d", config.JWT.ResetPasswordTokenExpire))
 }
 
-func register(router *mux.Router, db *sql.DB, config *config.Config, logger *plog.PlutoLog) error {
+func register(router *route.Router, db *sql.DB, config *config.Config, logger *plog.PlutoLog) error {
 
 	printConfig(config, logger)
 
@@ -48,8 +51,18 @@ func register(router *mux.Router, db *sql.DB, config *config.Config, logger *plo
 		return err
 	}
 
-	// add router
-	route.Router(router, db, config, logger)
+	if err := admin.Init(db, config, logger); err != nil {
+		if err.PlutoCode == perror.ServerError.PlutoCode {
+			logger.Error(err.LogError.Error())
+		} else {
+			logger.Warn(err.LogError.Error())
+		}
+		return err.LogError
+	}
+
+	// register routes
+	router.Register()
+
 	return nil
 }
 
@@ -67,6 +80,8 @@ func main() {
 			database.NewDatabase,
 			plog.NewLogger,
 			server.NewMux,
+			route.NewRouter,
+			manage.NewManager,
 		),
 		fx.Invoke(register),
 		fx.NopLogger,

@@ -1,7 +1,6 @@
 package route
 
 import (
-	"database/sql"
 	"encoding/json"
 	"errors"
 	"fmt"
@@ -9,66 +8,17 @@ import (
 	"net/http"
 	"strings"
 
-	"github.com/leeif/pluto/models"
+	"github.com/leeif/pluto/utils/jwt"
 
-	"github.com/gorilla/mux"
+	"github.com/gorilla/context"
 	"github.com/gorilla/schema"
-	"github.com/leeif/pluto/config"
 	"github.com/leeif/pluto/datatype/request"
-	"github.com/leeif/pluto/log"
+	"github.com/leeif/pluto/modelexts"
 	"github.com/leeif/pluto/utils/view"
 
 	perror "github.com/leeif/pluto/datatype/pluto_error"
 	resp "github.com/leeif/pluto/datatype/response"
 )
-
-type router struct {
-	Name   string
-	Prefix string
-	Func   func(router *mux.Router, db *sql.DB, config *config.Config, logger *log.PlutoLog)
-}
-
-var routers = []router{
-	{
-		Name:   "register",
-		Prefix: "/api/user",
-		Func:   registerRouter,
-	},
-	{
-		Name:   "login",
-		Prefix: "/api/user",
-		Func:   loginRouter,
-	},
-	{
-		Name:   "user",
-		Prefix: "/api/user",
-		Func:   userRouter,
-	},
-	{
-		Name:   "auth",
-		Prefix: "/api/auth",
-		Func:   authRouter,
-	},
-	{
-		Name:   "web",
-		Prefix: "/",
-		Func:   webRouter,
-	},
-	{
-		Name:   "healthCheck",
-		Prefix: "/",
-		Func:   healthCheckRouter,
-	},
-}
-
-func Router(router *mux.Router, db *sql.DB, config *config.Config, logger *log.PlutoLog) {
-
-	for _, r := range routers {
-		logger.Info(fmt.Sprintf("Register %s router", r.Name))
-		sub := router.PathPrefix(r.Prefix).Subrouter()
-		r.Func(sub, db, config, logger)
-	}
-}
 
 func getBaseURL(r *http.Request) string {
 	scheme := "http"
@@ -109,18 +59,52 @@ func getBody(r *http.Request, reciver interface{}) *perror.PlutoError {
 	return nil
 }
 
-func formatUser(user *models.User) map[string]interface{} {
+func getQuery(r *http.Request, reciver interface{}) *perror.PlutoError {
+	decoder := schema.NewDecoder()
+	if err := decoder.Decode(reciver, r.URL.Query()); err != nil {
+		return perror.BadRequest.Wrapper(err)
+	}
+
+	return nil
+}
+
+func formatUser(user *modelexts.User) map[string]interface{} {
 	res := make(map[string]interface{})
 	res["id"] = user.ID
 	res["mail"] = user.Mail
 	res["name"] = user.Name
-	res["gender"] = user.Gender
 	res["avatar"] = user.Avatar
+	res["roles"] = user.Roles
 	res["login_type"] = user.LoginType
 	res["verified"] = user.Verified
 	res["created_at"] = user.CreatedAt.Time.Unix()
 	res["updated_at"] = user.UpdatedAt.Time.Unix()
 	return res
+}
+
+func getAccessPayload(r *http.Request) (*jwt.AccessPayload, *perror.PlutoError) {
+	perr := context.Get(r, "pluto_error")
+	if perr != nil {
+		err, ok := perr.(*perror.PlutoError)
+		if !ok {
+			err = perror.ServerError.Wrapper(fmt.Errorf("Unknow error"))
+		}
+		return nil, err
+	}
+
+	accessPayload := context.Get(r, "payload")
+
+	if accessPayload == nil {
+		err := perror.ServerError.Wrapper(fmt.Errorf("Access token payload is empty"))
+		return nil, err
+	}
+
+	payload, ok := accessPayload.(*jwt.AccessPayload)
+	if !ok {
+		err := perror.ServerError.Wrapper(fmt.Errorf("Not a access token payload"))
+		return nil, err
+	}
+	return payload, nil
 }
 
 func responseOK(body interface{}, w http.ResponseWriter) error {

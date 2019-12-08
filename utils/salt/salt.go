@@ -1,7 +1,7 @@
 package salt
 
 import (
-	"crypto/rand"
+	"math/rand"
 	"encoding/base64"
 	"strings"
 
@@ -44,4 +44,14 @@ func encryptRandSequence(n int, prefix []string) string {
 	}
 	dst := base64.URLEncoding.EncodeToString(src)
 	return dst
+}
+
+const letterBytes = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ"
+
+func RandomToken(n int) string {
+	b := make([]byte, n)
+	for i := range b {
+		b[i] = letterBytes[rand.Intn(len(letterBytes))]
+	}
+	return string(b)
 }

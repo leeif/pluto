@@ -29,9 +29,7 @@ type User struct {
 	DeletedAt     null.Time   `boil:"deleted_at" json:"deleted_at,omitempty" toml:"deleted_at" yaml:"deleted_at,omitempty"`
 	Mail          null.String `boil:"mail" json:"mail,omitempty" toml:"mail" yaml:"mail,omitempty"`
 	Name          string      `boil:"name" json:"name" toml:"name" yaml:"name"`
-	Gender        null.String `boil:"gender" json:"gender,omitempty" toml:"gender" yaml:"gender,omitempty"`
 	Password      null.String `boil:"password" json:"password,omitempty" toml:"password" yaml:"password,omitempty"`
-	Birthday      null.Time   `boil:"birthday" json:"birthday,omitempty" toml:"birthday" yaml:"birthday,omitempty"`
 	Avatar        null.String `boil:"avatar" json:"avatar,omitempty" toml:"avatar" yaml:"avatar,omitempty"`
 	Verified      null.Bool   `boil:"verified" json:"verified,omitempty" toml:"verified" yaml:"verified,omitempty"`
 	LoginType     string      `boil:"login_type" json:"login_type" toml:"login_type" yaml:"login_type"`
@@ -48,9 +46,7 @@ var UserColumns = struct {
 	DeletedAt     string
 	Mail          string
 	Name          string
-	Gender        string
 	Password      string
-	Birthday      string
 	Avatar        string
 	Verified      string
 	LoginType     string
@@ -62,9 +58,7 @@ var UserColumns = struct {
 	DeletedAt:     "deleted_at",
 	Mail:          "mail",
 	Name:          "name",
-	Gender:        "gender",
 	Password:      "password",
-	Birthday:      "birthday",
 	Avatar:        "avatar",
 	Verified:      "verified",
 	LoginType:     "login_type",
@@ -72,29 +66,6 @@ var UserColumns = struct {
 }
 
 // Generated where
-
-type whereHelpernull_String struct{ field string }
-
-func (w whereHelpernull_String) EQ(x null.String) qm.QueryMod {
-	return qmhelper.WhereNullEQ(w.field, false, x)
-}
-func (w whereHelpernull_String) NEQ(x null.String) qm.QueryMod {
-	return qmhelper.WhereNullEQ(w.field, true, x)
-}
-func (w whereHelpernull_String) IsNull() qm.QueryMod    { return qmhelper.WhereIsNull(w.field) }
-func (w whereHelpernull_String) IsNotNull() qm.QueryMod { return qmhelper.WhereIsNotNull(w.field) }
-func (w whereHelpernull_String) LT(x null.String) qm.QueryMod {
-	return qmhelper.Where(w.field, qmhelper.LT, x)
-}
-func (w whereHelpernull_String) LTE(x null.String) qm.QueryMod {
-	return qmhelper.Where(w.field, qmhelper.LTE, x)
-}
-func (w whereHelpernull_String) GT(x null.String) qm.QueryMod {
-	return qmhelper.Where(w.field, qmhelper.GT, x)
-}
-func (w whereHelpernull_String) GTE(x null.String) qm.QueryMod {
-	return qmhelper.Where(w.field, qmhelper.GTE, x)
-}
 
 type whereHelpernull_Bool struct{ field string }
 
@@ -126,9 +97,7 @@ var UserWhere = struct {
 	DeletedAt     whereHelpernull_Time
 	Mail          whereHelpernull_String
 	Name          whereHelperstring
-	Gender        whereHelpernull_String
 	Password      whereHelpernull_String
-	Birthday      whereHelpernull_Time
 	Avatar        whereHelpernull_String
 	Verified      whereHelpernull_Bool
 	LoginType     whereHelperstring
@@ -140,9 +109,7 @@ var UserWhere = struct {
 	DeletedAt:     whereHelpernull_Time{field: "`users`.`deleted_at`"},
 	Mail:          whereHelpernull_String{field: "`users`.`mail`"},
 	Name:          whereHelperstring{field: "`users`.`name`"},
-	Gender:        whereHelpernull_String{field: "`users`.`gender`"},
 	Password:      whereHelpernull_String{field: "`users`.`password`"},
-	Birthday:      whereHelpernull_Time{field: "`users`.`birthday`"},
 	Avatar:        whereHelpernull_String{field: "`users`.`avatar`"},
 	Verified:      whereHelpernull_Bool{field: "`users`.`verified`"},
 	LoginType:     whereHelperstring{field: "`users`.`login_type`"},
@@ -166,8 +133,8 @@ func (*userR) NewStruct() *userR {
 type userL struct{}
 
 var (
-	userAllColumns            = []string{"id", "created_at", "updated_at", "deleted_at", "mail", "name", "gender", "password", "birthday", "avatar", "verified", "login_type", "identify_token"}
-	userColumnsWithoutDefault = []string{"created_at", "updated_at", "deleted_at", "mail", "name", "gender", "password", "birthday", "avatar", "verified", "login_type", "identify_token"}
+	userAllColumns            = []string{"id", "created_at", "updated_at", "deleted_at", "mail", "name", "password", "avatar", "verified", "login_type", "identify_token"}
+	userColumnsWithoutDefault = []string{"created_at", "updated_at", "deleted_at", "mail", "name", "password", "avatar", "verified", "login_type", "identify_token"}
 	userColumnsWithDefault    = []string{"id"}
 	userPrimaryKeyColumns     = []string{"id"}
 )

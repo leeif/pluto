@@ -52,20 +52,22 @@ type Payload struct {
 	Expire int64  `json:"expire_time"`
 }
 
-type UserPayload struct {
+type AccessPayload struct {
 	Payload
-	UserID    uint   `json:"userId"`
-	DeviceID  string `json:"deviceId"`
-	AppID     string `json:"appId"`
-	LoginType string `json:"login_type"`
+	UserID    uint     `json:"userId"`
+	DeviceID  string   `json:"deviceId"`
+	AppID     string   `json:"appId"`
+	Scopes    []string `json:"scopes"`
+	LoginType string   `json:"login_type"`
 }
 
-func NewUserPayload(userID uint, deviceID, appID, loginType string, expire int64) *UserPayload {
-	up := &UserPayload{}
+func NewAccessPayload(userID uint, scopes []string, deviceID, appID, loginType string, expire int64) *AccessPayload {
+	up := &AccessPayload{}
 	up.UserID = userID
 	up.DeviceID = deviceID
 	up.AppID = appID
 	up.LoginType = loginType
+	up.Scopes = scopes
 
 	up.Payload.Type = ACCESS
 	up.Payload.Create = time.Now().Unix()
@@ -141,6 +143,9 @@ func GenerateRSAJWT(payload interface{}) (*JWT, *perror.PlutoError) {
 func VerifyJWT(token string) (*JWT, *perror.PlutoError) {
 	jwt := &JWT{}
 	parts := strings.Split(token, ".")
+	if len(parts) != 3 {
+		return nil, perror.InvalidJWTToekn
+	}
 	head, err := b64.RawStdEncoding.DecodeString(parts[0])
 	if err != nil {
 		return nil, perror.InvalidJWTToekn

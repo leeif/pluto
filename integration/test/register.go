@@ -149,8 +149,8 @@ func testMailLoginOK() error {
 	payload := request.MailLogin{
 		Mail:     "test@gmail.com",
 		Password: "test",
+		AppID:    "test",
 		DeviceID: "xxx",
-		AppID:    "xxx",
 	}
 	b, err := json.Marshal(payload)
 	if err != nil {

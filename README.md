@@ -9,6 +9,8 @@ Pluto is a JWT based authorization/authentication service. Pluto is designed for
 
 * User registration / login
 * JWT generation / verification
+* Role-based access control (RBAC)
+* Admin page in Vue.js (https://github.com/leeif/pluto-admin)[https://github.com/leeif/pluto-admin]
 
 
 ## Getting started
@@ -25,13 +27,10 @@ Here are some helpful documents for reading.
 * [Configuration](https://github.com/leeif/pluto/blob/master/docs/configuration.md) 
 * [Replace Views](https://github.com/leeif/pluto/blob/master/docs/view.md) is a guide for replacing the default html pages with your own custom files
 * [JWT Token](https://github.com/leeif/pluto/blob/master/docs/jwt.md) gives an introduction of the JWT.
-* (Doing) [Example]() is an example showing how to using Pluto with your apps.
 
 ## Roadmap
 
-* Admin page
-* Support OAuth2 / OpenID Connect
-* Support grpc endpoints
+* Support of OAuth2 / OpenID
 
 ## Contribute
 

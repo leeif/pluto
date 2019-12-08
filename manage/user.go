@@ -6,6 +6,7 @@ import (
 	"errors"
 	"fmt"
 	"net/url"
+	"strings"
 	"time"
 
 	"github.com/volatiletech/sqlboiler/boil"
@@ -15,6 +16,7 @@ import (
 	"github.com/leeif/pluto/utils/avatar"
 
 	perror "github.com/leeif/pluto/datatype/pluto_error"
+	"github.com/leeif/pluto/modelexts"
 	"github.com/leeif/pluto/models"
 
 	saltUtil "github.com/leeif/pluto/utils/salt"
@@ -30,7 +32,7 @@ func (m *Manager) ResetPasswordMail(rpm request.ResetPasswordMail) (*models.User
 	identifyToken := b64.RawStdEncoding.EncodeToString([]byte(rpm.Mail))
 	user, err := models.Users(qm.Where("login_type = ? and identify_token = ?", MAILLOGIN, identifyToken)).One(m.db)
 	if err != nil && err == sql.ErrNoRows {
-		return nil, perror.MailIsNotExsit
+		return nil, perror.MailNotExist
 	} else if err != nil {
 		return nil, perror.ServerError.Wrapper(err)
 	}
@@ -135,41 +137,34 @@ func (m *Manager) ResetPassword(token string, rp request.ResetPasswordWeb) *perr
 		return perror.ServerError.Wrapper(err)
 	}
 
-	// add operation history
-	if err := historyOperation(tx, OperationResetPassword, user.ID); err != nil {
-		return err
-	}
-
 	tx.Commit()
 
 	return nil
 }
 
-func (m *Manager) UserInfo(token string) (*models.User, *perror.PlutoError) {
-	jwtToken, perr := jwt.VerifyJWT(token)
-	if perr != nil {
-		return nil, perr
-	}
+func (m *Manager) UserInfo(accessPayload *jwt.AccessPayload) (*modelexts.User, *perror.PlutoError) {
 
-	userPayload := jwt.UserPayload{}
-	json.Unmarshal(jwtToken.Payload, &userPayload)
-
-	if userPayload.Type != jwt.ACCESS {
-		return nil, perror.InvalidJWTToekn
-	}
-
-	if time.Now().Unix() > userPayload.Expire {
-		return nil, perror.JWTTokenExpired
-	}
-
-	user, err := models.Users(qm.Where("id = ?", userPayload.UserID)).One(m.db)
+	user, err := models.Users(qm.Where("id = ?", accessPayload.UserID)).One(m.db)
 	if err != nil && err == sql.ErrNoRows {
-		return nil, perror.ServerError.Wrapper(errors.New("user not found id: " + string(userPayload.UserID)))
+		return nil, perror.ServerError.Wrapper(errors.New("user not found id: " + string(accessPayload.UserID)))
 	} else if err != nil {
 		return nil, perror.ServerError.Wrapper(err)
 	}
 
-	return user, nil
+	role, perr := getUserRole(accessPayload.UserID, accessPayload.AppID, m.db)
+	if perr != nil {
+		return nil, perr
+	}
+
+	userExt := &modelexts.User{
+		User: user,
+	}
+
+	if role != nil {
+		userExt.Roles = []string{role.Name}
+	}
+
+	return userExt, nil
 }
 
 func (m *Manager) RefreshAccessToken(rat request.RefreshAccessToken) (map[string]string, *perror.PlutoError) {
@@ -210,17 +205,14 @@ func (m *Manager) RefreshAccessToken(rat request.RefreshAccessToken) (map[string
 		return nil, perror.ServerError.Wrapper(err)
 	}
 
+	scopes := strings.Split(rt.Scopes.String, ",")
+
 	// generate jwt token
-	up := jwt.NewUserPayload(rat.UseID, rat.DeviceID, rat.AppID, user.LoginType, m.config.JWT.AccessTokenExpire)
+	up := jwt.NewAccessPayload(rat.UseID, scopes, rat.DeviceID, rat.AppID, user.LoginType, m.config.JWT.AccessTokenExpire)
 	token, perr := jwt.GenerateRSAJWT(up)
 
 	if perr != nil {
 		return nil, perr.Wrapper(errors.New("JWT token generate failed"))
-	}
-
-	// add operation history
-	if err := historyOperation(tx, OperationRefreshToken, rat.UseID); err != nil {
-		return nil, err
 	}
 
 	res["jwt"] = token.String()
@@ -229,24 +221,10 @@ func (m *Manager) RefreshAccessToken(rat request.RefreshAccessToken) (map[string
 	return res, nil
 }
 
-func (m *Manager) UpdateUserInfo(token string, uui request.UpdateUserInfo) *perror.PlutoError {
-	jwtToken, perr := jwt.VerifyJWT(token)
-	if perr != nil {
-		return perr
-	}
+func (m *Manager) UpdateUserInfo(accessPayload *jwt.AccessPayload, uui request.UpdateUserInfo) *perror.PlutoError {
 
-	userPayload := jwt.UserPayload{}
-	json.Unmarshal(jwtToken.Payload, &userPayload)
-
-	if userPayload.Type != jwt.ACCESS {
-		return perror.InvalidJWTToekn
-	}
-
-	if time.Now().Unix() > userPayload.Expire {
-		return perror.JWTTokenExpired
-	}
-
-	if userPayload.LoginType != MAILLOGIN {
+	// only user using mail login can be update
+	if accessPayload.LoginType != MAILLOGIN {
 		return perror.InvalidJWTToekn
 	}
 
@@ -260,9 +238,9 @@ func (m *Manager) UpdateUserInfo(token string, uui request.UpdateUserInfo) *perr
 		tx.Rollback()
 	}()
 
-	user, err := models.Users(qm.Where("id = ?", userPayload.UserID)).One(tx)
+	user, err := models.Users(qm.Where("id = ?", accessPayload.UserID)).One(tx)
 	if err != nil && err == sql.ErrNoRows {
-		return perror.ServerError.Wrapper(errors.New("user not found id: " + string(userPayload.UserID)))
+		return perror.ServerError.Wrapper(errors.New("user not found id: " + string(accessPayload.UserID)))
 	} else if err != nil {
 		return perror.ServerError.Wrapper(err)
 	}
@@ -283,10 +261,6 @@ func (m *Manager) UpdateUserInfo(token string, uui request.UpdateUserInfo) *perr
 		user.Avatar.SetValid(url)
 	} else if uui.Avatar != "" {
 		return perror.InvalidAvatarFormat
-	}
-
-	if uui.Gender != "" {
-		user.Gender.SetValid(uui.Gender)
 	}
 
 	if uui.Name != "" {

@@ -4,17 +4,23 @@
 package models
 
 var TableNames = struct {
-	Applications      string
-	DeviceApps        string
-	HistoryOperations string
-	RefreshTokens     string
-	Salts             string
-	Users             string
+	Applications             string
+	DeviceApps               string
+	RbacRoleScopes           string
+	RbacRoles                string
+	RbacScopes               string
+	RbacUserApplicationRoles string
+	RefreshTokens            string
+	Salts                    string
+	Users                    string
 }{
-	Applications:      "applications",
-	DeviceApps:        "device_apps",
-	HistoryOperations: "history_operations",
-	RefreshTokens:     "refresh_tokens",
-	Salts:             "salts",
-	Users:             "users",
+	Applications:             "applications",
+	DeviceApps:               "device_apps",
+	RbacRoleScopes:           "rbac_role_scopes",
+	RbacRoles:                "rbac_roles",
+	RbacScopes:               "rbac_scopes",
+	RbacUserApplicationRoles: "rbac_user_application_roles",
+	RefreshTokens:            "refresh_tokens",
+	Salts:                    "salts",
+	Users:                    "users",
 }

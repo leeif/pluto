@@ -1,110 +1,97 @@
 package route
 
 import (
-	"database/sql"
 	"net/http"
-	"strings"
 
-	"github.com/leeif/pluto/config"
-	"github.com/leeif/pluto/middleware"
 	"github.com/leeif/pluto/utils/mail"
 
-	perror "github.com/leeif/pluto/datatype/pluto_error"
 	"github.com/leeif/pluto/datatype/request"
-	"github.com/leeif/pluto/log"
-	"github.com/leeif/pluto/manage"
 
 	"github.com/gorilla/context"
-	"github.com/gorilla/mux"
 )
 
-func userRouter(router *mux.Router, db *sql.DB, config *config.Config, logger *log.PlutoLog) {
-	mw := middleware.NewMiddle(logger)
-	manager := manage.NewManager(db, config, logger)
+func (router *Router) passwordResetMail(w http.ResponseWriter, r *http.Request, next http.HandlerFunc) {
+	rpm := request.ResetPasswordMail{}
 
-	router.Handle("/password/reset/mail", mw.NoVerifyMiddleware(func(w http.ResponseWriter, r *http.Request, next http.HandlerFunc) {
-		rpm := request.ResetPasswordMail{}
+	if err := getBody(r, &rpm); err != nil {
+		context.Set(r, "pluto_error", err)
+		responseError(err, w)
+		next(w, r)
+		return
+	}
 
-		if err := getBody(r, &rpm); err != nil {
-			context.Set(r, "pluto_error", err)
-			responseError(err, w)
-			next(w, r)
-			return
-		}
+	user, err := router.manager.ResetPasswordMail(rpm)
+	if err != nil {
+		context.Set(r, "pluto_error", err)
+		responseError(err, w)
+		next(w, r)
+		return
+	}
 
-		user, err := manager.ResetPasswordMail(rpm)
+	go func() {
+		ml, err := mail.NewMail(router.config)
 		if err != nil {
-			context.Set(r, "pluto_error", err)
-			responseError(err, w)
-			next(w, r)
-			return
+			router.logger.Error(err.LogError.Error())
 		}
 
-		go func() {
-			ml, err := mail.NewMail(config)
-			if err != nil {
-				logger.Error(err.LogError.Error())
-			}
-
-			if err := ml.SendResetPassword(user.Mail.String, getBaseURL(r)); err != nil {
-				logger.Error(err.LogError.Error())
-			}
-		}()
-
-		responseOK(nil, w)
-	})).Methods("POST")
-
-	router.Handle("/info/me", mw.NoVerifyMiddleware(func(w http.ResponseWriter, r *http.Request, next http.HandlerFunc) {
-		auth := strings.Fields(r.Header.Get("Authorization"))
-
-		if len(auth) < 2 && strings.ToLower(auth[0]) != "jwt" {
-			context.Set(r, "pluto_error", perror.InvalidJWTToekn)
-			responseError(perror.InvalidJWTToekn, w)
-			next(w, r)
-			return
+		if err := ml.SendResetPassword(user.Mail.String, getBaseURL(r)); err != nil {
+			router.logger.Error(err.LogError.Error())
 		}
+	}()
 
-		res, err := manager.UserInfo(auth[1])
+	responseOK(nil, w)
+}
 
-		if err != nil {
-			// set err to context for log
-			context.Set(r, "pluto_error", err)
-			responseError(err, w)
-			next(w, r)
-			return
-		}
+func (router *Router) userInfo(w http.ResponseWriter, r *http.Request, next http.HandlerFunc) {
+	payload, perr := getAccessPayload(r)
+	if perr != nil {
+		// set err to context for log
+		context.Set(r, "pluto_error", perr)
+		responseError(perr, w)
+		next(w, r)
+		return
+	}
 
-		responseOK(formatUser(res), w)
-	})).Methods("GET")
+	res, perr := router.manager.UserInfo(payload)
 
-	router.Handle("/info/me/update", mw.NoVerifyMiddleware(func(w http.ResponseWriter, r *http.Request, next http.HandlerFunc) {
-		uui := request.UpdateUserInfo{}
-		auth := strings.Fields(r.Header.Get("Authorization"))
+	if perr != nil {
+		// set err to context for log
+		context.Set(r, "pluto_error", perr)
+		responseError(perr, w)
+		next(w, r)
+		return
+	}
 
-		if err := getBody(r, &uui); err != nil {
-			context.Set(r, "pluto_error", err)
-			responseError(err, w)
-			next(w, r)
-			return
-		}
+	responseOK(formatUser(res), w)
+}
 
-		if len(auth) < 2 && strings.ToLower(auth[0]) != "jwt" {
-			context.Set(r, "pluto_error", perror.InvalidJWTToekn)
-			responseError(perror.InvalidJWTToekn, w)
-			next(w, r)
-			return
-		}
+func (router *Router) updateUserInfo(w http.ResponseWriter, r *http.Request, next http.HandlerFunc) {
+	payload, perr := getAccessPayload(r)
+	if perr != nil {
+		// set err to context for log
+		context.Set(r, "pluto_error", perr)
+		responseError(perr, w)
+		next(w, r)
+		return
+	}
 
-		err := manager.UpdateUserInfo(auth[1], uui)
+	uui := request.UpdateUserInfo{}
+	if err := getBody(r, &uui); err != nil {
+		context.Set(r, "pluto_error", err)
+		responseError(err, w)
+		next(w, r)
+		return
+	}
 
-		if err != nil {
-			// set err to context for log
-			context.Set(r, "pluto_error", err)
-			responseError(err, w)
-			next(w, r)
-			return
-		}
+	err := router.manager.UpdateUserInfo(payload, uui)
 
-		responseOK(nil, w)
-	})).Methods("POST")
+	if err != nil {
+		// set err to context for log
+		context.Set(r, "pluto_error", err)
+		responseError(err, w)
+		next(w, r)
+		return
+	}
+
+	responseOK(nil, w)
 }

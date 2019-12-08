@@ -55,6 +55,10 @@ var migrations = []Migrations{
 		name:     "add_scopes_column_in_refresh_token_table",
 		function: addScopesColumnInRefreshTokenTable,
 	},
+	{
+		name:     "removeGenderAndBirthdayColumnInUserTable",
+		function: removeGenderAndBirthdayColumnInUserTable,
+	},
 }
 
 func changeUsersTable(db *sql.DB, name string) error {
@@ -278,6 +282,15 @@ func addDefaultRoleColumnInApplicationTable(db *sql.DB, name string) error {
 
 func addScopesColumnInRefreshTokenTable(db *sql.DB, name string) error {
 	sql := "ALTER TABLE `refresh_tokens` ADD `scopes` varchar(255);"
+	_, err := db.Exec(sql)
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
+func removeGenderAndBirthdayColumnInUserTable(db *sql.DB, name string) error {
+	sql := "ALTER TABLE `users` DROP COLUMN `gender`, DROP COLUMN `birthday`;"
 	_, err := db.Exec(sql)
 	if err != nil {
 		return err

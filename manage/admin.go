@@ -519,9 +519,12 @@ func (m *Manager) FindUser(fu *request.FindUser) (*modelexts.FindUser, *perror.P
 		ra = append(ra, userAppRole.RoleID)
 	}
 
-	roles, err := models.RbacRoles(qm.AndIn("id in ?", ra...)).All(m.db)
-	if err != nil {
-		return nil, perror.ServerError.Wrapper(err)
+	var roles models.RbacRoleSlice
+	if len(ra) > 0 {
+		roles, err = models.RbacRoles(qm.WhereIn("id in ?", ra...)).All(m.db)
+		if err != nil {
+			return nil, perror.ServerError.Wrapper(err)
+		}
 	}
 
 	roleMap := make(map[uint]*models.RbacRole)

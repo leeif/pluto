@@ -1,4 +1,14 @@
 
+<a name="v0.4.1"></a>
+## [v0.4.1](https://github.com/leeif/pluto/compare/v0.4.0...v0.4.1)
+
+> 2019-12-10
+
+### Fix
+
+* **rbac:** fix find user api
+
+
 <a name="v0.4.0"></a>
 ## [v0.4.0](https://github.com/leeif/pluto/compare/0.2.7...v0.4.0)
 

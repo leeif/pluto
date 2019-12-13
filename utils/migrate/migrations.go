@@ -222,8 +222,7 @@ func createRBACRoleTable(db *sql.DB, name string) error {
 		"`app_id` int(10) unsigned NOT NULL," +
 		"`default_scope` int(10) unsigned," +
 		"PRIMARY KEY (`id`)," +
-		"KEY `app_id` (`app_id`)," +
-		"UNIQUE KEY `name` (`name`)," +
+		"UNIQUE KEY `app_id_name` (`app_id`, `name`)," +
 		"KEY `idx_roles_deleted_at` (`deleted_at`)" +
 		")"
 	_, err := db.Exec(sql)
@@ -261,8 +260,8 @@ func createRBACScopeTable(db *sql.DB, name string) error {
 		"`name` varchar(20) NOT NULL," +
 		"`app_id` int(10) unsigned NOT NULL," +
 		"PRIMARY KEY (`id`)," +
-		"UNIQUE KEY `name` (`name`)," +
-		"KEY `app_id` (`app_id`)" +
+		"UNIQUE KEY `app_id_name` (`app_id`, `name`)," +
+		"KEY `idx_scopes_deleted_at` (`deleted_at`)" +
 		")"
 	_, err := db.Exec(sql)
 	if err != nil {

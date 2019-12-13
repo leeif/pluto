@@ -1,4 +1,14 @@
 
+<a name="v0.5.0"></a>
+## [v0.5.0](https://github.com/leeif/pluto/compare/v0.4.1...v0.5.0)
+
+> 2019-12-13
+
+### Update
+
+* **jwt:** update jwt claims
+
+
 <a name="v0.4.1"></a>
 ## [v0.4.1](https://github.com/leeif/pluto/compare/v0.4.0...v0.4.1)
 

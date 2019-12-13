@@ -13,8 +13,8 @@ Pluto assign a JWT for each user and you can use this JWT to authenticate users 
   "type": "access",
   "iat": 1576230404,
   "exp": 1576234004,
-  "sub": 1,
-  "iss": "pluto",
+  "sub": 1, // user id
+  "iss": "pluto", // application name
   "scopes": [
     "pluto.admin"
   ],

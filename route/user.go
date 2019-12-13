@@ -62,7 +62,7 @@ func (router *Router) userInfo(w http.ResponseWriter, r *http.Request, next http
 		return
 	}
 
-	responseOK(formatUser(res), w)
+	responseOK(res.Format(), w)
 }
 
 func (router *Router) updateUserInfo(w http.ResponseWriter, r *http.Request, next http.HandlerFunc) {

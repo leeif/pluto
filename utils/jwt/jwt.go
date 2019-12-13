@@ -48,23 +48,21 @@ type Head struct {
 
 type Payload struct {
 	Type   string `json:"type"`
-	Create int64  `json:"create_time"`
-	Expire int64  `json:"expire_time"`
+	Create int64  `json:"iat"`
+	Expire int64  `json:"exp"`
 }
 
 type AccessPayload struct {
 	Payload
-	UserID    uint     `json:"userId"`
-	DeviceID  string   `json:"deviceId"`
-	AppID     string   `json:"appId"`
+	UserID    uint     `json:"sub"`
+	AppID     string   `json:"iss"`
 	Scopes    []string `json:"scopes"`
 	LoginType string   `json:"login_type"`
 }
 
-func NewAccessPayload(userID uint, scopes []string, deviceID, appID, loginType string, expire int64) *AccessPayload {
+func NewAccessPayload(userID uint, scopes []string, appID, loginType string, expire int64) *AccessPayload {
 	up := &AccessPayload{}
 	up.UserID = userID
-	up.DeviceID = deviceID
 	up.AppID = appID
 	up.LoginType = loginType
 	up.Scopes = scopes
@@ -77,7 +75,7 @@ func NewAccessPayload(userID uint, scopes []string, deviceID, appID, loginType s
 
 type RegisterVerifyPayload struct {
 	Payload
-	UserID uint `json:"userId"`
+	UserID uint `json:"sub"`
 }
 
 func NewRegisterVerifyPayload(userID uint, expire int64) *RegisterVerifyPayload {

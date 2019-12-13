@@ -10,12 +10,15 @@ Pluto assign a JWT for each user and you can use this JWT to authenticate users 
  alg: "rsa"
 }.
 {
- create_time: 1566396559,
- expire_time: 1566400159,
- type: "access",
- userId: <int>,
- deviceId: "<string>",
- appId: "<string>"
+  "type": "access",
+  "iat": 1576230404,
+  "exp": 1576234004,
+  "sub": 1,
+  "iss": "pluto",
+  "scopes": [
+    "pluto.admin"
+  ],
+  "login_type": "mail"
 }.
 [signature]
 ```

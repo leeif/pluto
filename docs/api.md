@@ -167,7 +167,7 @@ Get User info which requires a jwt token.
 {
   "status": "ok",
   "body": {
-    "id": 2,
+    "sub": 2,
     "create_at": 1567236370,
     "updated_at": 1567236410,
     "delete_at": 0,

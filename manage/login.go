@@ -69,6 +69,7 @@ func (m *Manager) updateRefreshToken(tx *sql.Tx, userID uint, deviceApp *models.
 		}
 	} else if err == nil {
 		rt.RefreshToken = refreshToken
+		rt.Scopes.SetValid(scopes)
 		if _, err := rt.Update(tx, boil.Infer()); err != nil {
 			return "", perror.ServerError.Wrapper(err)
 		}

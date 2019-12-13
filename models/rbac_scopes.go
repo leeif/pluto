@@ -606,7 +606,6 @@ func (o RbacScopeSlice) UpdateAll(exec boil.Executor, cols M) (int64, error) {
 
 var mySQLRbacScopeUniqueColumns = []string{
 	"id",
-	"name",
 }
 
 // Upsert attempts an insert using an executor, and does an update or ignore on conflict.

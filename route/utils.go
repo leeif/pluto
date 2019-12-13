@@ -13,7 +13,6 @@ import (
 	"github.com/gorilla/context"
 	"github.com/gorilla/schema"
 	"github.com/leeif/pluto/datatype/request"
-	"github.com/leeif/pluto/modelexts"
 	"github.com/leeif/pluto/utils/view"
 
 	perror "github.com/leeif/pluto/datatype/pluto_error"
@@ -66,20 +65,6 @@ func getQuery(r *http.Request, reciver interface{}) *perror.PlutoError {
 	}
 
 	return nil
-}
-
-func formatUser(user *modelexts.User) map[string]interface{} {
-	res := make(map[string]interface{})
-	res["id"] = user.ID
-	res["mail"] = user.Mail
-	res["name"] = user.Name
-	res["avatar"] = user.Avatar
-	res["roles"] = user.Roles
-	res["login_type"] = user.LoginType
-	res["verified"] = user.Verified
-	res["created_at"] = user.CreatedAt.Time.Unix()
-	res["updated_at"] = user.UpdatedAt.Time.Unix()
-	return res
 }
 
 func getAccessPayload(r *http.Request) (*jwt.AccessPayload, *perror.PlutoError) {

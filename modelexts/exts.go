@@ -1,12 +1,24 @@
 package modelexts
 
-import (
-	"github.com/leeif/pluto/models"
-)
+import "github.com/leeif/pluto/models"
 
 type User struct {
 	*models.User
 	Roles []string `json:"roles"`
+}
+
+func (user User) Format() map[string]interface{} {
+	res := make(map[string]interface{})
+	res["sub"] = user.ID
+	res["mail"] = user.Mail
+	res["name"] = user.Name
+	res["avatar"] = user.Avatar
+	res["roles"] = user.Roles
+	res["login_type"] = user.LoginType
+	res["verified"] = user.Verified
+	res["created_at"] = user.CreatedAt.Time.Unix()
+	res["updated_at"] = user.UpdatedAt.Time.Unix()
+	return res
 }
 
 type Scopes struct {

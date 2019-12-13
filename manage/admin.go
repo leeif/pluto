@@ -30,7 +30,7 @@ func (m *Manager) CreateRole(cr request.CreateRole) (*models.RbacRole, *perror.P
 		return nil, perror.ServerError.Wrapper(err)
 	}
 
-	role, err := models.RbacRoles(qm.Where("name = ?", cr.Name)).One(tx)
+	role, err := models.RbacRoles(qm.Where("app_id = ? and name = ?", cr.AppID, cr.Name)).One(tx)
 	if err == nil {
 		return role, perror.RoleExists
 	} else if err != nil && err != sql.ErrNoRows {
@@ -65,7 +65,7 @@ func (m *Manager) CreateScope(cs request.CreateScope) (*models.RbacScope, *perro
 		return nil, perror.ServerError.Wrapper(err)
 	}
 
-	scope, err := models.RbacScopes(qm.Where("name = ?", cs.Name)).One(tx)
+	scope, err := models.RbacScopes(qm.Where("app_id = ? and name = ?", cs.AppID, cs.Name)).One(tx)
 	if err == nil {
 		return scope, perror.ScopeExists
 	} else if err != nil && err != sql.ErrNoRows {

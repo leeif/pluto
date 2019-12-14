@@ -258,6 +258,33 @@ func (r *Router) registerAdminRoutes() {
 	r.registerRoutes(routes, "/api")
 }
 
+func (r *Router) registerOauth2Routes() {
+	routes := []PlutoRoute{
+		{
+			path:        "/tokens",
+			description: "request access token",
+			method:      "POST",
+			middle:      r.mw.NoAuthMiddleware,
+			handler:     r.Oauth2Tokens,
+		},
+		{
+			path:        "/authorize",
+			description: "authorize page",
+			method:      "GET",
+			middle:      r.mw.NoAuthMiddleware,
+			handler:     r.Oauth2Authorize,
+		},
+		{
+			path:        "/login",
+			description: "login for oauth2",
+			method:      "GET",
+			middle:      r.mw.NoAuthMiddleware,
+			handler:     r.Oauth2Login,
+		},
+	}
+	r.registerRoutes(routes, "/oauth2")
+}
+
 func (router *Router) registerRoutes(routes []PlutoRoute, prefix string) {
 	sub := router.mux.PathPrefix(prefix).Subrouter()
 	for _, r := range routes {

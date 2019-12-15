@@ -484,20 +484,34 @@ func (m *Manager) UsersCount() (map[string]int, *perror.PlutoError) {
 	return res, nil
 }
 
-func (m *Manager) FindUser(fu *request.FindUser) (*modelexts.FindUser, *perror.PlutoError) {
+func (m *Manager) FindUser(fu *request.FindUser) ([]*modelexts.FindUser, *perror.PlutoError) {
 
 	field := "name"
 	if general.ValidMail(fu.Keyword) {
 		field = "mail"
 	}
 
-	user, err := models.Users(qm.Where(field+" = ?", fu.Keyword)).One(m.db)
-	if err != nil && err == sql.ErrNoRows {
+	users, err := models.Users(qm.Where(field+" = ?", fu.Keyword)).All(m.db)
+	if err != nil && len(users) == 0 {
 		return nil, perror.UserNotExist
 	} else if err != nil {
 		return nil, perror.ServerError.Wrapper(err)
 	}
 
+	res := make([]*modelexts.FindUser, 0)
+
+	for _, user := range users {
+		found, err := m.findUser(user)
+		if err != nil {
+			return nil, err
+		}
+		res = append(res, found)
+	}
+
+	return res, nil
+}
+
+func (m *Manager) findUser(user *models.User) (*modelexts.FindUser, *perror.PlutoError) {
 	applications, err := models.Applications().All(m.db)
 	if err != nil {
 		return nil, perror.ServerError.Wrapper(err)

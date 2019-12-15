@@ -64,6 +64,11 @@ func getQuery(r *http.Request, reciver interface{}) *perror.PlutoError {
 		return perror.BadRequest.Wrapper(err)
 	}
 
+	pr, ok := reciver.(request.PlutoRequest)
+	// check request body validation
+	if ok && !pr.Validation() {
+		return perror.BadRequest
+	}
 	return nil
 }
 

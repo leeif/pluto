@@ -2,8 +2,10 @@ package middleware
 
 import (
 	"net/http"
+	"strings"
 
 	"github.com/leeif/pluto/config"
+	perror "github.com/leeif/pluto/datatype/pluto_error"
 	"github.com/leeif/pluto/log"
 	"github.com/urfave/negroni"
 )
@@ -47,4 +49,18 @@ func NewMiddle(logger *log.PlutoLog, config *config.Config) *Middleware {
 		Logger: logger.With("componment", "middleware"),
 		Config: config,
 	}
+}
+
+func getAuthorizationHeader(r *http.Request) (string, *perror.PlutoError) {
+	auth := strings.Fields(r.Header.Get("Authorization"))
+
+	if len(auth) != 2 {
+		return "", perror.Unauthorized
+	}
+
+	if strings.ToLower(auth[0]) != "jwt" && strings.ToLower(auth[0]) != "bearer" {
+		return "", perror.Unauthorized
+	}
+
+	return auth[1], nil
 }

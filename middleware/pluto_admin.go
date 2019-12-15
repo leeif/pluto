@@ -3,7 +3,6 @@ package middleware
 import (
 	"encoding/json"
 	"net/http"
-	"strings"
 	"time"
 
 	"github.com/leeif/pluto/utils/general"
@@ -18,15 +17,15 @@ import (
 
 func PlutoAdmin() negroni.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request, next http.HandlerFunc) {
-		auth := strings.Fields(r.Header.Get("Authorization"))
+		accessToken, perr := getAuthorizationHeader(r)
 
-		if len(auth) < 2 && strings.ToLower(auth[0]) != "jwt" {
-			context.Set(r, "pluto_error", perror.Forbidden)
+		if perr != nil {
+			context.Set(r, "pluto_error", perr)
 			next(w, r)
 			return
 		}
 
-		jwtToken, perr := jwt.VerifyJWT(auth[1])
+		jwtToken, perr := jwt.VerifyJWT(accessToken)
 		if perr != nil {
 			context.Set(r, "pluto_error", perr)
 			next(w, r)

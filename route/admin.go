@@ -369,14 +369,20 @@ func (router *Router) FindUser(w http.ResponseWriter, r *http.Request, next http
 		return
 	}
 
-	res, err := router.manager.FindUser(fu)
+	founds, err := router.manager.FindUser(fu)
 	if err != nil {
 		context.Set(r, "pluto_error", err)
 		responseError(err, w)
 		next(w, r)
 		return
 	}
-	if err := responseOK(res.Format(), w); err != nil {
+	users := make([]map[string]interface{}, 0)
+	for _, found := range founds {
+		users = append(users, found.Format())
+	}
+	res := make(map[string]interface{})
+	res["users"] = users
+	if err := responseOK(res, w); err != nil {
 		router.logger.Error(err.Error())
 	}
 }

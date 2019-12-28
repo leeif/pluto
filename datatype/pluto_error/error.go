@@ -2,6 +2,7 @@ package pluto_error
 
 import (
 	"errors"
+	"fmt"
 )
 
 type PlutoError struct {
@@ -12,16 +13,8 @@ type PlutoError struct {
 }
 
 func (pe *PlutoError) Wrapper(err error) *PlutoError {
-	str := ""
-	if pe.LogError != nil {
-		str += pe.LogError.Error() + "\n"
-	}
-	if err != nil {
-		str += err.Error() + "\n"
-	}
-	newPE := PlutoError(*pe)
-	newPE.LogError = errors.New(str)
-	return &newPE
+	pe.LogError = fmt.Errorf("%s\n%w", err.Error(), pe.LogError)
+	return pe
 }
 
 func NewPlutoError(httpCode int, plutoCode int, httpError string, logError error) *PlutoError {

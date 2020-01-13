@@ -2,6 +2,7 @@
 
 [![Build Status](https://travis-ci.org/leeif/pluto.svg?branch=master)](https://travis-ci.org/leeif/pluto)
 [![Go Report Card](https://goreportcard.com/badge/github.com/leeif/pluto)](https://goreportcard.com/report/github.com/leeif/pluto)
+[![Gitter](https://badges.gitter.im/pluto-discuss/community.svg)](https://gitter.im/pluto-discuss/community?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge)
 
 Pluto is a JWT based authorization/authentication service. Pluto is designed for the use case like microservices so you can use Pluto as an auth service for your own apps or services.
 

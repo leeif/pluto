@@ -15,14 +15,14 @@ func (auth *OAuth2Authorize) Validation() bool {
 	return true
 }
 
-type OAuth2AccessToken struct {
+type OAuth2Tokens struct {
 	GrantType   string `json:"grant_type"`
 	Code        string `json:"code"`
 	RedirectURI string `json:"redirect_uri"`
 	ClientID    string `json:"client_id"`
 }
 
-func (token *OAuth2AccessToken) Validation() bool {
+func (token *OAuth2Tokens) Validation() bool {
 	if token.Code == "" || token.GrantType == "" || token.RedirectURI == "" || token.ClientID == "" {
 		return false
 	}

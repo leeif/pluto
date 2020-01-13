@@ -265,21 +265,21 @@ func (r *Router) registerOauth2Routes() {
 			description: "request access token",
 			method:      "POST",
 			middle:      r.mw.NoAuthMiddleware,
-			handler:     r.Oauth2Tokens,
+			handler:     r.OAuth2Tokens,
 		},
 		{
 			path:        "/authorize",
 			description: "authorize page",
 			method:      "GET",
 			middle:      r.mw.NoAuthMiddleware,
-			handler:     r.Oauth2Authorize,
+			handler:     r.OAuth2Authorize,
 		},
 		{
 			path:        "/login",
 			description: "login for oauth2",
 			method:      "GET",
 			middle:      r.mw.NoAuthMiddleware,
-			handler:     r.Oauth2Login,
+			handler:     r.OAuth2Login,
 		},
 	}
 	r.registerRoutes(routes, "/oauth2")

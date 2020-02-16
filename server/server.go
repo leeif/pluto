@@ -2,7 +2,8 @@ package server
 
 import (
 	"context"
-	"net/http"
+	"github.com/micro/go-micro/server"
+	"time"
 
 	"github.com/gorilla/mux"
 	"github.com/rs/cors"
@@ -10,6 +11,10 @@ import (
 
 	"github.com/leeif/pluto/config"
 	"github.com/leeif/pluto/log"
+	"github.com/micro/go-plugins/registry/consul"
+	httpServer "github.com/micro/go-plugins/server/http"
+
+	"github.com/micro/go-micro"
 )
 
 type Server struct {
@@ -23,25 +28,38 @@ func NewMux(lc fx.Lifecycle, config *config.Config, logger *log.PlutoLog) *mux.R
 		AllowedHeaders: config.Cors.AllowedHeaders,
 	})
 	handler := c.Handler(router)
-	srv := &http.Server{
-		Addr:    address,
-		Handler: handler,
-	}
+
+	// microservices
+	registry := consul.NewRegistry()
+	srv := httpServer.NewServer(
+		server.Name("pluto"),
+		server.Address(address),
+	)
+	hd := srv.NewHandler(handler)
+	srv.Handle(hd)
+	ctx, cancel := context.WithCancel(context.Background())
+	service := micro.NewService(
+		micro.Server(srv),
+		micro.Name("pluto"),
+		micro.Registry(registry),
+		micro.Context(ctx),
+	)
 	lc.Append(fx.Hook{
 		// To mitigate the impact of deadlocks in application startup and
 		// shutdown, Fx imposes a time limit on OnStart and OnStop hooks. By
 		// default, hooks have a total of 30 seconds to complete. Timeouts are
 		// passed via Go's usual context.Context.
-		OnStart: func(context.Context) error {
+		OnStart: func(ctx context.Context) error {
 			logger.Info("Starting Pluto server at " + address)
-			// In production, we'd want to separate the Listen and Serve phases for
-			// better error-handling.
-			go srv.ListenAndServe()
+			go service.Run()
 			return nil
 		},
 		OnStop: func(ctx context.Context) error {
 			logger.Info("Stopping Pluto server")
-			return srv.Shutdown(ctx)
+			cancel()
+			// wait for consul deregister
+			time.Sleep(5*time.Second)
+			return nil
 		},
 	})
 	return router

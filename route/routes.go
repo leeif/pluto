@@ -7,6 +7,7 @@ import (
 	"github.com/leeif/pluto/middleware"
 
 	"github.com/gorilla/mux"
+	perror "github.com/leeif/pluto/datatype/pluto_error"
 	"github.com/leeif/pluto/log"
 	"github.com/leeif/pluto/manage"
 
@@ -20,7 +21,7 @@ type PlutoRoute struct {
 	description string
 	method      string
 	middle      middle
-	handler     negroni.HandlerFunc
+	handler     func(w http.ResponseWriter, r *http.Request) *perror.PlutoError
 }
 
 type Router struct {
@@ -118,7 +119,7 @@ func (r *Router) registerAPIRoutes() {
 			handler:     r.publicKey,
 		},
 	}
-	r.registerRoutes(routes, "/api")
+	r.registerRoutes(routes, "/api", false)
 }
 
 func (r *Router) registerWebRoutes() {
@@ -145,7 +146,7 @@ func (r *Router) registerWebRoutes() {
 			handler:     r.resetPassword,
 		},
 	}
-	r.registerRoutes(routes, "/")
+	r.registerRoutes(routes, "/", true)
 }
 
 func (r *Router) registerHealthRoutes() {
@@ -158,7 +159,7 @@ func (r *Router) registerHealthRoutes() {
 			handler:     r.healthCheck,
 		},
 	}
-	r.registerRoutes(routes, "/")
+	r.registerRoutes(routes, "/", false)
 }
 
 func (r *Router) registerAdminRoutes() {
@@ -255,7 +256,7 @@ func (r *Router) registerAdminRoutes() {
 			handler:     r.SetUserRole,
 		},
 	}
-	r.registerRoutes(routes, "/api")
+	r.registerRoutes(routes, "/api", false)
 }
 
 func (r *Router) registerOauth2Routes() {
@@ -282,22 +283,26 @@ func (r *Router) registerOauth2Routes() {
 			handler:     r.OAuth2Login,
 		},
 	}
-	r.registerRoutes(routes, "/oauth2")
+	r.registerRoutes(routes, "/oauth2", false)
 }
 
-func (router *Router) registerRoutes(routes []PlutoRoute, prefix string) {
+func (router *Router) registerRoutes(routes []PlutoRoute, prefix string, isWeb bool) {
 	sub := router.mux.PathPrefix(prefix).Subrouter()
 	for _, r := range routes {
 		// options method for cors
-		sub.Handle(r.path, r.middle(r.handler)).Methods(r.method)
+		if isWeb {
+			sub.Handle(r.path, r.middle(router.plutoWebHandlerWrapper(r.handler))).Methods(r.method)
+		} else {
+			sub.Handle(r.path, r.middle(router.plutoHandlerWrapper(r.handler))).Methods(r.method)
+		}
 	}
 }
 
-func (r *Router) Register() {
-	r.registerAPIRoutes()
-	r.registerWebRoutes()
-	r.registerHealthRoutes()
-	r.registerAdminRoutes()
+func (router *Router) Register() {
+	router.registerAPIRoutes()
+	router.registerWebRoutes()
+	router.registerHealthRoutes()
+	router.registerAdminRoutes()
 }
 
 func NewRouter(mux *mux.Router, manager *manage.Manager, config *config.Config, logger *log.PlutoLog) *Router {

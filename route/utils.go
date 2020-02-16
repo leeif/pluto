@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"github.com/urfave/negroni"
 	"io/ioutil"
 	"net/http"
 	"strings"
@@ -164,4 +165,38 @@ func responseHTMLError(file string, data interface{}, w http.ResponseWriter, sta
 		return err
 	}
 	return nil
+}
+
+func (router *Router) plutoHandlerWrapper(handler func(http.ResponseWriter, *http.Request) *perror.PlutoError) negroni.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request, next http.HandlerFunc) {
+		if err := handler(w, r); err != nil {
+			responseError(err, w)
+			router.plutoLog(err, r)
+			return
+		}
+
+		next(w, r)
+	}
+}
+
+func (router *Router) plutoWebHandlerWrapper(handler func(http.ResponseWriter, *http.Request) *perror.PlutoError) negroni.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request, next http.HandlerFunc) {
+		if err := handler(w, r); err != nil {
+			responseHTMLError("error.html", nil, w, http.StatusInternalServerError)
+			router.plutoLog(err, r)
+			return
+		}
+
+		next(w, r)
+	}
+}
+
+func (router *Router) plutoLog(pe *perror.PlutoError, r *http.Request) {
+	url := r.URL.String()
+	if pe.LogError != nil {
+		router.logger.Error(fmt.Sprintf("[%s]:%s", url, pe.LogError.Error()))
+	}
+	if pe.HTTPError != nil {
+		router.logger.Debug(fmt.Sprintf("[%s]:%s", url, pe.HTTPError.Error()))
+	}
 }

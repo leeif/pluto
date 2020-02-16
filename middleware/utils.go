@@ -1,6 +1,7 @@
 package middleware
 
 import (
+	"fmt"
 	"net/http"
 	"strings"
 
@@ -17,11 +18,10 @@ type Middleware struct {
 
 func (middleware *Middleware) AccessTokenAuthMiddleware(handlers ...negroni.HandlerFunc) http.Handler {
 	ng := negroni.New()
-	ng.UseFunc(AccessTokenAuth)
+	ng.UseFunc(AccessTokenAuth())
 	for _, handler := range handlers {
 		ng.UseFunc(handler)
 	}
-	ng.UseFunc(Logger(middleware.Logger))
 	return ng
 }
 
@@ -31,7 +31,6 @@ func (middleware *Middleware) AdminAuthMiddleware(handlers ...negroni.HandlerFun
 	for _, handler := range handlers {
 		ng.UseFunc(handler)
 	}
-	ng.UseFunc(Logger(middleware.Logger))
 	return ng
 }
 
@@ -40,7 +39,6 @@ func (middleware *Middleware) NoAuthMiddleware(handlers ...negroni.HandlerFunc) 
 	for _, handler := range handlers {
 		ng.UseFunc(handler)
 	}
-	ng.UseFunc(Logger(middleware.Logger))
 	return ng
 }
 
@@ -63,4 +61,25 @@ func getAuthorizationHeader(r *http.Request) (string, *perror.PlutoError) {
 	}
 
 	return auth[1], nil
+}
+
+func (middleware *Middleware) plutoHandlerWrapper(handler func(http.ResponseWriter, *http.Request) *perror.PlutoError) negroni.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request, next http.HandlerFunc) {
+		if err := handler(w, r); err != nil {
+			middleware.plutoLog(err, r)
+			return
+		}
+
+		next(w, r)
+	}
+}
+
+func (middleware *Middleware) plutoLog(pe *perror.PlutoError, r *http.Request) {
+	url := r.URL.String()
+	if pe.LogError != nil {
+		middleware.Logger.Error(fmt.Sprintf("[%s]:%s", url, pe.LogError.Error()))
+	}
+	if pe.HTTPError != nil {
+		middleware.Logger.Debug(fmt.Sprintf("[%s]:%s", url, pe.HTTPError.Error()))
+	}
 }

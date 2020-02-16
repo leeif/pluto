@@ -1,31 +1,23 @@
 package route
 
 import (
+	perror "github.com/leeif/pluto/datatype/pluto_error"
 	"net/http"
 
 	"github.com/leeif/pluto/datatype/request"
 	"github.com/leeif/pluto/utils/mail"
-
-	"github.com/gorilla/context"
 )
 
-func (router *Router) register(w http.ResponseWriter, r *http.Request, next http.HandlerFunc) {
+func (router *Router) register(w http.ResponseWriter, r *http.Request) *perror.PlutoError {
 	register := request.MailRegister{}
 
 	if err := getBody(r, &register); err != nil {
-		context.Set(r, "pluto_error", err)
-		next(w, r)
-		responseError(err, w)
-		return
+		return err
 	}
 
 	user, err := router.manager.RegisterWithEmail(register)
 	if err != nil {
-		// set err to context for log
-		context.Set(r, "pluto_error", err)
-		next(w, r)
-		responseError(err, w)
-		return
+		return err
 	}
 
 	respBody := make(map[string]interface{})
@@ -45,26 +37,21 @@ func (router *Router) register(w http.ResponseWriter, r *http.Request, next http
 		}
 	}()
 	responseOK(respBody, w)
+
+	return nil
 }
 
-func (router *Router) verifyMail(w http.ResponseWriter, r *http.Request, next http.HandlerFunc) {
+func (router *Router) verifyMail(w http.ResponseWriter, r *http.Request) *perror.PlutoError {
 	rvm := request.RegisterVerifyMail{}
 
 	if perr := getBody(r, &rvm); perr != nil {
-		context.Set(r, "pluto_error", perr)
-		responseError(perr, w)
-		next(w, r)
-		return
+		return perr
 	}
 
 	user, perr := router.manager.RegisterVerifyMail(rvm)
 
 	if perr != nil {
-		// set err to context for log
-		context.Set(r, "pluto_error", perr)
-		responseError(perr, w)
-		next(w, r)
-		return
+		return perr
 	}
 
 	go func() {
@@ -76,5 +63,8 @@ func (router *Router) verifyMail(w http.ResponseWriter, r *http.Request, next ht
 			router.logger.Error(err.LogError.Error())
 		}
 	}()
+
 	responseOK(nil, w)
+
+	return nil
 }

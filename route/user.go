@@ -1,31 +1,24 @@
 package route
 
 import (
+	perror "github.com/leeif/pluto/datatype/pluto_error"
 	"net/http"
 
 	"github.com/leeif/pluto/utils/mail"
 
 	"github.com/leeif/pluto/datatype/request"
-
-	"github.com/gorilla/context"
 )
 
-func (router *Router) passwordResetMail(w http.ResponseWriter, r *http.Request, next http.HandlerFunc) {
+func (router *Router) passwordResetMail(w http.ResponseWriter, r *http.Request) *perror.PlutoError {
 	rpm := request.ResetPasswordMail{}
 
 	if err := getBody(r, &rpm); err != nil {
-		context.Set(r, "pluto_error", err)
-		responseError(err, w)
-		next(w, r)
-		return
+		return err
 	}
 
 	user, err := router.manager.ResetPasswordMail(rpm)
 	if err != nil {
-		context.Set(r, "pluto_error", err)
-		responseError(err, w)
-		next(w, r)
-		return
+		return err
 	}
 
 	go func() {
@@ -40,58 +33,45 @@ func (router *Router) passwordResetMail(w http.ResponseWriter, r *http.Request, 
 	}()
 
 	responseOK(nil, w)
+
+	return nil
 }
 
-func (router *Router) userInfo(w http.ResponseWriter, r *http.Request, next http.HandlerFunc) {
+func (router *Router) userInfo(w http.ResponseWriter, r *http.Request) *perror.PlutoError {
 	payload, perr := getAccessPayload(r)
 	if perr != nil {
-		// set err to context for log
-		context.Set(r, "pluto_error", perr)
-		responseError(perr, w)
-		next(w, r)
-		return
+		return perr
 	}
 
 	res, perr := router.manager.UserInfo(payload)
 
 	if perr != nil {
-		// set err to context for log
-		context.Set(r, "pluto_error", perr)
-		responseError(perr, w)
-		next(w, r)
-		return
+		return perr
 	}
 
 	responseOK(res.Format(), w)
+
+	return nil
 }
 
-func (router *Router) updateUserInfo(w http.ResponseWriter, r *http.Request, next http.HandlerFunc) {
+func (router *Router) updateUserInfo(w http.ResponseWriter, r *http.Request) *perror.PlutoError {
 	payload, perr := getAccessPayload(r)
 	if perr != nil {
-		// set err to context for log
-		context.Set(r, "pluto_error", perr)
-		responseError(perr, w)
-		next(w, r)
-		return
+		return perr
 	}
 
 	uui := request.UpdateUserInfo{}
 	if err := getBody(r, &uui); err != nil {
-		context.Set(r, "pluto_error", err)
-		responseError(err, w)
-		next(w, r)
-		return
+		return perr
 	}
 
 	err := router.manager.UpdateUserInfo(payload, uui)
 
 	if err != nil {
-		// set err to context for log
-		context.Set(r, "pluto_error", err)
-		responseError(err, w)
-		next(w, r)
-		return
+		return err
 	}
 
 	responseOK(nil, w)
+
+	return nil
 }

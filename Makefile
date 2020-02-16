@@ -38,14 +38,7 @@ update-changelog:
 unit-test:
 	GO111MODULE=on go test -v ./...
 
-integration-test:
-	docker-compose -f integration/docker/docker-compose.yml down || true
-	docker-compose -f integration/docker/docker-compose.yml up --build -d
-	GO111MODULE=on go run integration/main.go
-	docker-compose -f integration/docker/docker-compose.yml down
-	docker rmi $(shell docker images --filter dangling=true -q 2>/dev/null) 2>/dev/null || true
-
-test: unit-test integration-test
+test: unit-test
 
 run-server:
 	go run cmd/pluto-server/main.go

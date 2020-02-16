@@ -3,18 +3,15 @@ package route
 import (
 	"net/http"
 
-	"github.com/gorilla/context"
+	perror "github.com/leeif/pluto/datatype/pluto_error"
 	"github.com/leeif/pluto/datatype/request"
 )
 
-func (router *Router) OAuth2Tokens(w http.ResponseWriter, r *http.Request, next http.HandlerFunc) {
+func (router *Router) OAuth2Tokens(w http.ResponseWriter, r *http.Request) *perror.PlutoError {
 	tokens := &request.OAuth2Tokens{}
 
 	if err := getBody(r, tokens); err != nil {
-		context.Set(r, "pluto_error", err)
-		next(w, r)
-		responseError(err, w)
-		return
+		return err
 	}
 
 	grantTypes := map[string]func(*request.OAuth2Tokens){
@@ -26,20 +23,20 @@ func (router *Router) OAuth2Tokens(w http.ResponseWriter, r *http.Request, next 
 
 	grantHandler, ok := grantTypes[tokens.GrantType]
 	if !ok {
-		return
+		// TODO
+		return nil
 	}
 
 	grantHandler(tokens)
+
+	return nil
 }
 
-func (router *Router) OAuth2Authorize(w http.ResponseWriter, r *http.Request, next http.HandlerFunc) {
+func (router *Router) OAuth2Authorize(w http.ResponseWriter, r *http.Request) *perror.PlutoError {
 	authorize := &request.OAuth2Authorize{}
 
 	if err := getBody(r, authorize); err != nil {
-		context.Set(r, "pluto_error", err)
-		next(w, r)
-		responseError(err, w)
-		return
+		return nil
 	}
 
 	if authorize.ResponseType == "code" {
@@ -47,8 +44,10 @@ func (router *Router) OAuth2Authorize(w http.ResponseWriter, r *http.Request, ne
 	} else if authorize.ResponseType == "token" {
 		router.manager.GrantAccessToken(authorize)
 	}
+
+	return nil
 }
 
-func (router *Router) OAuth2Login(w http.ResponseWriter, r *http.Request, next http.HandlerFunc) {
-
+func (router *Router) OAuth2Login(w http.ResponseWriter, r *http.Request) *perror.PlutoError {
+	return nil
 }

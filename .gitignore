@@ -7,6 +7,7 @@ integration/docker/pluto.log
 integration/docker/id_rsa*
 .vscode
 env
+.idea/
 bin/
 sqlboiler.toml
 *.p8

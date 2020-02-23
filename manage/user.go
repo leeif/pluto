@@ -5,7 +5,6 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-	"net/url"
 	"strings"
 	"time"
 
@@ -25,6 +24,7 @@ import (
 
 	"github.com/leeif/pluto/datatype/request"
 	"github.com/leeif/pluto/utils/jwt"
+	"github.com/leeif/pluto/utils/general"
 )
 
 func (m *Manager) ResetPasswordMail(rpm request.ResetPasswordMail) (*models.User, *perror.PlutoError) {
@@ -245,7 +245,7 @@ func (m *Manager) UpdateUserInfo(accessPayload *jwt.AccessPayload, uui request.U
 		return perror.ServerError.Wrapper(err)
 	}
 
-	if uui.Avatar != "" && m.isValidURL(uui.Avatar) {
+	if uui.Avatar != "" && general.IsValidURL(uui.Avatar) {
 		user.Avatar.SetValid(uui.Avatar)
 	} else if uui.Avatar != "" && m.isValidBase64(uui.Avatar) {
 		ag := avatar.AvatarGen{}
@@ -274,11 +274,6 @@ func (m *Manager) UpdateUserInfo(accessPayload *jwt.AccessPayload, uui request.U
 	tx.Commit()
 
 	return nil
-}
-
-func (m *Manager) isValidURL(toTest string) bool {
-	u, err := url.Parse(toTest)
-	return err == nil && u.Scheme != "" && u.Host != ""
 }
 
 func (m *Manager) isValidBase64(toTest string) bool {

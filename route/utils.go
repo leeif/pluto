@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"github.com/leeif/pluto/utils/general"
 	"io/ioutil"
 	"net/http"
 	"strings"
@@ -25,7 +26,16 @@ func getBaseURL(r *http.Request) string {
 	if r.TLS != nil {
 		scheme = "https"
 	}
-	return fmt.Sprintf("%s://%s", scheme, r.Host)
+
+	gateway := r.Header.Get("X-Api-Gateway")
+
+	host := r.Host
+	if gateway != "" && general.IsValidURL(gateway) {
+		host = gateway
+	}
+
+
+	return fmt.Sprintf("%s://%s", scheme, host)
 }
 
 func getBody(r *http.Request, reciver interface{}) *perror.PlutoError {

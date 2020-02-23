@@ -2,7 +2,6 @@ package manage
 
 import (
 	"database/sql"
-
 	"github.com/volatiletech/sqlboiler/boil"
 
 	"github.com/leeif/pluto/config"

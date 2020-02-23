@@ -39,11 +39,26 @@ func (router *Router) OAuth2Authorize(w http.ResponseWriter, r *http.Request) *p
 		return nil
 	}
 
-	if authorize.ResponseType == "code" {
-		router.manager.GrantAuthorizationCode(authorize)
-	} else if authorize.ResponseType == "token" {
-		router.manager.GrantAccessToken(authorize)
+	if authorize.RedirectURI == "" {
+
 	}
+
+	if authorize.ResponseType == "code" {
+		// Create a new authorization code
+		query, err := router.manager.GrantAuthorizationCode(authorize)
+		if err != nil {
+			return err
+		}
+		redirectWithQueryString(authorize.RedirectURI, query.Query(), w, r)
+	} else if authorize.ResponseType == "token" {
+		// When response_type == "token", we will directly grant an access token
+		query, err := router.manager.GrantAccessToken(authorize)
+		if err != nil {
+			return err
+		}
+		redirectWithFragment(authorize.RedirectURI, query.Query(), w, r)
+	}
+
 
 	return nil
 }

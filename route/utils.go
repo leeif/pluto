@@ -31,7 +31,7 @@ func getBaseURL(r *http.Request) string {
 
 	host := r.Host
 	if gateway != "" && general.IsValidURL(gateway) {
-		host = gateway
+		return fmt.Sprintf("%s", gateway)
 	}
 
 

@@ -28,6 +28,8 @@ COPY --from=build /go/src/github.com/leeif/pluto/pluto-migrate /usr/bin/
 
 COPY --from=build /go/src/github.com/leeif/pluto/views views/
 
+COPY --from=build /go/src/github.com/leeif/pluto/entrypoint.sh /
+
 CMD /usr/bin/pluto-migrate --config.file=$ConfigFile
 
-ENTRYPOINT exec /usr/bin/pluto-server --config.file=$ConfigFile
+ENTRYPOINT ["/entrypoint.sh"]

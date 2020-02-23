@@ -49,11 +49,15 @@ func (router *Router) resetPasswordPage(w http.ResponseWriter, r *http.Request, 
 	token := vars["token"]
 
 	type Data struct {
-		Error *perror.PlutoError
-		Token string
+		Error   *perror.PlutoError
+		BaseURL string
+		Token   string
 	}
 
-	data := &Data{Token: token}
+	data := &Data{
+		Token:   token,
+		BaseURL: getBaseURL(r),
+	}
 	if err := router.manager.ResetPasswordPage(token); err != nil {
 		context.Set(r, "pluto_error", err)
 		next(w, r)

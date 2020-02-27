@@ -19,17 +19,10 @@ RUN wget https://github.com/jwilder/dockerize/releases/download/$DOCKERIZE_VERSI
     && tar -C /usr/local/bin -xzvf dockerize-linux-amd64-$DOCKERIZE_VERSION.tar.gz \
     && rm dockerize-linux-amd64-$DOCKERIZE_VERSION.tar.gz
 
-ENV ConfigFile /etc/pluto/config.json
-ENV AutoMigration true
-
 COPY --from=build /go/src/github.com/leeif/pluto/pluto-server /usr/bin/
 
 COPY --from=build /go/src/github.com/leeif/pluto/pluto-migrate /usr/bin/
 
 COPY --from=build /go/src/github.com/leeif/pluto/views views/
 
-COPY --from=build /go/src/github.com/leeif/pluto/entrypoint.sh /
-
-RUN chmod +x /entrypoint.sh
-
-ENTRYPOINT ["/entrypoint.sh"]
+ENTRYPOINT ["/usr/bin/pluto-server"]

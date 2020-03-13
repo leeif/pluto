@@ -25,6 +25,4 @@ COPY --from=build /go/src/github.com/leeif/pluto/pluto-migrate /usr/bin/
 
 COPY --from=build /go/src/github.com/leeif/pluto/views views/
 
-COPY --from=build /go/src/github.com/leeif/pluto/entrypoint.sh /
-
 ENTRYPOINT ["/usr/bin/pluto-server"]

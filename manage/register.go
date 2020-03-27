@@ -119,7 +119,7 @@ func (m *Manager) RegisterVerify(token string) *perror.PlutoError {
 	}
 
 	if verifyPayload.Type != jwt.REGISTERVERIFY {
-		return perror.InvalidJWTToekn
+		return perror.InvalidJWTToken
 	}
 
 	// expire

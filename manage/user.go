@@ -52,7 +52,7 @@ func (m *Manager) ResetPasswordPage(token string) *perror.PlutoError {
 	json.Unmarshal(jwtToken.Payload, &prp)
 
 	if prp.Type != jwt.PASSWORDRESET {
-		return perror.InvalidJWTToekn
+		return perror.InvalidJWTToken
 	}
 
 	if time.Now().Unix() > prp.Expire {
@@ -69,7 +69,7 @@ func (m *Manager) ResetPasswordPage(token string) *perror.PlutoError {
 
 	// user is updated after password reset token is created
 	if user.UpdatedAt.Valid && user.UpdatedAt.Time.Unix() > prp.Create {
-		return perror.InvalidJWTToekn
+		return perror.InvalidJWTToken
 	}
 
 	return nil
@@ -86,7 +86,7 @@ func (m *Manager) ResetPassword(token string, rp request.ResetPasswordWeb) *perr
 	json.Unmarshal(jwtToken.Payload, &prp)
 
 	if prp.Type != jwt.PASSWORDRESET {
-		return perror.InvalidJWTToekn
+		return perror.InvalidJWTToken
 	}
 
 	if time.Now().Unix() > prp.Expire {
@@ -113,7 +113,7 @@ func (m *Manager) ResetPassword(token string, rp request.ResetPasswordWeb) *perr
 
 	// user is updated after password reset token is created
 	if user.UpdatedAt.Valid && user.UpdatedAt.Time.Unix() > prp.Create {
-		return perror.InvalidJWTToekn
+		return perror.InvalidJWTToken
 	}
 
 	salt, err := models.Salts(qm.Where("user_id = ?", user.ID)).One(tx)
@@ -225,7 +225,7 @@ func (m *Manager) UpdateUserInfo(accessPayload *jwt.AccessPayload, uui request.U
 
 	// only user using mail login can be update
 	if accessPayload.LoginType != MAILLOGIN {
-		return perror.InvalidJWTToekn
+		return perror.InvalidJWTToken
 	}
 
 	tx, err := m.db.Begin()
@@ -274,6 +274,40 @@ func (m *Manager) UpdateUserInfo(accessPayload *jwt.AccessPayload, uui request.U
 	tx.Commit()
 
 	return nil
+}
+
+func (m *Manager) VerifyAccessToken(accessToken string) (*jwt.AccessPayload, *perror.PlutoError) {
+	tx, err := m.db.Begin()
+
+	if err != nil {
+		return nil, perror.ServerError.Wrapper(err)
+	}
+
+	defer func() {
+		tx.Rollback()
+	}()
+
+	jwtToken, perr := jwt.VerifyJWT(accessToken)
+
+	if perr != nil {
+		return nil, perror.InvalidJWTToken
+	}
+
+	accessPayload := &jwt.AccessPayload{}
+
+	if err := json.Unmarshal(jwtToken.Payload, &accessPayload); err != nil {
+		return nil, perror.ServerError.Wrapper(err)
+	}
+
+	if accessPayload.Type != jwt.ACCESS {
+		return nil, perror.InvalidAccessToken
+	}
+
+	if time.Now().Unix() > accessPayload.Expire {
+		return nil, perror.JWTTokenExpired
+	}
+
+	return accessPayload, nil
 }
 
 func (m *Manager) isValidURL(toTest string) bool {

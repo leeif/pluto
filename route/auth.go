@@ -43,3 +43,22 @@ func (router *Router) publicKey(w http.ResponseWriter, r *http.Request) *perror.
 
 	return nil
 }
+
+func (router *Router) verifyAccessToken(w http.ResponseWriter, r *http.Request) *perror.PlutoError {
+	accessToken := &request.VerifyAccessToken{}
+	if err := getBody(r, &accessToken); err != nil {
+		return err
+	}
+
+	res, err := router.manager.VerifyAccessToken(accessToken.Token)
+
+	if err != nil {
+		return err
+	}
+
+	if err := responseOK(res, w); err != nil {
+		router.logger.Error(err.Error())
+	}
+
+	return nil
+}

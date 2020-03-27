@@ -15,13 +15,13 @@ var (
 
 	InvalidPassword      = NewPlutoError(http.StatusForbidden, 3001, "Invalid Password", nil)
 	InvalidRefreshToken  = NewPlutoError(http.StatusForbidden, 3002, "Invalid Refresh Token", nil)
-	InvalidJWTToekn      = NewPlutoError(http.StatusForbidden, 3003, "Invalid JWT Token", nil)
+	InvalidJWTToken      = NewPlutoError(http.StatusForbidden, 3003, "Invalid JWT Token", nil)
 	InvalidGoogleIDToken = NewPlutoError(http.StatusForbidden, 3004, "Invalid Google ID Token", nil)
 	InvalidWechatCode    = NewPlutoError(http.StatusForbidden, 3005, "Invalid Wechat Code", nil)
 	InvalidAvatarFormat  = NewPlutoError(http.StatusBadRequest, 3006, "Invalid Avatar Format", nil)
 	InvalidAppleIDToken  = NewPlutoError(http.StatusForbidden, 3007, "Invalid Apple ID Token", nil)
-
-	JWTTokenExpired = NewPlutoError(http.StatusForbidden, 3008, "JWT Token Expired", nil)
+	JWTTokenExpired      = NewPlutoError(http.StatusForbidden, 3008, "JWT Token Expired", nil)
+	InvalidAccessToken   = NewPlutoError(http.StatusForbidden, 3009, "Invalid Access Token", nil)
 
 	ScopeExists         = NewPlutoError(http.StatusForbidden, 4001, "Scope already exists", nil)
 	ScopeNotExist       = NewPlutoError(http.StatusForbidden, 4002, "Scope not exist", nil)

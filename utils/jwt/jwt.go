@@ -73,6 +73,29 @@ func NewAccessPayload(userID uint, scopes []string, appID, loginType string, exp
 	return up
 }
 
+type IDTokenPayload struct {
+	Payload
+	UserID uint   `json:"sub"`
+	AppID  string `json:"iss"`
+	Role   string `json:"role"`
+	Name   string `json:"name"`
+	Mail   string `json:"mail"`
+}
+
+func NewIDTokenPayload(userID uint, role, name, mail, appID string, expire int64) *IDTokenPayload {
+	idToken := &IDTokenPayload{}
+	idToken.UserID = userID
+	idToken.AppID = appID
+	idToken.Role = role
+	idToken.Name = name
+	idToken.Mail = mail
+
+	idToken.Payload.Type = ACCESS
+	idToken.Payload.Create = time.Now().Unix()
+	idToken.Payload.Expire = time.Now().Unix() + expire
+	return idToken
+}
+
 type RegisterVerifyPayload struct {
 	Payload
 	UserID uint `json:"sub"`

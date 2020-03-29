@@ -67,13 +67,14 @@ func getRoleScopes(role *models.RbacRole, db boil.Executor) (*models.RbacScope, 
 }
 
 func getUserScopes(userID uint, appID string, db boil.Executor) ([]string, *perror.PlutoError) {
+	res := make([]string, 0)
 	role, err := getUserRole(userID, appID, db)
 	if err != nil {
 		return nil, err
 	}
 
 	if role == nil {
-		return nil, nil
+		return res, nil
 	}
 
 	scope, err := getRoleScopes(role, db)
@@ -83,10 +84,12 @@ func getUserScopes(userID uint, appID string, db boil.Executor) ([]string, *perr
 	}
 
 	if scope == nil {
-		return []string{}, nil
+		return res, nil
 	}
 
-	return []string{scope.Name}, nil
+	res = append(res, scope.Name)
+
+	return res, nil
 }
 
 type Manager struct {

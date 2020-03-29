@@ -2,6 +2,7 @@ package manage
 
 import (
 	"database/sql"
+
 	"github.com/volatiletech/sqlboiler/boil"
 
 	"github.com/leeif/pluto/config"
@@ -56,21 +57,24 @@ func getRoleScopes(role *models.RbacRole, db boil.Executor) (*models.RbacScope, 
 	}
 
 	scope, err := models.RbacScopes(qm.Where("id = ?", role.DefaultScope.Uint)).One(db)
-	if err != nil {
+	if err != nil && err != sql.ErrNoRows {
 		return nil, perror.ServerError.Wrapper(err)
+	} else if err == sql.ErrNoRows {
+		return nil, nil
 	}
 
 	return scope, nil
 }
 
 func getUserScopes(userID uint, appID string, db boil.Executor) ([]string, *perror.PlutoError) {
+	res := make([]string, 0)
 	role, err := getUserRole(userID, appID, db)
 	if err != nil {
 		return nil, err
 	}
 
 	if role == nil {
-		return nil, nil
+		return res, nil
 	}
 
 	scope, err := getRoleScopes(role, db)
@@ -80,10 +84,12 @@ func getUserScopes(userID uint, appID string, db boil.Executor) ([]string, *perr
 	}
 
 	if scope == nil {
-		return nil, nil
+		return res, nil
 	}
 
-	return []string{scope.Name}, nil
+	res = append(res, scope.Name)
+
+	return res, nil
 }
 
 type Manager struct {

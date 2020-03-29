@@ -76,7 +76,7 @@ type AppleMobileLogin struct {
 }
 
 func (aml *AppleMobileLogin) Validation() bool {
-	if aml.Code == "" {
+	if aml.Code == "" || aml.Name == "" {
 		return false
 	}
 
@@ -130,6 +130,30 @@ type UpdateUserInfo struct {
 
 func (uui *UpdateUserInfo) Validation() bool {
 	if uui.Name == "" && uui.Avatar == "" {
+		return false
+	}
+
+	return true
+}
+
+type VerifyAccessToken struct {
+	Token string `json:"token"`
+}
+
+func (vat *VerifyAccessToken) Validation() bool {
+	if vat.Token == "" {
+		return false
+	}
+
+	return true
+}
+
+type VerifyIDToken struct {
+	Token string `json:"token"`
+}
+
+func (vit *VerifyIDToken) Validation() bool {
+	if vit.Token == "" {
 		return false
 	}
 

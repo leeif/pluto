@@ -1,5 +1,30 @@
 # Installation
 
+## Setup Database for Pluto
+
+Pluto provides a database migration tool to create database tables.
+
+```
+git clone https://github.com/leeif/pluto.git
+cd pluto/
+make migrate-binary-build
+
+# set the database config in config.yaml
+./bin/pluto-migrate --config.file=config.yaml
+```
+
+## Installation from source
+
+Requirement: Go (> 1.13)
+
+Download the source file.
+```
+git clone https://github.com/leeif/pluto.git
+cd pluto/
+make server-binary-build
+./bin/pluto-server --config.file=config.yaml
+```
+
 ## Run Pluto with Docker image
 ```
 docker run -v ${PWD}/config.json:/etc/pluto/config.json --name pluto -d leeif/pluto:latest
@@ -52,21 +77,16 @@ spec:
 EOS | kubectl apply -f -
 ```
 
-## Installation from source
+## Setup Your First Application
 
-Requirement: Go (> 1.12)
+Pluto is an application-based auth system which means the admins can define the applications in Pluto and user can login to different applications to obtain the different permissions.
 
-Download the source file.
-```
-git clone https://github.com/leeif/pluto.git
-git checkout vx.x.x // switch to the version your want to install
-cd pluto/
-```
-Build the binary
-```
-make binary-build
-```
-The binary will be build into ./bin
-```
-./bin/pluto-server --config.file=config.yaml
-```
+Pluto provides a convenience way to handle these through an admin web page.
+
+### Start the admin web page
+
+### Login the admin web page
+
+### Create the Application
+
+### Create the Role and Scopes

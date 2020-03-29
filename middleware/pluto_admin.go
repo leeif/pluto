@@ -41,7 +41,7 @@ func PlutoAdmin() negroni.HandlerFunc {
 		}
 
 		if accessPayload.Type != jwt.ACCESS {
-			context.Set(r, "pluto_error", perror.InvalidJWTToekn)
+			context.Set(r, "pluto_error", perror.InvalidJWTToken)
 			next(w, r)
 			return
 		}

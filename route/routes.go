@@ -118,6 +118,13 @@ func (r *Router) registerAPIRoutes() {
 			middle:      r.mw.NoAuthMiddleware,
 			handler:     r.publicKey,
 		},
+		{
+			path:        "/auth/token/verify/access",
+			description: "verify access token",
+			method:      "POST",
+			middle:      r.mw.NoAuthMiddleware,
+			handler:     r.verifyAccessToken,
+		},
 	}
 	r.registerRoutes(routes, "/api", false)
 }

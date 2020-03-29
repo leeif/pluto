@@ -73,6 +73,29 @@ func NewAccessPayload(userID uint, scopes []string, appID, loginType string, exp
 	return up
 }
 
+type IDTokenPayload struct {
+	Payload
+	UserID uint   `json:"sub"`
+	AppID  string `json:"iss"`
+	Role   string `json:"role"`
+	Name   string `json:"name"`
+	Mail   string `json:"mail"`
+}
+
+func NewIDTokenPayload(userID uint, role, name, mail, appID string, expire int64) *IDTokenPayload {
+	idToken := &IDTokenPayload{}
+	idToken.UserID = userID
+	idToken.AppID = appID
+	idToken.Role = role
+	idToken.Name = name
+	idToken.Mail = mail
+
+	idToken.Payload.Type = ACCESS
+	idToken.Payload.Create = time.Now().Unix()
+	idToken.Payload.Expire = time.Now().Unix() + expire
+	return idToken
+}
+
 type RegisterVerifyPayload struct {
 	Payload
 	UserID uint `json:"sub"`
@@ -142,31 +165,31 @@ func VerifyJWT(token string) (*JWT, *perror.PlutoError) {
 	jwt := &JWT{}
 	parts := strings.Split(token, ".")
 	if len(parts) != 3 {
-		return nil, perror.InvalidJWTToekn
+		return nil, perror.InvalidJWTToken
 	}
 	head, err := b64.RawStdEncoding.DecodeString(parts[0])
 	if err != nil {
-		return nil, perror.InvalidJWTToekn
+		return nil, perror.InvalidJWTToken
 	}
 
 	jwt.Head = head
 
 	payload, err := b64.RawStdEncoding.DecodeString(parts[1])
 	if err != nil {
-		return nil, perror.InvalidJWTToekn
+		return nil, perror.InvalidJWTToken
 	}
 
 	jwt.Payload = payload
 
 	sign, err := b64.RawStdEncoding.DecodeString(parts[2])
 	if err != nil {
-		return nil, perror.InvalidJWTToekn
+		return nil, perror.InvalidJWTToken
 	}
 
 	jwt.Sign = sign
 
 	if err := rsa.VerifySignWithPublicKey(append(head, payload...), sign, crypto.SHA256); err != nil {
-		return nil, perror.InvalidJWTToekn
+		return nil, perror.InvalidJWTToken
 	}
 	return jwt, nil
 }
@@ -174,7 +197,7 @@ func VerifyJWT(token string) (*JWT, *perror.PlutoError) {
 func VerifyB64JWT(b64JWTToken string) (*JWT, *perror.PlutoError) {
 	b, err := b64.RawStdEncoding.DecodeString(b64JWTToken)
 	if err != nil {
-		return nil, perror.InvalidJWTToekn
+		return nil, perror.InvalidJWTToken
 	}
 	jwt, perr := VerifyJWT(string(b))
 	if perr != nil {

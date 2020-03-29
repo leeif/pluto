@@ -5,7 +5,7 @@ docker-build:
 	docker tag leeif/pluto:latest leeif/pluto:$(VERSION)
 
 docker-build-staging:
-	docker build -t leeif/pluto:staging .
+	docker build --build-arg VERSION=staging -t leeif/pluto:staging .
 
 docker-push:
 	docker push leeif/pluto:latest
@@ -13,9 +13,6 @@ docker-push:
 
 docker-push-staging:
 	docker push leeif/pluto:staging
-
-docker-run: local-docker-build
-	docker run -d -t pluto-server:latest
 
 docker-clean:
 	docker rmi leeif/pluto:latest || true
@@ -27,10 +24,6 @@ docker-clean-staging:
 	docker rmi leeif/pluto:staging || true
 	docker rm -v $(shell docker ps --filter status=exited -q 2>/dev/null) 2>/dev/null || true
 	docker rmi $(shell docker images --filter dangling=true -q 2>/dev/null) 2>/dev/null || true
-
-binary-build:
-	mkdir -p bin
-	GO111MODULE=on go build -ldflags="-X 'main.VERSION=$(VERSION)'" -o bin/pluto-server cmd/pluto-server/main.go
 
 check-version-tag:
 	git pull --tags
@@ -46,12 +39,19 @@ update-changelog:
 	git-chglog $(VERSION).. | cat - CHANGELOG.md > temp && mv temp CHANGELOG.md
 	git commit -am "update CHANGELOG.md"
 
+server-binary-build:
+	mkdir -p bin
+	GO111MODULE=on go build -ldflags="-X 'main.VERSION=$(VERSION)'" -o bin/pluto-server cmd/pluto-server/main.go
+
+migrate-binary-build:
+	mkdir -p bin
+	GO111MODULE=on go build -o bin/pluto-migrate cmd/pluto-migrate/main.go
+
 unit-test:
 	GO111MODULE=on go test -v ./...
 
 test: unit-test
 
-run-server:
-	go run cmd/pluto-server/main.go
+ci-build-production: check-version-tag docker-build docker-push docker-clean update-tag update-changelog
 
-jenkins-ci: check-version-tag docker-build docker-push docker-clean update-tag update-changelog
+ci-build-staging: docker-build-staging docker-push-staging docker-clean-staging

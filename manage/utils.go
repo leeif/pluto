@@ -57,8 +57,10 @@ func getRoleScopes(role *models.RbacRole, db boil.Executor) (*models.RbacScope, 
 	}
 
 	scope, err := models.RbacScopes(qm.Where("id = ?", role.DefaultScope.Uint)).One(db)
-	if err != nil {
+	if err != nil && err != sql.ErrNoRows {
 		return nil, perror.ServerError.Wrapper(err)
+	} else if err == sql.ErrNoRows {
+		return nil, nil
 	}
 
 	return scope, nil
@@ -81,7 +83,7 @@ func getUserScopes(userID uint, appID string, db boil.Executor) ([]string, *perr
 	}
 
 	if scope == nil {
-		return nil, nil
+		return []string{}, nil
 	}
 
 	return []string{scope.Name}, nil

@@ -5,6 +5,10 @@ type ServerConfig struct {
 	SkipRegisterVerifyMail bool `kiper_value:"name:skip_register_verify_mail;default:false"`
 
 	Port *Port `kiper_value:"name:port;help:server listen port;default:8010"`
+
+	Consul bool `kiper_value:"name:consul;help:register service into consul"`
+
+	Service string `kiper_value:"name:service;help:service;nam"`
 }
 
 type Port struct {

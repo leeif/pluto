@@ -59,7 +59,6 @@ func (router *Router) OAuth2Authorize(w http.ResponseWriter, r *http.Request) *p
 		redirectWithFragment(authorize.RedirectURI, query.Query(), w, r)
 	}
 
-
 	return nil
 }
 

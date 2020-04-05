@@ -31,6 +31,7 @@ type Config struct {
 	View        *ViewConfig        `kiper_config:"name:view"`
 	Admin       *AdminConfig       `kiper_config:"name:admin"`
 	Cors        *CorsConfig        `kiper_config:"name:cors"`
+	Register    *RegisterConfig    `kiper_config:"name:register"`
 }
 
 func NewConfig(args []string, version string) (*Config, error) {
@@ -48,6 +49,7 @@ func NewConfig(args []string, version string) (*Config, error) {
 		View:        newViewConfig(),
 		Admin:       newAdminConfig(),
 		Cors:        newCorsConfig(),
+		Register:    newRegisterConfig(),
 	}
 	kiper := kiper.NewKiper(filepath.Base(args[0]), "Pluto server")
 	kiper.Kingpin.Version(version)

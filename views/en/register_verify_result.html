@@ -1383,7 +1383,7 @@
         $.ajax({
           method: "POST",
           contentType: "application/json",
-          url: "/api/user/register/verify/mail",
+          url: "/v1/register/verify/mail",
           data: JSON.stringify({mail: mail}),
           dataType: "json"
         }).done(function(data) {

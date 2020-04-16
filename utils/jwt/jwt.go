@@ -54,18 +54,16 @@ type Payload struct {
 
 type AccessPayload struct {
 	Payload
-	UserID    uint     `json:"sub"`
-	AppID     string   `json:"iss"`
-	Scopes    []string `json:"scopes"`
-	LoginType string   `json:"login_type"`
+	UserID uint     `json:"sub"`
+	AppID  string   `json:"iss"`
+	Scopes []string `json:"scopes"`
 }
 
-func NewAccessPayload(userID uint, scopes []string, appID, loginType string, expire int64) *AccessPayload {
+func NewAccessPayload(userID uint, scopes string, appID string, expire int64) *AccessPayload {
 	up := &AccessPayload{}
 	up.UserID = userID
 	up.AppID = appID
-	up.LoginType = loginType
-	up.Scopes = scopes
+	up.Scopes = strings.Split(scopes, ",")
 
 	up.Payload.Type = ACCESS
 	up.Payload.Create = time.Now().Unix()

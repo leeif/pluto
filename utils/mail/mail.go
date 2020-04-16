@@ -112,14 +112,19 @@ func (m *Mail) SendPlainText(address, subject, text string) *perror.PlutoError {
 	return nil
 }
 
-func (m *Mail) SendRegisterVerify(userID uint, address string, baseURL string) *perror.PlutoError {
-	rvp := jwt.NewRegisterVerifyPayload(userID, m.config.JWT.RegisterVerifyTokenExpire)
+func (m *Mail) SendRegisterVerify(userID uint, address string, baseURL string, language string) *perror.PlutoError {
+	rvp := jwt.NewRegisterVerifyPayload(userID, m.config.Token.RegisterVerifyTokenExpire)
 	token, perr := jwt.GenerateRSAJWT(rvp)
 	if perr != nil {
 		return perr.Wrapper(errors.New("JWT token generate failed"))
 	}
 
-	t, err := view.Parse("register_verify_mail.html")
+	vw, err := view.GetView()
+	if err != nil {
+		return perror.ServerError.Wrapper(err)
+	}
+
+	t, err := vw.Parse(language, "register_verify_mail.html")
 	if err != nil {
 		return perror.ServerError.Wrapper(err)
 	}
@@ -136,14 +141,19 @@ func (m *Mail) SendRegisterVerify(userID uint, address string, baseURL string) *
 	return nil
 }
 
-func (m *Mail) SendResetPassword(address string, baseURL string) *perror.PlutoError {
-	prp := jwt.NewPasswordResetPayload(address, m.config.JWT.ResetPasswordTokenExpire)
+func (m *Mail) SendResetPassword(address string, baseURL string, language string) *perror.PlutoError {
+	prp := jwt.NewPasswordResetPayload(address, m.config.Token.ResetPasswordTokenExpire)
 	token, perr := jwt.GenerateRSAJWT(prp)
 	if perr != nil {
 		return perr.Wrapper(errors.New("JWT token generate failed"))
 	}
 
-	t, err := view.Parse("password_reset_mail.html")
+	vw, err := view.GetView()
+	if err != nil {
+		return perror.ServerError.Wrapper(err)
+	}
+
+	t, err := vw.Parse(language, "password_reset_mail.html")
 	if err != nil {
 		return perror.ServerError.Wrapper(err)
 	}

@@ -3,7 +3,6 @@ package main
 import (
 	"context"
 	"database/sql"
-	"fmt"
 	"log"
 	"os"
 	"os/signal"
@@ -31,31 +30,23 @@ import (
 // VERSION is the pluto build version
 var VERSION = ""
 
-func printConfig(config *config.Config, logger *plog.PlutoLog) {
-	logger.Info(fmt.Sprintf("AccessTokenExpire: %d", config.JWT.AccessTokenExpire))
-	logger.Info(fmt.Sprintf("RegisterVerifyTokenExpire: %d", config.JWT.RegisterVerifyTokenExpire))
-	logger.Info(fmt.Sprintf("ResetPasswordTokenExpire: %d", config.JWT.ResetPasswordTokenExpire))
-}
+func register(router *route.Router, db *sql.DB, config *config.Config) error {
 
-func register(router *route.Router, db *sql.DB, config *config.Config, logger *plog.PlutoLog) error {
-
-	printConfig(config, logger)
-
-	if err := rsa.Init(config, logger); err != nil {
-		logger.Error(err.Error())
+	if err := rsa.Init(config); err != nil {
+		log.Fatalln(err.Error())
 		return err
 	}
 
-	if err := view.Init(config, logger); err != nil {
-		logger.Error(err.Error())
+	if err := view.InitView(config); err != nil {
+		log.Fatalln(err.Error())
 		return err
 	}
 
-	if err := admin.Init(db, config, logger); err != nil {
+	if err := admin.Init(db, config); err != nil {
 		if err.PlutoCode == perror.ServerError.PlutoCode {
-			logger.Error(err.LogError.Error())
+			log.Fatalln(err.LogError.Error())
 		} else {
-			logger.Warn(err.LogError.Error())
+			log.Fatalln(err.LogError.Error())
 		}
 		return err.LogError
 	}

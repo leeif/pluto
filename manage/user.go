@@ -6,7 +6,6 @@ import (
 	"errors"
 	"fmt"
 	"net/url"
-	"strings"
 	"time"
 
 	"github.com/volatiletech/sqlboiler/boil"
@@ -151,7 +150,7 @@ func (m *Manager) UserInfo(accessPayload *jwt.AccessPayload) (*modelexts.User, *
 		return nil, perror.ServerError.Wrapper(err)
 	}
 
-	role, perr := getUserRole(accessPayload.UserID, accessPayload.AppID, m.db)
+	role, perr := getUserRole(m.db, accessPayload.UserID, accessPayload.AppID)
 	if perr != nil {
 		return nil, perr
 	}
@@ -180,7 +179,12 @@ func (m *Manager) RefreshAccessToken(rat request.RefreshAccessToken) (map[string
 		tx.Rollback()
 	}()
 
-	rt, err := models.RefreshTokens(qm.Where("user_id = ? and refresh_token = ?", rat.UseID, rat.RefreshToken)).One(tx)
+	application, perr := m.getApplication(tx, rat.AppID)
+	if perr != nil {
+		return nil, perr
+	}
+
+	rt, err := models.RefreshTokens(qm.Where("refresh_token = ?", rat.RefreshToken)).One(tx)
 	if err != nil && err == sql.ErrNoRows {
 		return nil, perror.InvalidRefreshToken
 	} else if err != nil {
@@ -194,21 +198,19 @@ func (m *Manager) RefreshAccessToken(rat request.RefreshAccessToken) (map[string
 		return nil, perror.ServerError.Wrapper(err)
 	}
 
-	if rt.UserID != rat.UseID || da.DeviceID != rat.DeviceID || da.AppID != rat.AppID {
+	if rt.UserID != rat.UseID || da.DeviceID != rat.DeviceID || da.AppID != application.ID {
 		return nil, perror.InvalidRefreshToken
 	}
 
-	user, err := models.Users(qm.Where("id = ?", rat.UseID)).One(tx)
+	_, err = models.Users(qm.Where("id = ?", rat.UseID)).One(tx)
 	if err != nil && err == sql.ErrNoRows {
 		return nil, perror.ServerError.Wrapper(fmt.Errorf("UserID not found: %d", rat.UseID))
 	} else if err != nil {
 		return nil, perror.ServerError.Wrapper(err)
 	}
 
-	scopes := strings.Split(rt.Scopes.String, ",")
-
 	// generate jwt token
-	up := jwt.NewAccessPayload(rat.UseID, scopes, rat.AppID, user.LoginType, m.config.JWT.AccessTokenExpire)
+	up := jwt.NewAccessPayload(rat.UseID, rt.Scopes.String, rat.AppID, m.config.Token.AccessTokenExpire)
 	token, perr := jwt.GenerateRSAJWT(up)
 
 	if perr != nil {
@@ -222,11 +224,6 @@ func (m *Manager) RefreshAccessToken(rat request.RefreshAccessToken) (map[string
 }
 
 func (m *Manager) UpdateUserInfo(accessPayload *jwt.AccessPayload, uui request.UpdateUserInfo) *perror.PlutoError {
-
-	// only user using mail login can be update
-	if accessPayload.LoginType != MAILLOGIN {
-		return perror.InvalidJWTToken
-	}
 
 	tx, err := m.db.Begin()
 

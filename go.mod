@@ -5,19 +5,24 @@ go 1.12
 require (
 	github.com/BillSJC/appleLogin v0.0.0-20190916123152-090c3039745d
 	github.com/DATA-DOG/go-sqlmock v1.3.3 // indirect
+	github.com/RichardKnop/uuid v0.0.0-20160216163710-c55201b03606
 	github.com/alecthomas/template v0.0.0-20190718012654-fb15b899a751
 	github.com/aliyun/aliyun-oss-go-sdk v2.0.2+incompatible
 	github.com/dgrijalva/jwt-go v3.2.0+incompatible
 	github.com/friendsofgo/errors v0.9.2
+	github.com/go-acme/lego/v3 v3.1.0
 	github.com/go-kit/kit v0.9.0
 	github.com/go-sql-driver/mysql v1.4.1
 	github.com/gorilla/context v1.1.1
 	github.com/gorilla/mux v1.7.3
 	github.com/gorilla/schema v1.1.0
+	github.com/gorilla/sessions v1.2.0
 	github.com/leeif/kiper v0.3.0
 	github.com/micro/go-micro v1.18.0
 	github.com/micro/go-plugins/registry/consul v0.0.0-20200119172437-4fe21aa238fd
 	github.com/micro/go-plugins/server/http v0.0.0-20200119172437-4fe21aa238fd
+	github.com/pelletier/go-toml v1.2.0
+	github.com/prometheus/common v0.6.0
 	github.com/rs/cors v1.7.0
 	github.com/stretchr/testify v1.4.0
 	github.com/urfave/negroni v1.0.0
@@ -29,5 +34,6 @@ require (
 	go.uber.org/fx v1.9.0
 	go.uber.org/goleak v0.10.0 // indirect
 	golang.org/x/crypto v0.0.0-20191108234033-bd318be0434a
+	golang.org/x/text v0.3.2
 	google.golang.org/api v0.8.0
 )

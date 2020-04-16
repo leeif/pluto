@@ -19,7 +19,13 @@
     <div class="container h-100">
       <div class="row h-100 align-items-center">
         <div class="content col-12 text-center">
-          <h1 class="font-weight-light">Sorry, some is wrong with the Pluto server !</h1>
+          <h1 class="font-weight-light">出错了!</h1>
+          {{ if .Error }}
+          <div class="alert alert-danger" role="alert">
+            <p>错误码: {{ .Error.PlutoCode }}</p>
+            <p>错误信息: {{ .Error.HTTPError }}</p>
+          </div>
+          {{ end }}
         </div>
       </div>
     </div>

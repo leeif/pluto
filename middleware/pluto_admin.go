@@ -7,65 +7,47 @@ import (
 
 	"github.com/leeif/pluto/utils/general"
 
-	"github.com/urfave/negroni"
-
 	"github.com/gorilla/context"
 	perror "github.com/leeif/pluto/datatype/pluto_error"
 	"github.com/leeif/pluto/utils/jwt"
 	"github.com/wxnacy/wgo/arrays"
 )
 
-func PlutoAdmin() negroni.HandlerFunc {
-	return func(w http.ResponseWriter, r *http.Request, next http.HandlerFunc) {
-		accessToken, perr := getAuthorizationHeader(r)
+func PlutoAdmin(w http.ResponseWriter, r *http.Request) *perror.PlutoError {
+	accessToken, perr := getAccessToken(r)
 
-		if perr != nil {
-			context.Set(r, "pluto_error", perr)
-			next(w, r)
-			return
-		}
-
-		jwtToken, perr := jwt.VerifyJWT(accessToken)
-		if perr != nil {
-			context.Set(r, "pluto_error", perr)
-			next(w, r)
-			return
-		}
-
-		accessPayload := &jwt.AccessPayload{}
-
-		if err := json.Unmarshal(jwtToken.Payload, &accessPayload); err != nil {
-			context.Set(r, "pluto_error", perror.ServerError.Wrapper(err))
-			next(w, r)
-			return
-		}
-
-		if accessPayload.Type != jwt.ACCESS {
-			context.Set(r, "pluto_error", perror.InvalidJWTToken)
-			next(w, r)
-			return
-		}
-
-		if time.Now().Unix() > accessPayload.Expire {
-			context.Set(r, "pluto_error", perror.JWTTokenExpired)
-			next(w, r)
-			return
-		}
-
-		if accessPayload.AppID != general.PlutoAdminApplication {
-			context.Set(r, "pluto_error", perror.Forbidden)
-			next(w, r)
-			return
-		}
-
-		if arrays.ContainsString(accessPayload.Scopes, general.PlutoAdminScope) == -1 {
-			context.Set(r, "pluto_error", perror.NotPlutoAdmin)
-			next(w, r)
-			return
-		}
-
-		context.Set(r, "payload", accessPayload)
-
-		next(w, r)
+	if perr != nil {
+		return perr
 	}
+
+	jwtToken, perr := jwt.VerifyJWT(accessToken)
+	if perr != nil {
+		return perr
+	}
+
+	accessPayload := &jwt.AccessPayload{}
+
+	if err := json.Unmarshal(jwtToken.Payload, &accessPayload); err != nil {
+		return perror.ServerError.Wrapper(err)
+	}
+
+	if accessPayload.Type != jwt.ACCESS {
+		return perror.InvalidJWTToken
+	}
+
+	if time.Now().Unix() > accessPayload.Expire {
+		return perror.JWTTokenExpired
+	}
+
+	if accessPayload.AppID != general.PlutoAdminApplication {
+		return perror.InvalidAccessToken
+	}
+
+	if arrays.ContainsString(accessPayload.Scopes, general.PlutoAdminScope) == -1 {
+		return perror.NotPlutoAdmin
+	}
+
+	context.Set(r, "payload", accessPayload)
+
+	return nil
 }

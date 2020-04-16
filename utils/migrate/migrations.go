@@ -5,11 +5,11 @@ import "database/sql"
 var migrations = []Migrations{
 	{
 		name:     "create_users_table",
-		function: changeUsersTable,
+		function: createUsersTable,
 	},
 	{
 		name:     "create_refresh_tokens_table",
-		function: changeRefreshTokensTable,
+		function: createRefreshTokensTable,
 	},
 	{
 		name:     "create_salts_table",
@@ -56,12 +56,20 @@ var migrations = []Migrations{
 		function: addScopesColumnInRefreshTokenTable,
 	},
 	{
-		name:     "removeGenderAndBirthdayColumnInUserTable",
+		name:     "remove_gender_and_birthday_column_in_user_table",
 		function: removeGenderAndBirthdayColumnInUserTable,
+	},
+	{
+		name:     "create_oauth_clients_table",
+		function: createOauthClientsTable,
+	},
+	{
+		name:     "create_oauth_authorization_codes_table",
+		function: createOauthAuthorizationCodesTable,
 	},
 }
 
-func changeUsersTable(db *sql.DB, name string) error {
+func createUsersTable(db *sql.DB, name string) error {
 	sql := "CREATE TABLE IF NOT EXISTS `users` (" +
 		"`id` int(10) unsigned NOT NULL AUTO_INCREMENT," +
 		"`created_at` timestamp NULL DEFAULT NULL," +
@@ -87,7 +95,7 @@ func changeUsersTable(db *sql.DB, name string) error {
 	return nil
 }
 
-func changeRefreshTokensTable(db *sql.DB, name string) error {
+func createRefreshTokensTable(db *sql.DB, name string) error {
 	sql := "CREATE TABLE IF NOT EXISTS `refresh_tokens` (" +
 		"`id` int(10) unsigned NOT NULL AUTO_INCREMENT," +
 		"`created_at` timestamp NULL DEFAULT NULL," +
@@ -98,7 +106,7 @@ func changeRefreshTokensTable(db *sql.DB, name string) error {
 		"`device_app_id` int(10) unsigned NOT NULL," +
 		"PRIMARY KEY (`id`)," +
 		"KEY `refresh_tokens_deleted_at` (`deleted_at`)," +
-		"KEY `user_id_refresh_token` (`user_id`,`refresh_token`)" +
+		"KEY `refresh_token` (`refresh_token`)" +
 		")"
 	_, err := db.Exec(sql)
 	if err != nil {
@@ -152,10 +160,10 @@ func createDeviceAppsTable(db *sql.DB, name string) error {
 		"`updated_at` timestamp NULL DEFAULT NULL," +
 		"`deleted_at` timestamp NULL DEFAULT NULL," +
 		"`device_id` varchar(255) NOT NULL," +
-		"`app_id` varchar(255) NOT NULL," +
+		"`app_id` int(10) unsigned NOT NULL," +
 		"PRIMARY KEY (`id`)," +
 		"KEY `idx_device_apps_deleted_at` (`deleted_at`)," +
-		"KEY `device_id_app_id` (`device_id`,`app_id`)" +
+		"KEY `app_id_device_id` (`app_id`,`device_id`)" +
 		")"
 	_, err := db.Exec(sql)
 	if err != nil {
@@ -290,6 +298,48 @@ func addScopesColumnInRefreshTokenTable(db *sql.DB, name string) error {
 
 func removeGenderAndBirthdayColumnInUserTable(db *sql.DB, name string) error {
 	sql := "ALTER TABLE `users` DROP COLUMN `gender`, DROP COLUMN `birthday`;"
+	_, err := db.Exec(sql)
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
+func createOauthClientsTable(db *sql.DB, name string) error {
+	sql := "CREATE TABLE IF NOT EXISTS `oauth_clients` (" +
+		"`id` int(10) unsigned NOT NULL AUTO_INCREMENT," +
+		"`created_at` timestamp NULL DEFAULT NULL," +
+		"`updated_at` timestamp NULL DEFAULT NULL," +
+		"`deleted_at` timestamp NULL DEFAULT NULL," +
+		"`key` varchar(255) NOT NULL," +
+		"`secret` varchar(60) NOT NULL," +
+		"`status` varchar(60) NOT NULL," +
+		"`redirect_uri` varchar(200) NOT NULL," +
+		"PRIMARY KEY (`id`)," +
+		"UNIQUE KEY `client_key` (`key`)" +
+		")"
+	_, err := db.Exec(sql)
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
+func createOauthAuthorizationCodesTable(db *sql.DB, name string) error {
+	sql := "CREATE TABLE IF NOT EXISTS `oauth_authorization_codes` (" +
+		"`id` int(10) unsigned NOT NULL AUTO_INCREMENT," +
+		"`created_at` timestamp NULL DEFAULT NULL," +
+		"`updated_at` timestamp NULL DEFAULT NULL," +
+		"`deleted_at` timestamp NULL DEFAULT NULL," +
+		"`user_id` int(10) unsigned NOT NULL," +
+		"`client_id` int(10) unsigned NOT NULL," +
+		"`app_id` int(10) unsigned NOT NULL," +
+		"`code` varchar(40) NOT NULL," +
+		"`redirect_uri` varchar(200) NOT NULL," +
+		"`expire_at` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP," +
+		"`scopes` varchar(200) NOT NULL," +
+		"PRIMARY KEY (`id`)" +
+		")"
 	_, err := db.Exec(sql)
 	if err != nil {
 		return err

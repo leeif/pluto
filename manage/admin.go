@@ -110,7 +110,7 @@ func (m *Manager) CreateApplication(ca request.CreateApplication) (*models.Appli
 	return app, nil
 }
 
-func (m *Manager) AttachScope(rs request.RoleScope) *perror.PlutoError {
+func (m *Manager) RoleScopeUpdate(rsu request.RoleScopeUpdate) *perror.PlutoError {
 	tx, err := m.db.Begin()
 	if err != nil {
 		return perror.ServerError.Wrapper(err)
@@ -120,69 +120,7 @@ func (m *Manager) AttachScope(rs request.RoleScope) *perror.PlutoError {
 		tx.Rollback()
 	}()
 
-	roleScope, err := models.RbacRoleScopes(qm.Where("role_id = ? and scope_id = ?", rs.RoleID, rs.ScopeID)).One(tx)
-
-	if err != nil && err != sql.ErrNoRows {
-		return perror.ServerError.Wrapper(err)
-	}
-
-	if err == nil {
-		return perror.ScopeAttached
-	}
-
-	roleScope = &models.RbacRoleScope{}
-	roleScope.RoleID = rs.RoleID
-	roleScope.ScopeID = rs.ScopeID
-
-	if err := roleScope.Insert(tx, boil.Infer()); err != nil {
-		return perror.ServerError.Wrapper(err)
-	}
-
-	tx.Commit()
-
-	return nil
-}
-
-func (m *Manager) DetachScope(rs request.RoleScope) *perror.PlutoError {
-	tx, err := m.db.Begin()
-	if err != nil {
-		return perror.ServerError.Wrapper(err)
-	}
-
-	defer func() {
-		tx.Rollback()
-	}()
-
-	roleScope, err := models.RbacRoleScopes(qm.Where("role_id = ? and scope_id = ?", rs.RoleID, rs.ScopeID)).One(tx)
-
-	if err != nil && err != sql.ErrNoRows {
-		return perror.ServerError.Wrapper(err)
-	}
-
-	if err != nil && err == sql.ErrNoRows {
-		return perror.ScopeNotExist
-	}
-
-	if _, err := roleScope.Delete(tx); err != nil {
-		return perror.ServerError.Wrapper(err)
-	}
-
-	tx.Commit()
-
-	return nil
-}
-
-func (m *Manager) RoleScopeBatchUpdate(rscu request.RoleScopeBatchUpdate) *perror.PlutoError {
-	tx, err := m.db.Begin()
-	if err != nil {
-		return perror.ServerError.Wrapper(err)
-	}
-
-	defer func() {
-		tx.Rollback()
-	}()
-
-	role, err := models.RbacRoles(qm.Where("id = ?", rscu.RoleID)).One(tx)
+	role, err := models.RbacRoles(qm.Where("id = ?", rsu.RoleID)).One(tx)
 	if err != nil && err != sql.ErrNoRows {
 		return perror.ServerError.Wrapper(err)
 	} else if err != nil && err == sql.ErrNoRows {
@@ -190,7 +128,7 @@ func (m *Manager) RoleScopeBatchUpdate(rscu request.RoleScopeBatchUpdate) *perro
 	}
 
 	in := make([]interface{}, 0)
-	for _, scope := range rscu.Scopes {
+	for _, scope := range rsu.Scopes {
 		in = append(in, scope)
 	}
 

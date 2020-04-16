@@ -11,8 +11,9 @@ import (
 	"os"
 	"path"
 
+	"log"
+
 	"github.com/leeif/pluto/config"
-	plog "github.com/leeif/pluto/log"
 )
 
 var (
@@ -21,7 +22,7 @@ var (
 )
 
 // Init : Init the rsa setting, generate new public private files or load from existing files
-func Init(config *config.Config, logger *plog.PlutoLog) error {
+func Init(config *config.Config) error {
 	privateKeyPath := path.Join(*config.RSA.Path, *config.RSA.Name)
 	publicKeyPath := path.Join(*config.RSA.Path, *config.RSA.Name+".pub")
 
@@ -30,10 +31,8 @@ func Init(config *config.Config, logger *plog.PlutoLog) error {
 	_, publicKeyPathErr := os.Stat(publicKeyPath)
 
 	if os.IsNotExist(privateKeyPathErr) && os.IsNotExist(publicKeyPathErr) {
-		if logger != nil {
-			logger.Info("generate " + privateKeyPath)
-			logger.Info("generate " + publicKeyPath)
-		}
+		log.Println("generate " + privateKeyPath)
+		log.Println("generate " + publicKeyPath)
 		// generate private and public key
 		var err error
 		privateKey, publicKey, err = generateKey()
@@ -52,10 +51,8 @@ func Init(config *config.Config, logger *plog.PlutoLog) error {
 	}
 
 	if !os.IsNotExist(privateKeyPathErr) && !os.IsNotExist(publicKeyPathErr) {
-		if logger != nil {
-			logger.Info("load " + privateKeyPath)
-			logger.Info("load " + publicKeyPath)
-		}
+		log.Println("load " + privateKeyPath)
+		log.Println("load " + publicKeyPath)
 		// load private and public key from file
 		var err error
 		publicKey, err = loadPublicKeyFromFile(publicKeyPath)

@@ -3,6 +3,7 @@ package admin
 import (
 	"database/sql"
 	"fmt"
+	"log"
 
 	"github.com/volatiletech/sqlboiler/boil"
 
@@ -16,16 +17,15 @@ import (
 	"github.com/leeif/pluto/manage"
 
 	"github.com/leeif/pluto/config"
-	"github.com/leeif/pluto/log"
 )
 
-func Init(db *sql.DB, config *config.Config, logger *log.PlutoLog) *perror.PlutoError {
+func Init(db *sql.DB, config *config.Config) *perror.PlutoError {
 
 	if config.Admin.Mail == "" || config.Admin.Name == "" {
 		return nil
 	}
 
-	manager := manage.NewManager(db, config, logger)
+	manager := manage.NewManager(db, config, nil)
 
 	ca := request.CreateApplication{}
 	ca.Name = general.PlutoAdminApplication
@@ -70,27 +70,31 @@ func Init(db *sql.DB, config *config.Config, logger *log.PlutoLog) *perror.Pluto
 
 		mailBody := fmt.Sprintf("Your Pluto Admin Mail : %s, Password : %s", mr.Mail, mr.Password)
 
-		logger.Info(mailBody)
+		log.Println(mailBody)
 
 		go func() {
 			ml, err := mail.NewMail(config)
 			if err != nil {
-				logger.Warn("smtp server is not set, mail can't be send")
+				log.Println("smtp server is not set, mail can't be send")
 			}
 			if err := ml.SendPlainText(mr.Mail, "[Pluto]Admin Password", mailBody); err != nil {
-				logger.Error("send mail failed: " + err.LogError.Error())
+				log.Println("send mail failed: " + err.LogError.Error())
 			}
-			logger.Info("Mail with your admin login info is send")
+			log.Println("Mail with your admin login info is send")
 		}()
+	}
+
+	rsu := request.RoleScopeUpdate{}
+	rsu.RoleID = role.ID
+	rsu.Scopes = []uint{scope.ID}
+
+	if err := manager.RoleScopeUpdate(rsu); err != nil && err.PlutoCode == perror.ServerError.PlutoCode {
+		return err
 	}
 
 	rs := request.RoleScope{}
 	rs.RoleID = role.ID
 	rs.ScopeID = scope.ID
-
-	if err := manager.AttachScope(rs); err != nil && err.PlutoCode == perror.ServerError.PlutoCode {
-		return err
-	}
 
 	if err := manager.RoleDefaultScope(rs); err != nil && err.PlutoCode == perror.ServerError.PlutoCode {
 		return err

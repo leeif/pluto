@@ -605,7 +605,7 @@ func (m *Manager) OAuthCreateClient(occ *request.OAuthCreateClient) (*models.Oau
 	return client, nil
 }
 
-func (m *Manager) OAuthApproveClient(occ *request.OAuthApproveClient) (*models.OauthClient, *perror.PlutoError) {
+func (m *Manager) UpdateOAuthClientStatus(occ *request.OAuthClientStatus) (*models.OauthClient, *perror.PlutoError) {
 	tx, err := m.db.Begin()
 	if err != nil {
 		return nil, perror.ServerError.Wrapper(err)
@@ -615,31 +615,9 @@ func (m *Manager) OAuthApproveClient(occ *request.OAuthApproveClient) (*models.O
 		tx.Rollback()
 	}()
 
-	client, err := models.OauthClients(qm.Where("`key`=?", occ.Key)).One(tx)
-	if err != nil && err != sql.ErrNoRows {
-		return nil, perror.ServerError.Wrapper(err)
-	} else if err == sql.ErrNoRows {
-		return nil, perror.OAuthClientIDOrSecretNotFound
+	if occ.Status != ClientApproved && occ.Status != ClientDenied {
+		return nil, perror.InvalidAccessToken
 	}
-
-	client.Status = ClientApproved
-
-	if _, err := client.Update(tx, boil.Infer()); err != nil {
-		return nil, perror.ServerError.Wrapper(err)
-	}
-
-	return client, nil
-}
-
-func (m *Manager) OAuthDenyClient(occ *request.OAuthApproveClient) (*models.OauthClient, *perror.PlutoError) {
-	tx, err := m.db.Begin()
-	if err != nil {
-		return nil, perror.ServerError.Wrapper(err)
-	}
-
-	defer func() {
-		tx.Rollback()
-	}()
 
 	client, err := models.OauthClients(qm.Where("`key`=?", occ.Key)).One(tx)
 	if err != nil && err != sql.ErrNoRows {
@@ -648,7 +626,7 @@ func (m *Manager) OAuthDenyClient(occ *request.OAuthApproveClient) (*models.Oaut
 		return nil, perror.OAuthClientIDOrSecretNotFound
 	}
 
-	client.Status = ClientDenied
+	client.Status = occ.Status
 
 	if _, err := client.Update(tx, boil.Infer()); err != nil {
 		return nil, perror.ServerError.Wrapper(err)

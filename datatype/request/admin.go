@@ -1,11 +1,11 @@
 package request
 
 type FindUser struct {
-	Keyword string `json:"keyword"`
+	Account string `json:"account"`
 }
 
 func (fu *FindUser) Validation() bool {
-	if fu.Keyword == "" {
+	if fu.Account == "" {
 		return false
 	}
 	return true

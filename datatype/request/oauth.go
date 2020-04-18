@@ -80,16 +80,12 @@ func (token *OAuthTokens) ValidateRefreshToken() bool {
 
 type RefreshAccessToken struct {
 	RefreshToken string `json:"refresh_token"`
-	UseID        uint   `json:"user_id"`
-	DeviceID     string `json:"device_id"`
 	AppID        string `json:"app_id"`
+	Scopes       string `json:"scopes"`
 }
 
 func (rat *RefreshAccessToken) Validation() bool {
-	if rat.RefreshToken == "" || rat.UseID == 0 {
-		return false
-	}
-	if rat.DeviceID == "" || rat.AppID == "" {
+	if rat.RefreshToken == "" || rat.AppID == "" {
 		return false
 	}
 	return true
@@ -109,12 +105,13 @@ func (occ *OAuthCreateClient) Validation() bool {
 	return true
 }
 
-type OAuthApproveClient struct {
-	Key string `json:"key"`
+type OAuthClientStatus struct {
+	Key    string `json:"key"`
+	Status string `json:"status"`
 }
 
-func (occ *OAuthApproveClient) Validation() bool {
-	if occ.Key == "" {
+func (ocs *OAuthClientStatus) Validation() bool {
+	if ocs.Key == "" || ocs.Status == "" {
 		return false
 	}
 

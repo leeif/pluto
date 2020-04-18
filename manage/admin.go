@@ -425,11 +425,11 @@ func (m *Manager) UsersCount() (map[string]int, *perror.PlutoError) {
 func (m *Manager) FindUser(fu *request.FindUser) ([]*modelexts.FindUser, *perror.PlutoError) {
 
 	field := "name"
-	if general.ValidMail(fu.Keyword) {
+	if general.ValidMail(fu.Account) {
 		field = "mail"
 	}
 
-	users, err := models.Users(qm.Where(field+" = ?", fu.Keyword)).All(m.db)
+	users, err := models.Users(qm.Where(field+" = ?", fu.Account)).All(m.db)
 	if err != nil && len(users) == 0 {
 		return nil, perror.UserNotExist
 	} else if err != nil {

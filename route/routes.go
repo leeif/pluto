@@ -35,8 +35,8 @@ type Router struct {
 func (router *Router) registerRoutes(routes []PlutoRoute, prefix string, isWeb bool) {
 	sub := router.mux.PathPrefix(prefix).Subrouter()
 	for _, r := range routes {
-		// r.middle = middleware.NoAuthMiddleware
-		// options method for cors
+		// p := path.Join(prefix, r.path)
+		// fmt.Println(fmt.Sprintf("* [`%s`](%s)", p, strings.Replace(p, "/", "", -1)))
 		if isWeb {
 			sub.Handle(r.path, r.middle(router.plutoWebHandlerWrapper, r.handler)).Methods(r.method)
 		} else {
@@ -47,8 +47,8 @@ func (router *Router) registerRoutes(routes []PlutoRoute, prefix string, isWeb b
 
 func (router *Router) RegisterV1() {
 	v1Prefix := "/v1"
-	router.registerLoginV1Routes(v1Prefix)
 	router.registerWebV1Routes("")
+	router.registerLoginV1Routes(v1Prefix)
 	router.registerHealthV1Routes(v1Prefix)
 	router.registerRBACV1Routes(v1Prefix)
 	router.registerUserV1Routers(v1Prefix)

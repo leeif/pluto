@@ -2,7 +2,9 @@ package v1
 
 import (
 	"net/http"
+	"strconv"
 
+	"github.com/gorilla/mux"
 	perror "github.com/leeif/pluto/datatype/pluto_error"
 
 	"github.com/leeif/pluto/utils/mail"
@@ -45,7 +47,15 @@ func (router *Router) UserInfo(w http.ResponseWriter, r *http.Request) *perror.P
 		return perr
 	}
 
-	res, perr := router.manager.UserInfo(payload)
+	vars := mux.Vars(r)
+
+	userID, err := strconv.Atoi(vars["userID"])
+
+	if err != nil {
+		return perror.BadRequest.Wrapper(err)
+	}
+
+	res, perr := router.manager.UserInfo(uint(userID), payload)
 
 	if perr != nil {
 		return perr
@@ -62,15 +72,25 @@ func (router *Router) UpdateUserInfo(w http.ResponseWriter, r *http.Request) *pe
 		return perr
 	}
 
+	vars := mux.Vars(r)
+
+	userID, err := strconv.Atoi(vars["userID"])
+
+	if err != nil {
+		return perror.BadRequest.Wrapper(err)
+	}
+
+	if uint(userID) != payload.UserID {
+		return perror.InvalidAccessToken
+	}
+
 	uui := request.UpdateUserInfo{}
 	if err := routeUtils.GetRequestData(r, &uui); err != nil {
 		return perr
 	}
 
-	err := router.manager.UpdateUserInfo(payload, uui)
-
-	if err != nil {
-		return err
+	if perr := router.manager.UpdateUserInfo(payload, uui); perr != nil {
+		return perr
 	}
 
 	routeUtils.ResponseOK(nil, w)

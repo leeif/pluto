@@ -43,5 +43,6 @@ var (
 	OAuthAuthorizationCodeExpired  = NewPlutoError(http.StatusForbidden, 5004, "Authorization code expired", nil)
 	OAuthClientIDOrSecretNotFound  = NewPlutoError(http.StatusUnauthorized, 5005, "client_id or secret not found", nil)
 	OAuthClientExist               = NewPlutoError(http.StatusUnauthorized, 5006, "Client already exists", nil)
-	OAuthInvalidClient             = NewPlutoError(http.StatusForbidden, 5007, "Invalid client", nil)
+	OAuthInvalidClientStatus       = NewPlutoError(http.StatusUnauthorized, 5007, "Invalid client status", nil)
+	OAuthInvalidClient             = NewPlutoError(http.StatusForbidden, 5008, "Invalid client", nil)
 )

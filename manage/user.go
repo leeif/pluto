@@ -4,7 +4,6 @@ import (
 	"database/sql"
 	"encoding/json"
 	"errors"
-	"fmt"
 	"net/url"
 	"time"
 
@@ -141,16 +140,16 @@ func (m *Manager) ResetPassword(token string, rp request.ResetPasswordWeb) *perr
 	return nil
 }
 
-func (m *Manager) UserInfo(accessPayload *jwt.AccessPayload) (*modelexts.User, *perror.PlutoError) {
+func (m *Manager) UserInfo(userID uint, accessPayload *jwt.AccessPayload) (*modelexts.User, *perror.PlutoError) {
 
-	user, err := models.Users(qm.Where("id = ?", accessPayload.UserID)).One(m.db)
+	user, err := models.Users(qm.Where("id = ?", userID)).One(m.db)
 	if err != nil && err == sql.ErrNoRows {
 		return nil, perror.ServerError.Wrapper(errors.New("user not found id: " + string(accessPayload.UserID)))
 	} else if err != nil {
 		return nil, perror.ServerError.Wrapper(err)
 	}
 
-	role, perr := getUserRole(m.db, accessPayload.UserID, accessPayload.AppID)
+	role, perr := getUserRole(m.db, userID, accessPayload.AppID)
 	if perr != nil {
 		return nil, perr
 	}
@@ -160,15 +159,13 @@ func (m *Manager) UserInfo(accessPayload *jwt.AccessPayload) (*modelexts.User, *
 	}
 
 	if role != nil {
-		userExt.Roles = []string{role.Name}
+		userExt.Role = role.Name
 	}
 
 	return userExt, nil
 }
 
-func (m *Manager) RefreshAccessToken(rat request.RefreshAccessToken) (map[string]string, *perror.PlutoError) {
-	res := make(map[string]string)
-
+func (m *Manager) RefreshAccessToken(rat request.RefreshAccessToken) (*GrantResult, *perror.PlutoError) {
 	tx, err := m.db.Begin()
 
 	if err != nil {
@@ -198,29 +195,31 @@ func (m *Manager) RefreshAccessToken(rat request.RefreshAccessToken) (map[string
 		return nil, perror.ServerError.Wrapper(err)
 	}
 
-	if rt.UserID != rat.UseID || da.DeviceID != rat.DeviceID || da.AppID != application.ID {
+	if da.AppID != application.ID {
 		return nil, perror.InvalidRefreshToken
 	}
 
-	_, err = models.Users(qm.Where("id = ?", rat.UseID)).One(tx)
-	if err != nil && err == sql.ErrNoRows {
-		return nil, perror.ServerError.Wrapper(fmt.Errorf("UserID not found: %d", rat.UseID))
-	} else if err != nil {
-		return nil, perror.ServerError.Wrapper(err)
-	}
-
-	// generate jwt token
-	up := jwt.NewAccessPayload(rat.UseID, rt.Scopes.String, rat.AppID, m.config.Token.AccessTokenExpire)
-	token, perr := jwt.GenerateRSAJWT(up)
+	scopes, perr := getValidScopes(tx, rat.Scopes, rt.UserID, application.Name)
 
 	if perr != nil {
-		return nil, perr.Wrapper(errors.New("JWT token generate failed"))
+		return nil, perr
 	}
 
-	res["jwt"] = token.String()
+	if scopes == "" && !rt.Scopes.IsZero() {
+		scopes = rt.Scopes.String
+	}
+
+	if perr := m.updateRefreshToken(tx, rt, scopes); perr != nil {
+		return nil, perr
+	}
+
+	grantResult, perr := m.grantToken(rt.UserID, rt.RefreshToken, scopes, rat.AppID, m.config.Token.AccessTokenExpire)
+	if perr != nil {
+		return nil, perr
+	}
 
 	tx.Commit()
-	return res, nil
+	return grantResult, nil
 }
 
 func (m *Manager) UpdateUserInfo(accessPayload *jwt.AccessPayload, uui request.UpdateUserInfo) *perror.PlutoError {

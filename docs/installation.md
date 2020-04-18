@@ -79,9 +79,9 @@ EOS | kubectl apply -f -
 
 ## Setup Your First Application
 
-Pluto is an application-based auth system which means the admins can define the applications in Pluto and user can login to different applications to obtain the different permissions.
+Pluto is designed as an application-based auth system.
 
-Pluto provides a convenience way to handle these through an admin web page.
+You can start creating your first application through pluto admin page.
 
 ### Start the admin web page
 

@@ -11,11 +11,11 @@
   <script>
     $(document).ready(function() {
       $(".login").click(function() {
-        var user = $("#user").val();
+        var account = $("#account").val();
         var password = $("#password").val();
 
-        if (user === "") {
-          alert("User can't be empty");
+        if (account === "") {
+          alert("Account can't be empty");
           event.preventDefault();
           return;
         }
@@ -41,7 +41,7 @@
               <div class="input-group-prepend">
                 <span class="input-group-text" id="basic-addon1"><i class="fas fa-user"></i></span>
               </div>
-              <input id="user" type="text" class="form-control" name="user" placeholder="邮箱或用户名">
+              <input id="account" type="text" class="form-control" name="account" placeholder="邮箱或用户名">
             </div>
             <div class="input-group" style="margin-bottom: 20px;">
               <div class="input-group-prepend">

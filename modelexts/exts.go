@@ -4,7 +4,7 @@ import "github.com/leeif/pluto/models"
 
 type User struct {
 	*models.User
-	Roles []string `json:"roles"`
+	Role string `json:"role"`
 }
 
 func (user User) Format() map[string]interface{} {
@@ -13,7 +13,7 @@ func (user User) Format() map[string]interface{} {
 	res["mail"] = user.Mail
 	res["name"] = user.Name
 	res["avatar"] = user.Avatar
-	res["roles"] = user.Roles
+	res["role"] = user.Role
 	res["login_type"] = user.LoginType
 	res["verified"] = user.Verified
 	res["created_at"] = user.CreatedAt.Time.Unix()

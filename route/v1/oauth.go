@@ -213,36 +213,12 @@ func (router *Router) OAuthCreateClient(w http.ResponseWriter, r *http.Request) 
 }
 
 func (router *Router) OAuthApproveClient(w http.ResponseWriter, r *http.Request) *perror.PlutoError {
-	oac := &request.OAuthApproveClient{}
-	if perr := routeUtils.GetRequestData(r, oac); perr != nil {
+	ocs := &request.OAuthClientStatus{}
+	if perr := routeUtils.GetRequestData(r, ocs); perr != nil {
 		return perr
 	}
 
-	client, perr := router.manager.OAuthApproveClient(oac)
-
-	if perr != nil {
-		return perr
-	}
-
-	data := make(map[string]interface{})
-
-	data["key"] = client.Key
-	data["status"] = client.Status
-
-	if perr := routeUtils.ResponseOK(data, w); perr != nil {
-		return perr
-	}
-
-	return nil
-}
-
-func (router *Router) OAuthDenyClient(w http.ResponseWriter, r *http.Request) *perror.PlutoError {
-	oac := &request.OAuthApproveClient{}
-	if perr := routeUtils.GetRequestData(r, oac); perr != nil {
-		return perr
-	}
-
-	client, perr := router.manager.OAuthDenyClient(oac)
+	client, perr := router.manager.UpdateOAuthClientStatus(ocs)
 
 	if perr != nil {
 		return perr

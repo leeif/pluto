@@ -3,7 +3,6 @@ package middleware
 import (
 	"encoding/json"
 	"net/http"
-	"strings"
 	"time"
 
 	"github.com/gorilla/context"
@@ -11,43 +10,32 @@ import (
 	"github.com/leeif/pluto/utils/jwt"
 )
 
-func AccessTokenAuth(w http.ResponseWriter, r *http.Request, next http.HandlerFunc) {
-	auth := strings.Fields(r.Header.Get("Authorization"))
-
-	if len(auth) != 2 || strings.ToLower(auth[0]) != "jwt" {
-		context.Set(r, "pluto_error", perror.Forbidden)
-		next(w, r)
-		return
+func AccessTokenAuth(w http.ResponseWriter, r *http.Request) *perror.PlutoError {
+	accessToken, perr := getAccessToken(r)
+	if perr != nil {
+		return perr
 	}
 
-	jwtToken, perr := jwt.VerifyJWT(auth[1])
+	jwtToken, perr := jwt.VerifyJWT(accessToken)
 	if perr != nil {
-		context.Set(r, "pluto_error", perr)
-		next(w, r)
-		return
+		return perr
 	}
 
 	accessPayload := &jwt.AccessPayload{}
 
 	if err := json.Unmarshal(jwtToken.Payload, &accessPayload); err != nil {
-		context.Set(r, "pluto_error", perror.ServerError.Wrapper(err))
-		next(w, r)
-		return
+		return perror.ServerError.Wrapper(err)
 	}
 
 	if accessPayload.Type != jwt.ACCESS {
-		context.Set(r, "pluto_error", perror.InvalidJWTToekn)
-		next(w, r)
-		return
+		return perror.InvalidJWTToken
 	}
 
 	if time.Now().Unix() > accessPayload.Expire {
-		context.Set(r, "pluto_error", perror.JWTTokenExpired)
-		next(w, r)
-		return
+		return perror.JWTTokenExpired
 	}
 
 	context.Set(r, "payload", accessPayload)
 
-	next(w, r)
+	return nil
 }

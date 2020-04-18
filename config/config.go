@@ -1,7 +1,10 @@
 package config
 
 import (
+	"fmt"
 	"path/filepath"
+
+	"log"
 
 	"github.com/leeif/kiper"
 )
@@ -27,10 +30,12 @@ type Config struct {
 	GoogleLogin *GoogleLoginConfig `kiper_config:"name:google_login"`
 	WechatLogin *WechatLoginConfig `kiper_config:"name:wechat_login"`
 	AppleLogin  *AppleLoginConfig  `kiper_config:"name:apple_login"`
-	JWT         *JWTConfig         `kiper_config:"name:jwt"`
+	Token       *TokenConfig       `kiper_config:"name:token"`
 	View        *ViewConfig        `kiper_config:"name:view"`
 	Admin       *AdminConfig       `kiper_config:"name:admin"`
 	Cors        *CorsConfig        `kiper_config:"name:cors"`
+	Registry    *RegistryConfig    `kiper_config:"name:registry"`
+	OAuth       *OAuthConfig       `kiper_config:"name:oauth"`
 }
 
 func NewConfig(args []string, version string) (*Config, error) {
@@ -44,20 +49,39 @@ func NewConfig(args []string, version string) (*Config, error) {
 		GoogleLogin: newGoogleLoginConfig(),
 		WechatLogin: newWechatLoginConfig(),
 		AppleLogin:  newAppleLoginConfig(),
-		JWT:         newJWTConfig(),
+		Token:       newTokenConfig(),
 		View:        newViewConfig(),
 		Admin:       newAdminConfig(),
 		Cors:        newCorsConfig(),
+		Registry:    newRegistryConfig(),
+		OAuth:       newOAuthConfig(),
 	}
-	kiper := kiper.NewKiper(filepath.Base(args[0]), "Pluto server")
+	name := ""
+	ag := make([]string, 0)
+	if len(args) > 0 {
+		name = filepath.Base(args[0])
+		ag = args[1:]
+	}
+
+	kiper := kiper.NewKiper(name, "Pluto server")
 	kiper.Kingpin.Version(version)
 	kiper.Kingpin.HelpFlag.Short('h')
 
 	kiper.SetConfigFileFlag("config.file", "config file", "./config.json")
 
-	if err := kiper.Parse(c, args[1:]); err != nil {
+	if err := kiper.Parse(c, ag); err != nil {
 		return nil, err
 	}
 	c.Version = version
+
+	printConfig(c)
+
 	return c, nil
+}
+
+func printConfig(config *Config) {
+	log.Println(fmt.Sprintf("AccessTokenExpire: %d", config.Token.AccessTokenExpire))
+	log.Println(fmt.Sprintf("RegisterVerifyTokenExpire: %d", config.Token.RegisterVerifyTokenExpire))
+	log.Println(fmt.Sprintf("ResetPasswordTokenExpire: %d", config.Token.ResetPasswordTokenExpire))
+	log.Println(fmt.Sprintf("RefeshTokenExpire: %d", config.Token.RefreshTokenExpire))
 }

@@ -1,0 +1,50 @@
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Authorize</title>
+  <script src="https://code.jquery.com/jquery-3.4.1.min.js" integrity="sha256-CSXorXvZcTkaix6Yvo6HppcZGetbYMGWSFlBw8HfCJo=" crossorigin="anonymous"></script>
+  <link href="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-ggOyR0iXCbMQv3Xipma34MD+dH/1fQ784/j6cY/iJTQUOhcWr7x9JvoRxT2MZw1T" crossorigin="anonymous">
+  <link rel="stylesheet" href="https://use.fontawesome.com/releases/v5.7.0/css/all.css" integrity="sha384-lZN37f5QGtY3VHgisS14W3ExzMWZxybE1SJSEsQp9S+oqd12jhcu+A56Ebc1zFSJ" crossorigin="anonymous">
+  <style>
+  </style>
+  <script>
+    $(document).ready(function() {
+    });
+  </script>
+</head>
+<body>
+  {{template "header"}}
+  <header class="masthead">
+    <div class="container h-100">
+      <div class="row h-100 justify-content-center align-items-center">
+        <div class="col-md-6 text-center">
+          <h2 class="text-center text-info" style="margin-bottom: 30px;">Authorize</h2>
+          <form class="login-form" action="" method="POST">
+            <p>Authorize<b> {{ .ClientID }}</b> client to behave as <b>{{ .AppID }}</b></p>
+            {{ if .Token }}
+            <p>How long do you want to authorize <b>{{ .ClientID }}</b> for?</p>
+            <div class="radio">
+              <label class="radio-inline">
+                <input type="radio" name="lifetime" value="3600"> 1 hour
+              </label>
+              <label class="radio-inline">
+                <input type="radio" name="lifetime" value="86400"> 1 day
+              </label>
+              <label class="radio-inline">
+                <input type="radio" name="lifetime" value="604800" checked> 1 week
+              </label>
+            </div>
+            {{ end }}
+            <button type="submit" class="btn btn-info" name="allow">Allow</button>
+            <button type="submit" class="btn btn-info" name="deny">Deny</button>
+          </form>
+        </div>
+      </div>
+    </div>
+  </header>
+  {{template "footer"}}
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.12.9/umd/popper.min.js" integrity="sha384-ApNbgh9B+Y1QKtv3Rn7W3mgPxhU9K/ScQsAP7hUibX39j7fakFPskvXusvfa0b4Q" crossorigin="anonymous"></script>
+  <script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/js/bootstrap.min.js" integrity="sha384-JZR6Spejh4U02d8jOt6vLEHfe/JQGiRRSQQxSfFWpi1MquVdAyjUar5+76PVCmYl" crossorigin="anonymous"></script>
+</body>
+</html>

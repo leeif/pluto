@@ -6,6 +6,8 @@ package models
 var TableNames = struct {
 	Applications             string
 	DeviceApps               string
+	OauthAuthorizationCodes  string
+	OauthClients             string
 	RbacRoleScopes           string
 	RbacRoles                string
 	RbacScopes               string
@@ -16,6 +18,8 @@ var TableNames = struct {
 }{
 	Applications:             "applications",
 	DeviceApps:               "device_apps",
+	OauthAuthorizationCodes:  "oauth_authorization_codes",
+	OauthClients:             "oauth_clients",
 	RbacRoleScopes:           "rbac_role_scopes",
 	RbacRoles:                "rbac_roles",
 	RbacScopes:               "rbac_scopes",

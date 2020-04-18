@@ -1,0 +1,64 @@
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>登陆</title>
+  <script src="https://code.jquery.com/jquery-3.4.1.min.js" integrity="sha256-CSXorXvZcTkaix6Yvo6HppcZGetbYMGWSFlBw8HfCJo=" crossorigin="anonymous"></script>
+  <link href="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-ggOyR0iXCbMQv3Xipma34MD+dH/1fQ784/j6cY/iJTQUOhcWr7x9JvoRxT2MZw1T" crossorigin="anonymous">
+  <link rel="stylesheet" href="https://use.fontawesome.com/releases/v5.7.0/css/all.css" integrity="sha384-lZN37f5QGtY3VHgisS14W3ExzMWZxybE1SJSEsQp9S+oqd12jhcu+A56Ebc1zFSJ" crossorigin="anonymous">
+  <style>
+  </style>
+  <script>
+    $(document).ready(function() {
+      $(".login").click(function() {
+        var account = $("#account").val();
+        var password = $("#password").val();
+
+        if (account === "") {
+          alert("Account can't be empty");
+          event.preventDefault();
+          return;
+        }
+        if (password === "") {
+          alert("Password can't be empty");
+          event.preventDefault();
+          return;
+        }
+      });
+    });
+  </script>
+</head>
+<body>
+  {{template "header"}}
+  <header class="masthead">
+    <div class="container h-100">
+      <div class="row h-100 justify-content-center align-items-center">
+        <div class="col-md-6 text-center">
+          <form class="login-form" action="" method="POST">
+            <h2 class="text-center text-info" style="margin-bottom: 30px;">登陆</h2>
+            <p class="text-center text-info" style="margin-bottom: 20px;">应用: <span style="color:red">{{ .Application }}</span></p>
+            <div class="input-group" style="margin-bottom: 20px;">
+              <div class="input-group-prepend">
+                <span class="input-group-text" id="basic-addon1"><i class="fas fa-user"></i></span>
+              </div>
+              <input id="account" type="text" class="form-control" name="account" placeholder="邮箱或用户名">
+            </div>
+            <div class="input-group" style="margin-bottom: 20px;">
+              <div class="input-group-prepend">
+                <span class="input-group-text" id="basic-addon1"><i class="fas fa-lock"></i></span>
+              </div>
+              <input id="password" type="password" class="form-control" name="password" placeholder="密码">
+            </div>
+            <input id="appID" type="text" class="form-control" name="appID" value="{{ .Application }}" hidden>
+            <input id="deviceID" type="text" class="form-control" name="deviceID" value="oauth" hidden>
+            <button type="submit" class="btn btn-info login">登陆</button>
+          </form>
+        </div>
+      </div>
+    </div>
+  </header>
+  {{template "footer"}}
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.12.9/umd/popper.min.js" integrity="sha384-ApNbgh9B+Y1QKtv3Rn7W3mgPxhU9K/ScQsAP7hUibX39j7fakFPskvXusvfa0b4Q" crossorigin="anonymous"></script>
+  <script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/js/bootstrap.min.js" integrity="sha384-JZR6Spejh4U02d8jOt6vLEHfe/JQGiRRSQQxSfFWpi1MquVdAyjUar5+76PVCmYl" crossorigin="anonymous"></script>
+</body>
+</html>

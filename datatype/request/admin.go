@@ -1,11 +1,11 @@
 package request
 
 type FindUser struct {
-	Keyword string `json:"keyword"`
+	Account string `json:"account"`
 }
 
 func (fu *FindUser) Validation() bool {
-	if fu.Keyword == "" {
+	if fu.Account == "" {
 		return false
 	}
 	return true
@@ -61,12 +61,12 @@ func (rs *RoleScope) Validation() bool {
 	return true
 }
 
-type RoleScopeBatchUpdate struct {
+type RoleScopeUpdate struct {
 	RoleID uint   `json:"role_id"`
 	Scopes []uint `json:"scopes"`
 }
 
-func (rscu *RoleScopeBatchUpdate) Validation() bool {
+func (rscu *RoleScopeUpdate) Validation() bool {
 	if rscu.RoleID == 0 {
 		return false
 	}

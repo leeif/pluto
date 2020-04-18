@@ -22,8 +22,7 @@ import (
 	"github.com/leeif/pluto/datatype/request"
 	"github.com/leeif/pluto/models"
 	"github.com/leeif/pluto/utils/avatar"
-	"github.com/leeif/pluto/utils/jwt"
-	"github.com/leeif/pluto/utils/refresh"
+	"github.com/leeif/pluto/utils/general"
 	saltUtil "github.com/leeif/pluto/utils/salt"
 	"google.golang.org/api/oauth2/v2"
 )
@@ -35,65 +34,33 @@ const (
 	APPLELOGIN  = "apple"
 )
 
-func (m *Manager) addDeviceApp(tx *sql.Tx, deviceID, appID string) (*models.DeviceApp, *perror.PlutoError) {
-	// insert deviceID and appID into device table
-	deviceApp, err := models.DeviceApps(qm.Where("device_id = ? and app_id = ?", deviceID, appID)).One(tx)
-
-	if err != nil && err != sql.ErrNoRows {
-		return nil, perror.ServerError.Wrapper(err)
-	} else if err == sql.ErrNoRows {
-		deviceApp = &models.DeviceApp{}
-		deviceApp.DeviceID = deviceID
-		deviceApp.AppID = appID
-		if err := deviceApp.Insert(tx, boil.Infer()); err != nil {
-			return nil, perror.ServerError.Wrapper(err)
-		}
-	}
-	return deviceApp, nil
-}
-
-func (m *Manager) updateRefreshToken(tx *sql.Tx, userID uint, deviceApp *models.DeviceApp, scopes string) (string, *perror.PlutoError) {
-	refreshToken := refresh.GenerateRefreshToken(string(userID) + string(deviceApp.ID))
-
-	rt, err := models.RefreshTokens(qm.Where("user_id = ? and device_app_id = ?", userID, deviceApp.ID)).One(tx)
-	if err != nil && err != sql.ErrNoRows {
-		return "", perror.ServerError.Wrapper(err)
-	} else if err == sql.ErrNoRows {
-		rt = &models.RefreshToken{}
-		rt.DeviceAppID = deviceApp.ID
-		rt.UserID = userID
-		rt.RefreshToken = refreshToken
-		rt.Scopes.SetValid(scopes)
-		if err := rt.Insert(tx, boil.Infer()); err != nil {
-			return "", perror.ServerError.Wrapper(err)
-		}
-	} else if err == nil {
-		rt.RefreshToken = refreshToken
-		rt.Scopes.SetValid(scopes)
-		if _, err := rt.Update(tx, boil.Infer()); err != nil {
-			return "", perror.ServerError.Wrapper(err)
-		}
-	}
-	return refreshToken, nil
-}
-
-func (m *Manager) EmailLogin(login request.MailLogin) (map[string]string, *perror.PlutoError) {
-	res := make(map[string]string)
-
+func (m *Manager) PasswordLogin(login request.PasswordLogin) (*GrantResult, *perror.PlutoError) {
 	tx, err := m.db.Begin()
-
-	defer func() {
-		tx.Rollback()
-	}()
 
 	if err != nil {
 		return nil, perror.ServerError.Wrapper(err)
 	}
 
-	identifyToken := b64.RawStdEncoding.EncodeToString([]byte(login.Mail))
-	user, err := models.Users(qm.Where("login_type = ? and identify_token = ?", MAILLOGIN, identifyToken)).One(tx)
+	defer func() {
+		tx.Rollback()
+	}()
+
+	loginType := ""
+	if general.ValidMail(login.Account) {
+		loginType = MAILLOGIN
+	} else {
+		loginType = ""
+	}
+
+	identifyToken := b64.RawStdEncoding.EncodeToString([]byte(login.Account))
+	user, err := models.Users(qm.Where("login_type = ? and identify_token = ?", loginType, identifyToken)).One(tx)
 	if err != nil && err == sql.ErrNoRows {
-		return nil, perror.MailNotExist
+		switch loginType {
+		case MAILLOGIN:
+			return nil, perror.MailNotExist
+		default:
+			return nil, perror.UsernameNotExist
+		}
 	} else if err != nil {
 		return nil, perror.ServerError.Wrapper(err)
 	}
@@ -117,43 +84,22 @@ func (m *Manager) EmailLogin(login request.MailLogin) (map[string]string, *perro
 		return nil, perror.InvalidPassword
 	}
 
-	// insert deviceID and appID into device table
-	deviceApp, perr := m.addDeviceApp(tx, login.DeviceID, login.AppID)
+	scopes, perr := getUserDefaultScopes(tx, user.ID, login.AppID)
 	if perr != nil {
 		return nil, perr
 	}
 
-	scopes, perr := getUserScopes(user.ID, login.AppID, tx)
+	grantResult, perr := m.loginWithAppName(tx, user.ID, login.DeviceID, login.AppID, strings.Join(scopes, ","))
 	if perr != nil {
 		return nil, perr
 	}
-
-	// update refresh token
-	refreshToken, perr := m.updateRefreshToken(tx, user.ID, deviceApp, strings.Join(scopes, ","))
-
-	if perr != nil {
-		return nil, perr
-	}
-
-	// generate jwt token
-	up := jwt.NewAccessPayload(user.ID, scopes, deviceApp.AppID, MAILLOGIN, m.config.JWT.AccessTokenExpire)
-	token, perr := jwt.GenerateRSAJWT(up)
-
-	if perr != nil {
-		return nil, perr.Wrapper(errors.New("JWT token generate failed"))
-	}
-
-	res["jwt"] = token.String()
-	res["refresh_token"] = refreshToken
 
 	tx.Commit()
 
-	return res, nil
+	return grantResult, nil
 }
 
-func (m *Manager) GoogleLoginMobile(login request.GoogleMobileLogin) (map[string]string, *perror.PlutoError) {
-	res := make(map[string]string)
-
+func (m *Manager) GoogleLoginMobile(login request.GoogleMobileLogin) (*GrantResult, *perror.PlutoError) {
 	info, perr := verifyGoogleIdToken(login.IDToken)
 	if perr != nil {
 		return nil, perr
@@ -184,38 +130,19 @@ func (m *Manager) GoogleLoginMobile(login request.GoogleMobileLogin) (map[string
 		}
 	}
 
-	// insert deviceID and appID into device table
-	deviceApp, perr := m.addDeviceApp(tx, login.DeviceID, login.AppID)
+	scopes, perr := getUserDefaultScopes(tx, user.ID, login.AppID)
 	if perr != nil {
 		return nil, perr
 	}
 
-	scopes, perr := getUserScopes(user.ID, login.AppID, tx)
+	grantResult, perr := m.loginWithAppName(tx, user.ID, login.DeviceID, login.AppID, strings.Join(scopes, ","))
 	if perr != nil {
 		return nil, perr
 	}
-
-	// update refresh token
-	refreshToken, perr := m.updateRefreshToken(tx, user.ID, deviceApp, strings.Join(scopes, ","))
-
-	if perr != nil {
-		return nil, perr
-	}
-
-	// generate jwt token
-	up := jwt.NewAccessPayload(user.ID, scopes, deviceApp.AppID, GOOGLELOGIN, m.config.JWT.AccessTokenExpire)
-	token, perr := jwt.GenerateRSAJWT(up)
-
-	if perr != nil {
-		return nil, perr.Wrapper(errors.New("JWT token generate failed"))
-	}
-
-	res["jwt"] = token.String()
-	res["refresh_token"] = refreshToken
 
 	tx.Commit()
 
-	return res, nil
+	return grantResult, nil
 }
 
 // googleIDTokenInfo struct
@@ -264,9 +191,7 @@ func verifyGoogleIdToken(idToken string) (*googleIDTokenInfo, *perror.PlutoError
 	return nil, perror.InvalidGoogleIDToken
 }
 
-func (m *Manager) WechatLoginMobile(login request.WechatMobileLogin) (map[string]string, *perror.PlutoError) {
-	res := make(map[string]string)
-
+func (m *Manager) WechatLoginMobile(login request.WechatMobileLogin) (*GrantResult, *perror.PlutoError) {
 	accessToken, openID, perr := getWechatAccessToken(login.Code, m.config.WechatLogin)
 
 	if perr != nil {
@@ -302,37 +227,18 @@ func (m *Manager) WechatLoginMobile(login request.WechatMobileLogin) (map[string
 		}
 	}
 
-	// insert deviceID and appID into device table
-	deviceApp, perr := m.addDeviceApp(tx, login.DeviceID, login.AppID)
+	scopes, perr := getUserDefaultScopes(tx, user.ID, login.AppID)
 	if perr != nil {
 		return nil, perr
 	}
 
-	scopes, perr := getUserScopes(user.ID, login.AppID, tx)
+	grantResult, perr := m.loginWithAppName(tx, user.ID, login.DeviceID, login.AppID, strings.Join(scopes, ","))
 	if perr != nil {
 		return nil, perr
 	}
-
-	// update refresh token
-	refreshToken, perr := m.updateRefreshToken(tx, user.ID, deviceApp, strings.Join(scopes, ","))
-
-	if perr != nil {
-		return nil, perr
-	}
-
-	// generate jwt token
-	up := jwt.NewAccessPayload(user.ID, scopes, deviceApp.AppID, WECHATLOGIN, m.config.JWT.AccessTokenExpire)
-	token, perr := jwt.GenerateRSAJWT(up)
-
-	if perr != nil {
-		return nil, perr.Wrapper(errors.New("JWT token generate failed"))
-	}
-
-	res["jwt"] = token.String()
-	res["refresh_token"] = refreshToken
 
 	tx.Commit()
-	return res, nil
+	return grantResult, nil
 }
 
 func getWechatAccessToken(code string, cfg *config.WechatLoginConfig) (accessToken string, openID string, pe *perror.PlutoError) {
@@ -451,9 +357,7 @@ func getWechatUserInfo(accessToken string, openID string) (info *wechatUserInfo,
 	return nil, perror.ServerError.Wrapper(errors.New("Unknow server error"))
 }
 
-func (m *Manager) AppleLoginMobile(login request.AppleMobileLogin) (map[string]string, *perror.PlutoError) {
-	res := make(map[string]string)
-
+func (m *Manager) AppleLoginMobile(login request.AppleMobileLogin) (*GrantResult, *perror.PlutoError) {
 	info, perr := getAppleToken(m.config, login.Code)
 
 	if perr != nil {
@@ -510,37 +414,18 @@ func (m *Manager) AppleLoginMobile(login request.AppleMobileLogin) (map[string]s
 		}
 	}
 
-	// insert deviceID and appID into device table
-	deviceApp, perr := m.addDeviceApp(tx, login.DeviceID, login.AppID)
+	scopes, perr := getUserDefaultScopes(tx, user.ID, login.AppID)
 	if perr != nil {
 		return nil, perr
 	}
 
-	scopes, perr := getUserScopes(user.ID, login.AppID, tx)
+	grantResult, perr := m.loginWithAppName(tx, user.ID, login.DeviceID, login.AppID, strings.Join(scopes, ","))
 	if perr != nil {
 		return nil, perr
 	}
-
-	// update refresh token
-	refreshToken, perr := m.updateRefreshToken(tx, user.ID, deviceApp, strings.Join(scopes, ","))
-
-	if perr != nil {
-		return nil, perr
-	}
-
-	// generate jwt token
-	up := jwt.NewAccessPayload(user.ID, scopes, deviceApp.AppID, APPLELOGIN, m.config.JWT.AccessTokenExpire)
-	token, perr := jwt.GenerateRSAJWT(up)
-
-	if perr != nil {
-		return nil, perr.Wrapper(errors.New("JWT token generate failed"))
-	}
-
-	res["jwt"] = token.String()
-	res["refresh_token"] = refreshToken
 
 	tx.Commit()
-	return res, nil
+	return grantResult, nil
 }
 
 type appleIdTokenInfo struct {

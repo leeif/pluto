@@ -1,5 +1,9 @@
 package request
 
+const (
+	defaultDeviceID = "UnKnown Device"
+)
+
 type MailRegister struct {
 	Mail     string `json:"mail"`
 	Name     string `json:"name"`
@@ -13,20 +17,25 @@ func (mr *MailRegister) Validation() bool {
 	return true
 }
 
-type MailLogin struct {
-	Mail     string `json:"mail"`
-	Password string `json:"password"`
-	DeviceID string `json:"device_id"`
-	AppID    string `json:"app_id"`
+type PasswordLogin struct {
+	Account  string `json:"account" schema:"account"`
+	Password string `json:"password" schema:"password"`
+	DeviceID string `json:"device_id" schema:"deviceID"`
+	AppID    string `json:"app_id" schema:"appID"`
 }
 
-func (ml *MailLogin) Validation() bool {
-	if ml.Mail == "" || ml.Password == "" {
+func (ml *PasswordLogin) Validation() bool {
+	if ml.Account == "" || ml.Password == "" {
 		return false
 	}
 
-	if ml.DeviceID == "" || ml.AppID == "" {
+	if ml.AppID == "" {
 		return false
+	}
+
+	// set default deviceID
+	if ml.DeviceID == "" {
+		ml.DeviceID = defaultDeviceID
 	}
 
 	return true
@@ -43,8 +52,13 @@ func (gml *GoogleMobileLogin) Validation() bool {
 		return false
 	}
 
-	if gml.DeviceID == "" || gml.AppID == "" {
+	if gml.AppID == "" {
 		return false
+	}
+
+	// set default deviceID
+	if gml.DeviceID == "" {
+		gml.DeviceID = defaultDeviceID
 	}
 
 	return true
@@ -61,8 +75,13 @@ func (wml *WechatMobileLogin) Validation() bool {
 		return false
 	}
 
-	if wml.DeviceID == "" || wml.AppID == "" {
+	if wml.AppID == "" {
 		return false
+	}
+
+	// set default deviceID
+	if wml.DeviceID == "" {
+		wml.DeviceID = defaultDeviceID
 	}
 
 	return true
@@ -76,12 +95,17 @@ type AppleMobileLogin struct {
 }
 
 func (aml *AppleMobileLogin) Validation() bool {
-	if aml.Code == "" {
+	if aml.Code == "" || aml.Name == "" {
 		return false
 	}
 
-	if aml.DeviceID == "" || aml.AppID == "" {
+	if aml.AppID == "" {
 		return false
+	}
+
+	// set default deviceID
+	if aml.DeviceID == "" {
+		aml.DeviceID = defaultDeviceID
 	}
 
 	return true
@@ -112,7 +136,7 @@ func (rpm *ResetPasswordMail) Validation() bool {
 }
 
 type ResetPasswordWeb struct {
-	Password string `json:"password" schema:"password,required"`
+	Password string `json:"password" schema:"password"`
 }
 
 func (rp *ResetPasswordWeb) Validation() bool {
@@ -130,6 +154,30 @@ type UpdateUserInfo struct {
 
 func (uui *UpdateUserInfo) Validation() bool {
 	if uui.Name == "" && uui.Avatar == "" {
+		return false
+	}
+
+	return true
+}
+
+type VerifyAccessToken struct {
+	Token string `json:"token"`
+}
+
+func (vat *VerifyAccessToken) Validation() bool {
+	if vat.Token == "" {
+		return false
+	}
+
+	return true
+}
+
+type VerifyIDToken struct {
+	Token string `json:"token"`
+}
+
+func (vit *VerifyIDToken) Validation() bool {
+	if vit.Token == "" {
 		return false
 	}
 

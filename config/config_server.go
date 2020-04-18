@@ -2,9 +2,10 @@ package config
 
 type ServerConfig struct {
 	// skip sending verify mail when mail register
-	SkipRegisterVerifyMail bool `kiper_value:"name:skip_register_verify_mail;default:false"`
-
-	Port *Port `kiper_value:"name:port;help:server listen port;default:8010"`
+	SkipRegisterVerifyMail bool   `kiper_value:"name:skip_register_verify_mail;default:false"`
+	Port                   *Port  `kiper_value:"name:port;help:server listen port;default:8010"`
+	CookieSecure           bool   `kiper_value:"name:cookie_secure;cookie secure;default:true"`
+	ServerName             string `kiper_value:"name:server_name;help:server name;default:pluto"`
 }
 
 type Port struct {

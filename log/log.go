@@ -7,7 +7,6 @@ import (
 	"github.com/go-kit/kit/log"
 	"github.com/go-kit/kit/log/level"
 	"github.com/leeif/pluto/config"
-	"go.uber.org/fx"
 )
 
 type PlutoLog struct {
@@ -37,7 +36,7 @@ func (pl *PlutoLog) With(keyvals ...interface{}) *PlutoLog {
 	}
 }
 
-func NewLogger(lc fx.Lifecycle, config *config.Config) (*PlutoLog, error) {
+func NewLogger(config *config.Config) (*PlutoLog, error) {
 	var l log.Logger
 	var writer io.WriteCloser
 	var err error

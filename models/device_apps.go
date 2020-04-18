@@ -28,7 +28,7 @@ type DeviceApp struct {
 	UpdatedAt null.Time `boil:"updated_at" json:"updated_at,omitempty" toml:"updated_at" yaml:"updated_at,omitempty"`
 	DeletedAt null.Time `boil:"deleted_at" json:"deleted_at,omitempty" toml:"deleted_at" yaml:"deleted_at,omitempty"`
 	DeviceID  string    `boil:"device_id" json:"device_id" toml:"device_id" yaml:"device_id"`
-	AppID     string    `boil:"app_id" json:"app_id" toml:"app_id" yaml:"app_id"`
+	AppID     uint      `boil:"app_id" json:"app_id" toml:"app_id" yaml:"app_id"`
 
 	R *deviceAppR `boil:"-" json:"-" toml:"-" yaml:"-"`
 	L deviceAppL  `boil:"-" json:"-" toml:"-" yaml:"-"`
@@ -58,14 +58,14 @@ var DeviceAppWhere = struct {
 	UpdatedAt whereHelpernull_Time
 	DeletedAt whereHelpernull_Time
 	DeviceID  whereHelperstring
-	AppID     whereHelperstring
+	AppID     whereHelperuint
 }{
 	ID:        whereHelperuint{field: "`device_apps`.`id`"},
 	CreatedAt: whereHelpernull_Time{field: "`device_apps`.`created_at`"},
 	UpdatedAt: whereHelpernull_Time{field: "`device_apps`.`updated_at`"},
 	DeletedAt: whereHelpernull_Time{field: "`device_apps`.`deleted_at`"},
 	DeviceID:  whereHelperstring{field: "`device_apps`.`device_id`"},
-	AppID:     whereHelperstring{field: "`device_apps`.`app_id`"},
+	AppID:     whereHelperuint{field: "`device_apps`.`app_id`"},
 }
 
 // DeviceAppRels is where relationship names are stored.

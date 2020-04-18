@@ -9,10 +9,10 @@ Pluto is a JWT based authorization/authentication service. Besides providing a b
 ## Main Features
 
 * User registration / login
-* Oauth2 Authorization
-* JWT generation / verification
+* Oauth2 APIs
+* JWT-based authorization
 * Role-based access control (RBAC)
-* Admin page in Vue.js [link](https://github.com/leeif/pluto-admin)
+* Admin page [link](https://github.com/leeif/pluto-admin)
 
 ## Getting started
 

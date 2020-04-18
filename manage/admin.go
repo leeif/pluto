@@ -430,6 +430,7 @@ func (m *Manager) FindUser(fu *request.FindUser) ([]*modelexts.FindUser, *perror
 	}
 
 	users, err := models.Users(qm.Where(field+" = ?", fu.Account)).All(m.db)
+	
 	if err != nil && len(users) == 0 {
 		return nil, perror.UserNotExist
 	} else if err != nil {

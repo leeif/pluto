@@ -17,7 +17,7 @@ import (
 
 func (router *Router) plutoHandlerWrapper(handler func(http.ResponseWriter, *http.Request) *perror.PlutoError) negroni.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request, next http.HandlerFunc) {
-
+		
 		defer func() {
 			if err := recover(); err != nil {
 				var perr *perror.PlutoError

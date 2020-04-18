@@ -47,7 +47,7 @@ verify(string(head)+string(payload), <public key>)
 
 In Pluto, we have the following types of JWT token.
 
-* ACCESS token will be response after user login.
+* ACCESS token will be responsed after user login or oauth authorization.
 
 *	REGISTERVERIFY token is to verify the register mail.
 

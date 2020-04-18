@@ -30,7 +30,6 @@ Pluto provides a set of HTTP resetful APIs.
 * [`/v1/oauth/client`](#v1oauthclient)
 * [`/v1/oauth/client/status`](#v1oauthclientstatus)
 
-
 ## account api
 
 ### /v1/register
@@ -41,21 +40,21 @@ Register user with email
 
 * request:
 
- ```
- {"mail":<string>, "name": <string>, "password":<string>}
- ```
+```
+{"mail":<string>, "name": <string>, "password":<string>}
+```
 
 * response example:
- 
- ```
- {
+
+```
+{
   "status": "ok",
   "body": {
     "mail": "geeklyf@hotmail.com",
     "verified": false
   }
 }
- ```
+```
 
 ### /v1/register/verify/mail
 
@@ -65,18 +64,18 @@ Send registration verification mail
 
 * request:
 
- ```
- {"mail":<string>}
- ```
+```
+  "mail":<string>}
+```
 
 * response example:
 
- ```
+```
 {
   "status": "ok",
   "body": nil
 }
- ```
+```
 
 ### /v1/login/account
 

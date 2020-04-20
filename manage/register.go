@@ -68,7 +68,7 @@ func (m *Manager) RegisterWithEmail(register request.MailRegister) (*models.User
 	remoteURL, perr := as.SaveAvatarImageInOSS(avatarReader)
 	if perr != nil {
 		user.Avatar.SetValid(avatarReader.OriginURL)
-		m.logger.Warn(perr.LogError)
+		m.logger.Error(perr.LogError)
 	} else {
 		user.Avatar.SetValid(remoteURL)
 	}

@@ -45,10 +45,8 @@ func register(router *route.Router, db *sql.DB, config *config.Config) error {
 	if err := admin.Init(db, config); err != nil {
 		if err.PlutoCode == perror.ServerError.PlutoCode {
 			log.Fatalln(err.LogError.Error())
-		} else {
-			log.Fatalln(err.LogError.Error())
+			return err.LogError
 		}
-		return err.LogError
 	}
 
 	// register routes

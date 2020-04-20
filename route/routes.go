@@ -48,10 +48,9 @@ func (router *Router) registerRoutes(routes []PlutoRoute, prefix string, isWeb b
 func (router *Router) RegisterV1() {
 	v1Prefix := "/v1"
 	router.registerWebV1Routes("")
-	router.registerLoginV1Routes(v1Prefix)
 	router.registerHealthV1Routes(v1Prefix)
 	router.registerRBACV1Routes(v1Prefix)
-	router.registerUserV1Routers(v1Prefix)
+	router.registerUserV1Routes(v1Prefix)
 	router.registerTokenV1Routes(v1Prefix)
 	router.registerOauthV1Routes(v1Prefix)
 }

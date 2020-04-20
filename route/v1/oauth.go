@@ -10,6 +10,7 @@ import (
 	perror "github.com/leeif/pluto/datatype/pluto_error"
 	"github.com/leeif/pluto/datatype/request"
 	"github.com/leeif/pluto/manage"
+	"github.com/leeif/pluto/utils/general"
 	routeUtils "github.com/leeif/pluto/utils/route"
 )
 
@@ -140,7 +141,15 @@ func (router *Router) OAuthLogin(w http.ResponseWriter, r *http.Request) *perror
 		return perr
 	}
 
-	grantResult, perr := router.manager.PasswordLogin(login)
+	var grantResult *manage.GrantResult
+
+	var perr *perror.PlutoError
+	if general.ValidMail(login.Account) {
+		grantResult, perr = router.manager.MailPasswordLogin(login)
+	} else {
+		grantResult, perr = router.manager.NamePasswordLogin(login)
+	}
+
 	if perr != nil {
 		return perr
 	}

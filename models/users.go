@@ -23,46 +23,37 @@ import (
 
 // User is an object representing the database table.
 type User struct {
-	ID            uint        `boil:"id" json:"id" toml:"id" yaml:"id"`
-	CreatedAt     null.Time   `boil:"created_at" json:"created_at,omitempty" toml:"created_at" yaml:"created_at,omitempty"`
-	UpdatedAt     null.Time   `boil:"updated_at" json:"updated_at,omitempty" toml:"updated_at" yaml:"updated_at,omitempty"`
-	DeletedAt     null.Time   `boil:"deleted_at" json:"deleted_at,omitempty" toml:"deleted_at" yaml:"deleted_at,omitempty"`
-	Mail          null.String `boil:"mail" json:"mail,omitempty" toml:"mail" yaml:"mail,omitempty"`
-	Name          string      `boil:"name" json:"name" toml:"name" yaml:"name"`
-	Password      null.String `boil:"password" json:"password,omitempty" toml:"password" yaml:"password,omitempty"`
-	Avatar        null.String `boil:"avatar" json:"avatar,omitempty" toml:"avatar" yaml:"avatar,omitempty"`
-	Verified      null.Bool   `boil:"verified" json:"verified,omitempty" toml:"verified" yaml:"verified,omitempty"`
-	LoginType     string      `boil:"login_type" json:"login_type" toml:"login_type" yaml:"login_type"`
-	IdentifyToken string      `boil:"identify_token" json:"identify_token" toml:"identify_token" yaml:"identify_token"`
+	ID        uint        `boil:"id" json:"id" toml:"id" yaml:"id"`
+	CreatedAt null.Time   `boil:"created_at" json:"created_at,omitempty" toml:"created_at" yaml:"created_at,omitempty"`
+	UpdatedAt null.Time   `boil:"updated_at" json:"updated_at,omitempty" toml:"updated_at" yaml:"updated_at,omitempty"`
+	DeletedAt null.Time   `boil:"deleted_at" json:"deleted_at,omitempty" toml:"deleted_at" yaml:"deleted_at,omitempty"`
+	Name      string      `boil:"name" json:"name" toml:"name" yaml:"name"`
+	Password  null.String `boil:"password" json:"password,omitempty" toml:"password" yaml:"password,omitempty"`
+	Verified  null.Bool   `boil:"verified" json:"verified,omitempty" toml:"verified" yaml:"verified,omitempty"`
+	Avatar    null.String `boil:"avatar" json:"avatar,omitempty" toml:"avatar" yaml:"avatar,omitempty"`
 
 	R *userR `boil:"-" json:"-" toml:"-" yaml:"-"`
 	L userL  `boil:"-" json:"-" toml:"-" yaml:"-"`
 }
 
 var UserColumns = struct {
-	ID            string
-	CreatedAt     string
-	UpdatedAt     string
-	DeletedAt     string
-	Mail          string
-	Name          string
-	Password      string
-	Avatar        string
-	Verified      string
-	LoginType     string
-	IdentifyToken string
+	ID        string
+	CreatedAt string
+	UpdatedAt string
+	DeletedAt string
+	Name      string
+	Password  string
+	Verified  string
+	Avatar    string
 }{
-	ID:            "id",
-	CreatedAt:     "created_at",
-	UpdatedAt:     "updated_at",
-	DeletedAt:     "deleted_at",
-	Mail:          "mail",
-	Name:          "name",
-	Password:      "password",
-	Avatar:        "avatar",
-	Verified:      "verified",
-	LoginType:     "login_type",
-	IdentifyToken: "identify_token",
+	ID:        "id",
+	CreatedAt: "created_at",
+	UpdatedAt: "updated_at",
+	DeletedAt: "deleted_at",
+	Name:      "name",
+	Password:  "password",
+	Verified:  "verified",
+	Avatar:    "avatar",
 }
 
 // Generated where
@@ -91,29 +82,23 @@ func (w whereHelpernull_Bool) GTE(x null.Bool) qm.QueryMod {
 }
 
 var UserWhere = struct {
-	ID            whereHelperuint
-	CreatedAt     whereHelpernull_Time
-	UpdatedAt     whereHelpernull_Time
-	DeletedAt     whereHelpernull_Time
-	Mail          whereHelpernull_String
-	Name          whereHelperstring
-	Password      whereHelpernull_String
-	Avatar        whereHelpernull_String
-	Verified      whereHelpernull_Bool
-	LoginType     whereHelperstring
-	IdentifyToken whereHelperstring
+	ID        whereHelperuint
+	CreatedAt whereHelpernull_Time
+	UpdatedAt whereHelpernull_Time
+	DeletedAt whereHelpernull_Time
+	Name      whereHelperstring
+	Password  whereHelpernull_String
+	Verified  whereHelpernull_Bool
+	Avatar    whereHelpernull_String
 }{
-	ID:            whereHelperuint{field: "`users`.`id`"},
-	CreatedAt:     whereHelpernull_Time{field: "`users`.`created_at`"},
-	UpdatedAt:     whereHelpernull_Time{field: "`users`.`updated_at`"},
-	DeletedAt:     whereHelpernull_Time{field: "`users`.`deleted_at`"},
-	Mail:          whereHelpernull_String{field: "`users`.`mail`"},
-	Name:          whereHelperstring{field: "`users`.`name`"},
-	Password:      whereHelpernull_String{field: "`users`.`password`"},
-	Avatar:        whereHelpernull_String{field: "`users`.`avatar`"},
-	Verified:      whereHelpernull_Bool{field: "`users`.`verified`"},
-	LoginType:     whereHelperstring{field: "`users`.`login_type`"},
-	IdentifyToken: whereHelperstring{field: "`users`.`identify_token`"},
+	ID:        whereHelperuint{field: "`users`.`id`"},
+	CreatedAt: whereHelpernull_Time{field: "`users`.`created_at`"},
+	UpdatedAt: whereHelpernull_Time{field: "`users`.`updated_at`"},
+	DeletedAt: whereHelpernull_Time{field: "`users`.`deleted_at`"},
+	Name:      whereHelperstring{field: "`users`.`name`"},
+	Password:  whereHelpernull_String{field: "`users`.`password`"},
+	Verified:  whereHelpernull_Bool{field: "`users`.`verified`"},
+	Avatar:    whereHelpernull_String{field: "`users`.`avatar`"},
 }
 
 // UserRels is where relationship names are stored.
@@ -133,8 +118,8 @@ func (*userR) NewStruct() *userR {
 type userL struct{}
 
 var (
-	userAllColumns            = []string{"id", "created_at", "updated_at", "deleted_at", "mail", "name", "password", "avatar", "verified", "login_type", "identify_token"}
-	userColumnsWithoutDefault = []string{"created_at", "updated_at", "deleted_at", "mail", "name", "password", "avatar", "verified", "login_type", "identify_token"}
+	userAllColumns            = []string{"id", "created_at", "updated_at", "deleted_at", "name", "password", "verified", "avatar"}
+	userColumnsWithoutDefault = []string{"created_at", "updated_at", "deleted_at", "name", "password", "verified", "avatar"}
 	userColumnsWithDefault    = []string{"id"}
 	userPrimaryKeyColumns     = []string{"id"}
 )
@@ -654,6 +639,7 @@ func (o UserSlice) UpdateAll(exec boil.Executor, cols M) (int64, error) {
 
 var mySQLUserUniqueColumns = []string{
 	"id",
+	"name",
 }
 
 // Upsert attempts an insert using an executor, and does an update or ignore on conflict.

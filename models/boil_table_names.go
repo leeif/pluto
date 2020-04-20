@@ -5,6 +5,7 @@ package models
 
 var TableNames = struct {
 	Applications             string
+	Bindings                 string
 	DeviceApps               string
 	OauthAuthorizationCodes  string
 	OauthClients             string
@@ -17,6 +18,7 @@ var TableNames = struct {
 	Users                    string
 }{
 	Applications:             "applications",
+	Bindings:                 "bindings",
 	DeviceApps:               "device_apps",
 	OauthAuthorizationCodes:  "oauth_authorization_codes",
 	OauthClients:             "oauth_clients",

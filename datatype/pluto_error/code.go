@@ -14,7 +14,7 @@ var (
 	MailNotExist          = NewPlutoError(http.StatusForbidden, 2002, "Mail does not exist", nil)
 	MailIsNotVerified     = NewPlutoError(http.StatusForbidden, 2003, "Mail is not verified", nil)
 	MailAlreadyVerified   = NewPlutoError(http.StatusBadRequest, 2004, "Mail is already verified", nil)
-	UsernameNotExist      = NewPlutoError(http.StatusForbidden, 2005, "Username does not exist", nil)
+	UsernameNotExist      = NewPlutoError(http.StatusForbidden, 2005, "User name does not exist", nil)
 
 	InvalidPassword      = NewPlutoError(http.StatusForbidden, 3001, "Invalid Password", nil)
 	InvalidRefreshToken  = NewPlutoError(http.StatusForbidden, 3002, "Invalid Refresh Token", nil)

@@ -3,21 +3,20 @@ package modelexts
 import "github.com/leeif/pluto/models"
 
 type User struct {
-	*models.User
-	Role string `json:"role"`
+	User    *models.User
+	Binding []*models.Binding
+	Role    string `json:"role"`
 }
 
-func (user User) Format() map[string]interface{} {
+func (u User) Format() map[string]interface{} {
 	res := make(map[string]interface{})
-	res["sub"] = user.ID
-	res["mail"] = user.Mail
-	res["name"] = user.Name
-	res["avatar"] = user.Avatar
-	res["role"] = user.Role
-	res["login_type"] = user.LoginType
-	res["verified"] = user.Verified
-	res["created_at"] = user.CreatedAt.Time.Unix()
-	res["updated_at"] = user.UpdatedAt.Time.Unix()
+	res["sub"] = u.User.ID
+	res["name"] = u.User.Name
+	res["avatar"] = u.User.Avatar
+	res["role"] = u.Role
+	res["verified"] = u.User.Verified
+	res["created_at"] = u.User.CreatedAt.Time.Unix()
+	res["updated_at"] = u.User.UpdatedAt.Time.Unix()
 	return res
 }
 
@@ -95,20 +94,19 @@ type UserApplicationRole struct {
 }
 
 type FindUser struct {
-	*models.User
+	User         *models.User
+	Bindings     []*models.User
 	Applications []*UserApplicationRole `json:"applications"`
 }
 
-func (findUser FindUser) Format() map[string]interface{} {
+func (f FindUser) Format() map[string]interface{} {
 	res := make(map[string]interface{})
-	res["id"] = findUser.ID
-	res["name"] = findUser.Name
-	res["mail"] = findUser.Mail.String
-	res["avatar"] = findUser.Avatar.String
-	res["login_type"] = findUser.LoginType
+	res["id"] = f.User.ID
+	res["name"] = f.User.Name
+	res["avatar"] = f.User.Avatar.String
 
 	applications := make([]interface{}, 0)
-	for _, application := range findUser.Applications {
+	for _, application := range f.Applications {
 		a := make(map[string]interface{})
 		a["id"] = application.ID
 		a["name"] = application.Name

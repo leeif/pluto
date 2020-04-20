@@ -8,6 +8,10 @@ var migrations = []Migrations{
 		function: createUsersTable,
 	},
 	{
+		name:     "create_bindings_table",
+		function: createBindingsTable,
+	},
+	{
 		name:     "create_refresh_tokens_table",
 		function: createRefreshTokensTable,
 	},
@@ -22,14 +26,6 @@ var migrations = []Migrations{
 	{
 		name:     "create_device_apps_table",
 		function: createDeviceAppsTable,
-	},
-	{
-		name:     "create_history_operations_table",
-		function: createHistoryOperationsTable,
-	},
-	{
-		name:     "drop_history_operations_table",
-		function: dropHistoryOperationsTable,
 	},
 	{
 		name:     "create_rbac_user_application_roles_table",
@@ -56,10 +52,6 @@ var migrations = []Migrations{
 		function: addScopesColumnInRefreshTokenTable,
 	},
 	{
-		name:     "remove_gender_and_birthday_column_in_user_table",
-		function: removeGenderAndBirthdayColumnInUserTable,
-	},
-	{
 		name:     "create_oauth_clients_table",
 		function: createOauthClientsTable,
 	},
@@ -75,15 +67,31 @@ func createUsersTable(db *sql.DB, name string) error {
 		"`created_at` timestamp NULL DEFAULT NULL," +
 		"`updated_at` timestamp NULL DEFAULT NULL," +
 		"`deleted_at` timestamp NULL DEFAULT NULL," +
-		"`mail` varchar(255) DEFAULT NULL," +
 		"`name` varchar(60) NOT NULL," +
-		"`gender` varchar(10) DEFAULT NULL," +
 		"`password` varchar(255) DEFAULT NULL," +
-		"`birthday` timestamp NULL DEFAULT NULL," +
-		"`avatar` varchar(255) DEFAULT NULL," +
 		"`verified` tinyint(1) DEFAULT NULL," +
+		"`avatar` varchar(255) DEFAULT NULL," +
+		"PRIMARY KEY (`id`)," +
+		"UNIQUE KEY `name_key` (`name`)," +
+		"KEY `users_deleted_at` (`deleted_at`)" +
+		")"
+	_, err := db.Exec(sql)
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
+func createBindingsTable(db *sql.DB, name string) error {
+	sql := "CREATE TABLE IF NOT EXISTS `bindings` (" +
+		"`id` int(10) unsigned NOT NULL AUTO_INCREMENT," +
+		"`created_at` timestamp NULL DEFAULT NULL," +
+		"`updated_at` timestamp NULL DEFAULT NULL," +
+		"`deleted_at` timestamp NULL DEFAULT NULL," +
 		"`login_type` varchar(10) NOT NULL," +
 		"`identify_token` varchar(255) NOT NULL," +
+		"`mail` varchar(255) NOT NULL," +
+		"`user_id` int(10) unsigned NOT NULL," +
 		"PRIMARY KEY (`id`)," +
 		"UNIQUE KEY `login_type_identify_token` (`login_type`,`identify_token`)," +
 		"KEY `users_deleted_at` (`deleted_at`)" +
@@ -165,34 +173,6 @@ func createDeviceAppsTable(db *sql.DB, name string) error {
 		"KEY `idx_device_apps_deleted_at` (`deleted_at`)," +
 		"KEY `app_id_device_id` (`app_id`,`device_id`)" +
 		")"
-	_, err := db.Exec(sql)
-	if err != nil {
-		return err
-	}
-	return nil
-}
-
-func createHistoryOperationsTable(db *sql.DB, name string) error {
-	sql := "CREATE TABLE IF NOT EXISTS `history_operations` (" +
-		"`id` int(10) unsigned NOT NULL AUTO_INCREMENT," +
-		"`created_at` timestamp NULL DEFAULT NULL," +
-		"`updated_at` timestamp NULL DEFAULT NULL," +
-		"`deleted_at` timestamp NULL DEFAULT NULL," +
-		"`user_id` int(10) unsigned NOT NULL," +
-		"`type` varchar(20) NOT NULL," +
-		"PRIMARY KEY (`id`)," +
-		"KEY `idx_history_operations_deleted_at` (`deleted_at`)," +
-		"KEY `user_id` (`user_id`)" +
-		")"
-	_, err := db.Exec(sql)
-	if err != nil {
-		return err
-	}
-	return nil
-}
-
-func dropHistoryOperationsTable(db *sql.DB, name string) error {
-	sql := "DROP TABLE IF EXISTS `history_operations`"
 	_, err := db.Exec(sql)
 	if err != nil {
 		return err

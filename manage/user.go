@@ -1008,7 +1008,7 @@ func (m *Manager) RegisterVerify(token string) *perror.PlutoError {
 	return nil
 }
 
-func (m *Manager) BindMail(mb *request.MailBinding, accessPayload *jwt.AccessPayload) *perror.PlutoError {
+func (m *Manager) BindMail(binding *request.Binding, accessPayload *jwt.AccessPayload) *perror.PlutoError {
 	tx, err := m.db.Begin()
 
 	if err != nil {
@@ -1028,7 +1028,7 @@ func (m *Manager) BindMail(mb *request.MailBinding, accessPayload *jwt.AccessPay
 		return perror.BindAlreadyExists
 	}
 
-	identifyToken := b64.RawStdEncoding.EncodeToString([]byte(mb.Mail))
+	identifyToken := b64.RawStdEncoding.EncodeToString([]byte(binding.Mail))
 
 	exists, err = models.Bindings(qm.Where("login_type = ? and identify_token = ?", MAILLOGIN, identifyToken)).Exists(tx)
 	if err != nil {
@@ -1039,7 +1039,7 @@ func (m *Manager) BindMail(mb *request.MailBinding, accessPayload *jwt.AccessPay
 		return perror.BindAlreadyExists
 	}
 
-	_, perr := m.newBinding(tx, accessPayload.UserID, mb.Mail, MAILLOGIN, identifyToken, false)
+	_, perr := m.newBinding(tx, accessPayload.UserID, binding.Mail, MAILLOGIN, identifyToken, false)
 	if perr != nil {
 		return perr
 	}
@@ -1047,9 +1047,9 @@ func (m *Manager) BindMail(mb *request.MailBinding, accessPayload *jwt.AccessPay
 	return nil
 }
 
-func (m *Manager) BindGoogle(gb *request.GoogleBinding, accessPayload *jwt.AccessPayload) *perror.PlutoError {
+func (m *Manager) BindGoogle(binding *request.Binding, accessPayload *jwt.AccessPayload) *perror.PlutoError {
 
-	info, perr := verifyGoogleIdToken(gb.IDToken)
+	info, perr := verifyGoogleIdToken(binding.IDToken)
 	if perr != nil {
 		return perr
 	}
@@ -1094,8 +1094,8 @@ func (m *Manager) BindGoogle(gb *request.GoogleBinding, accessPayload *jwt.Acces
 	return nil
 }
 
-func (m *Manager) BindApple(ab *request.AppleBinding, accessPayload *jwt.AccessPayload) *perror.PlutoError {
-	info, perr := getAppleToken(m.config, ab.Code)
+func (m *Manager) BindApple(binding *request.Binding, accessPayload *jwt.AccessPayload) *perror.PlutoError {
+	info, perr := getAppleToken(m.config, binding.Code)
 	if perr != nil {
 		return perr
 	}
@@ -1140,9 +1140,9 @@ func (m *Manager) BindApple(ab *request.AppleBinding, accessPayload *jwt.AccessP
 	return nil
 }
 
-func (m *Manager) BindWechat(wb *request.WechatBinding, accessPayload *jwt.AccessPayload) *perror.PlutoError {
+func (m *Manager) BindWechat(binding *request.Binding, accessPayload *jwt.AccessPayload) *perror.PlutoError {
 
-	accessToken, openID, perr := getWechatAccessToken(wb.Code, m.config.WechatLogin)
+	accessToken, openID, perr := getWechatAccessToken(binding.Code, m.config.WechatLogin)
 
 	if perr != nil {
 		return perr

@@ -183,51 +183,17 @@ func (vit *VerifyIDToken) Validation() bool {
 	return true
 }
 
-type MailBinding struct {
-	Mail string `json:"mail"`
-}
-
-func (mb *MailBinding) Validation() bool {
-	if mb.Mail == "" {
-		return false
-	}
-
-	return true
-}
-
-type WechatBinding struct {
-	Code string `json:"code"`
-}
-
-func (wb *WechatBinding) Validation() bool {
-	if wb.Code == "" {
-		return false
-	}
-
-	return true
-}
-
-type GoogleBinding struct {
+type Binding struct {
+	Mail    string `json:"mail"`
+	Code    string `json:"code"`
 	IDToken string `json:"id_token"`
+	Type    string `json:"type"`
 }
 
-func (gb *GoogleBinding) Validation() bool {
-	if gb.IDToken == "" {
+func (binding *Binding) Validation() bool {
+	if binding.Type == "" {
 		return false
 	}
-
-	return true
-}
-
-type AppleBinding struct {
-	Code string `json:"code"`
-}
-
-func (ab *AppleBinding) Validation() bool {
-	if ab.Code == "" {
-		return false
-	}
-
 	return true
 }
 

@@ -1,13 +1,15 @@
 # API Document
 Pluto provides a set of HTTP resetful APIs.
 
-* [`/v1/register`](#v1register)
-* [`/v1/register/verify/mail`](#v1registerverifymail)
-* [`/v1/login/account`](#v1loginaccount)
-* [`/v1/login/google/mobile`](#v1logingooglemobile)
-* [`/v1/login/apple/mobile`](#v1loginapplemobile)
-* [`/v1/login/wechat/mobile`](#v1loginwechatmobile)
-* [`/v1/password/reset/mail`](#v1passwordresetmail)
+* [`/v1/user/register`](#v1userregister)
+* [`/v1/user/register/verify/mail`](#v1userregisterverifymail)
+* [`/v1/user/login/account`](#v1userloginaccount)
+* [`/v1/user/login/google/mobile`](#v1userlogingooglemobile)
+* [`/v1/user/login/apple/mobile`](#v1userloginapplemobile)
+* [`/v1/user/login/wechat/mobile`](#v1userloginwechatmobile)
+* [`/v1/user/password/reset/mail`](#v1userpasswordresetmail)
+* [`/v1/user/binding`](#v1userbinding)
+* [`/v1/user/unbinding`](#v1userunbinding)
 * [`/v1/healthcheck`](#v1healthcheck)
 * [`/v1/rbac/role/create`](#v1rbacrolecreate)
 * [`/v1/rbac/scope/create`](#v1rbacscopecreate)
@@ -32,7 +34,7 @@ Pluto provides a set of HTTP resetful APIs.
 
 ## account api
 
-### /v1/register
+### /v1/user/register
 
 Register user with email
 
@@ -56,7 +58,7 @@ Register user with email
 }
 ```
 
-### /v1/register/verify/mail
+### /v1/user/register/verify/mail
 
 Send registration verification mail
 
@@ -77,7 +79,7 @@ Send registration verification mail
 }
 ```
 
-### /v1/login/account
+### /v1/user/login/account
 
 Login with email or username
 
@@ -102,7 +104,7 @@ Login with email or username
 }
 ```
 
-### /v1/login/google/mobile
+### /v1/user/login/google/mobile
 
 Login with google account for mobile app
 
@@ -130,7 +132,7 @@ Offical docs [iOS](https://developers.google.com/identity/sign-in/ios/backend-au
 }
 ```
 
-### /v1/login/apple/mobile
+### /v1/user/login/apple/mobile
 
 Login with apple account for mobile app
 
@@ -142,7 +144,7 @@ Login with apple account for mobile app
 {"code":<string>, "name":<string>, "device_id":<string>, "app_id":<string>}
 ```
 
-Code is the token for verifying the register and getting the user's info like id and email.
+Code is the token for verifying the register and getting the user's info like id and email
 
 * response example:
 
@@ -157,7 +159,7 @@ Code is the token for verifying the register and getting the user's info like id
 }
 ```
 
-### /v1/login/wechat/mobile
+### /v1/user/login/wechat/mobile
 
 Login with wechat account for mobile app
 
@@ -171,7 +173,7 @@ Offical docs [wechat](https://developers.weixin.qq.com/doc/oplatform/Mobile_App/
 {"code":<string>, "device_id":<string>, "app_id":<string>}
 ```
 
-Code is the token for exchanging the access token of wechat.
+Code is the token for exchanging the access token of wechat
 
 * response example:
 ```
@@ -185,7 +187,7 @@ Code is the token for exchanging the access token of wechat.
 }
 ```
 
-### /v1/password/reset/mail
+### /v1/user/password/reset/mail
 
 Send password reset mail
 
@@ -204,6 +206,34 @@ Send password reset mail
   "status": "ok",
   "body": nil
 }
+```
+
+### /v1/user/binding
+
+Bind mail, google, wechat, apple account
+
+* method: POST
+
+* request:
+
+```
+{"type":"mail|google|apple|wechat", "id_token":"<string>"(google binding), "mail":"<string>"(mail binding), "code":"<string>"(wechat, apple binding)}
+```
+
+### /v1/user/unbinding
+
+Unbind mail, google, wechat, apple account
+
+* method: POST
+
+* request:
+
+```
+{"type":"mail|google|apple|wechat"}
+```
+
+```
+{"mail":<string>}
 ```
 
 ## health check api
@@ -227,7 +257,7 @@ Health check
 
 ## rbac api
 
-Access token with `pluto.admin` scope should be provided.
+Access token with `pluto.admin` scope should be provided
 
 ### /v1/rbac/role/create
 
@@ -374,7 +404,7 @@ Set the role of a user in application
 
 Search the user using name or mail
 
-* Access token with `pluto.admin` scope needs.
+* Access token with `pluto.admin` scope needs
 
 * method: GET
 
@@ -388,7 +418,7 @@ Search the user using name or mail
 
 Get the count of the total users
 
-* Access token with `pluto.admin` scope needs.
+* Access token with `pluto.admin` scope needs
 
 * method: GET
 
@@ -540,7 +570,7 @@ Create client
 
 Set the client status to approved
 
-* Access token with `pluto.admin` scope needs.
+* Access token with `pluto.admin` scope needs
 
 * method: PUT
 

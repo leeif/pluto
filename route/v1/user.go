@@ -92,83 +92,51 @@ func (router *Router) AppleLoginMobile(w http.ResponseWriter, r *http.Request) *
 	return nil
 }
 
-func (router *Router) BindMail(w http.ResponseWriter, r *http.Request) *perror.PlutoError {
+func (router *Router) Binding(w http.ResponseWriter, r *http.Request) *perror.PlutoError {
 	payload, perr := routeUtils.GetAccessPayload(r)
 	if perr != nil {
 		return perr
 	}
 
-	mb := &request.MailBinding{}
+	binding := &request.Binding{}
 
-	if err := routeUtils.GetRequestData(r, &mb); err != nil {
+	if err := routeUtils.GetRequestData(r, binding); err != nil {
 		return err
 	}
 
-	if perr := router.manager.BindMail(mb, payload); perr != nil {
+	switch binding.Type {
+	case manage.MAILLOGIN:
+		if binding.Mail == "" {
+			return perror.BadRequest
+		}
+		perr = router.manager.BindMail(binding, payload)
+	case manage.GOOGLELOGIN:
+		if binding.IDToken == "" {
+			return perror.BadRequest
+		}
+		perr = router.manager.BindGoogle(binding, payload)
+	case manage.APPLELOGIN:
+		if binding.Code == "" {
+			return perror.BadRequest
+		}
+		perr = router.manager.BindApple(binding, payload)
+	case manage.WECHATLOGIN:
+		if binding.Code == "" {
+			return perror.BadRequest
+		}
+		perr = router.manager.BindWechat(binding, payload)
+	default:
+		return perror.Forbidden
+	}
+
+	if perr != nil {
 		return perr
 	}
 
 	return nil
 }
 
-func (router *Router) BindGoogle(w http.ResponseWriter, r *http.Request) *perror.PlutoError {
-	payload, perr := routeUtils.GetAccessPayload(r)
-	if perr != nil {
-		return perr
-	}
-
-	gb := &request.GoogleBinding{}
-
-	if err := routeUtils.GetRequestData(r, &gb); err != nil {
-		return err
-	}
-
-	if perr := router.manager.BindGoogle(gb, payload); perr != nil {
-		return perr
-	}
-
-	return nil
-}
-
-func (router *Router) BindApple(w http.ResponseWriter, r *http.Request) *perror.PlutoError {
-	payload, perr := routeUtils.GetAccessPayload(r)
-	if perr != nil {
-		return perr
-	}
-
-	ab := &request.AppleBinding{}
-
-	if err := routeUtils.GetRequestData(r, &ab); err != nil {
-		return err
-	}
-
-	if perr := router.manager.BindApple(ab, payload); perr != nil {
-		return perr
-	}
-
-	return nil
-}
-
-func (router *Router) BindWechat(w http.ResponseWriter, r *http.Request) *perror.PlutoError {
-	payload, perr := routeUtils.GetAccessPayload(r)
-	if perr != nil {
-		return perr
-	}
-
-	wb := &request.WechatBinding{}
-
-	if err := routeUtils.GetRequestData(r, &wb); err != nil {
-		return err
-	}
-
-	if perr := router.manager.BindWechat(wb, payload); perr != nil {
-		return perr
-	}
-
-	return nil
-}
-
-func (router *Router) Unbind(w http.ResponseWriter, r *http.Request) *perror.PlutoError {
+func (router *Router) Unbinding(w http.ResponseWriter, r *http.Request) *perror.PlutoError {
 	payload, perr := routeUtils.GetAccessPayload(r)
 	if perr != nil {
 		return perr
@@ -180,7 +148,17 @@ func (router *Router) Unbind(w http.ResponseWriter, r *http.Request) *perror.Plu
 		return err
 	}
 
-	if perr := router.manager.Unbind(ub, payload); perr != nil {
+	switch ub.Type {
+	case manage.MAILLOGIN:
+	case manage.GOOGLELOGIN:
+	case manage.APPLELOGIN:
+	case manage.WECHATLOGIN:
+		perr = router.manager.Unbind(ub, payload)
+	default:
+		return perror.Forbidden
+	}
+
+	if perr != nil {
 		return perr
 	}
 

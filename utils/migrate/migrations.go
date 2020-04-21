@@ -91,9 +91,11 @@ func createBindingsTable(db *sql.DB, name string) error {
 		"`login_type` varchar(10) NOT NULL," +
 		"`identify_token` varchar(255) NOT NULL," +
 		"`mail` varchar(255) NOT NULL," +
+		"`verified` tinyint(1) DEFAULT NULL," +
 		"`user_id` int(10) unsigned NOT NULL," +
 		"PRIMARY KEY (`id`)," +
 		"UNIQUE KEY `login_type_identify_token` (`login_type`,`identify_token`)," +
+		"UNIQUE KEY `user_id_login_type` (`user_id`,`login_type`)," +
 		"KEY `users_deleted_at` (`deleted_at`)" +
 		")"
 	_, err := db.Exec(sql)
@@ -206,7 +208,7 @@ func createRBACRoleTable(db *sql.DB, name string) error {
 		"`created_at` timestamp NULL DEFAULT NULL," +
 		"`updated_at` timestamp NULL DEFAULT NULL," +
 		"`deleted_at` timestamp NULL DEFAULT NULL," +
-		"`name` varchar(20) NOT NULL," +
+		"`name` varchar(60) NOT NULL," +
 		"`app_id` int(10) unsigned NOT NULL," +
 		"`default_scope` int(10) unsigned," +
 		"PRIMARY KEY (`id`)," +
@@ -245,7 +247,7 @@ func createRBACScopeTable(db *sql.DB, name string) error {
 		"`created_at` timestamp NULL DEFAULT NULL," +
 		"`updated_at` timestamp NULL DEFAULT NULL," +
 		"`deleted_at` timestamp NULL DEFAULT NULL," +
-		"`name` varchar(20) NOT NULL," +
+		"`name` varchar(60) NOT NULL," +
 		"`app_id` int(10) unsigned NOT NULL," +
 		"PRIMARY KEY (`id`)," +
 		"UNIQUE KEY `app_id_name` (`app_id`, `name`)," +

@@ -91,11 +91,10 @@ type AppleMobileLogin struct {
 	Code     string `json:"code"`
 	DeviceID string `json:"device_id"`
 	AppID    string `json:"app_id"`
-	Name     string `json:"name"`
 }
 
 func (aml *AppleMobileLogin) Validation() bool {
-	if aml.Code == "" || aml.Name == "" {
+	if aml.Code == "" {
 		return false
 	}
 
@@ -178,6 +177,66 @@ type VerifyIDToken struct {
 
 func (vit *VerifyIDToken) Validation() bool {
 	if vit.Token == "" {
+		return false
+	}
+
+	return true
+}
+
+type MailBinding struct {
+	Mail string `json:"mail"`
+}
+
+func (mb *MailBinding) Validation() bool {
+	if mb.Mail == "" {
+		return false
+	}
+
+	return true
+}
+
+type WechatBinding struct {
+	Code string `json:"code"`
+}
+
+func (wb *WechatBinding) Validation() bool {
+	if wb.Code == "" {
+		return false
+	}
+
+	return true
+}
+
+type GoogleBinding struct {
+	IDToken string `json:"id_token"`
+}
+
+func (gb *GoogleBinding) Validation() bool {
+	if gb.IDToken == "" {
+		return false
+	}
+
+	return true
+}
+
+type AppleBinding struct {
+	Code string `json:"code"`
+}
+
+func (ab *AppleBinding) Validation() bool {
+	if ab.Code == "" {
+		return false
+	}
+
+	return true
+}
+
+type UnBinding struct {
+	Type string `json:"type"`
+}
+
+func (ub *UnBinding) Validation() bool {
+	if ub.Type == "" {
 		return false
 	}
 

@@ -93,34 +93,97 @@ func (router *Router) AppleLoginMobile(w http.ResponseWriter, r *http.Request) *
 }
 
 func (router *Router) BindMail(w http.ResponseWriter, r *http.Request) *perror.PlutoError {
+	payload, perr := routeUtils.GetAccessPayload(r)
+	if perr != nil {
+		return perr
+	}
+
+	mb := &request.MailBinding{}
+
+	if err := routeUtils.GetRequestData(r, &mb); err != nil {
+		return err
+	}
+
+	if perr := router.manager.BindMail(mb, payload); perr != nil {
+		return perr
+	}
+
 	return nil
 }
 
 func (router *Router) BindGoogle(w http.ResponseWriter, r *http.Request) *perror.PlutoError {
+	payload, perr := routeUtils.GetAccessPayload(r)
+	if perr != nil {
+		return perr
+	}
+
+	gb := &request.GoogleBinding{}
+
+	if err := routeUtils.GetRequestData(r, &gb); err != nil {
+		return err
+	}
+
+	if perr := router.manager.BindGoogle(gb, payload); perr != nil {
+		return perr
+	}
+
 	return nil
 }
 
 func (router *Router) BindApple(w http.ResponseWriter, r *http.Request) *perror.PlutoError {
+	payload, perr := routeUtils.GetAccessPayload(r)
+	if perr != nil {
+		return perr
+	}
+
+	ab := &request.AppleBinding{}
+
+	if err := routeUtils.GetRequestData(r, &ab); err != nil {
+		return err
+	}
+
+	if perr := router.manager.BindApple(ab, payload); perr != nil {
+		return perr
+	}
+
 	return nil
 }
 
 func (router *Router) BindWechat(w http.ResponseWriter, r *http.Request) *perror.PlutoError {
+	payload, perr := routeUtils.GetAccessPayload(r)
+	if perr != nil {
+		return perr
+	}
+
+	wb := &request.WechatBinding{}
+
+	if err := routeUtils.GetRequestData(r, &wb); err != nil {
+		return err
+	}
+
+	if perr := router.manager.BindWechat(wb, payload); perr != nil {
+		return perr
+	}
+
 	return nil
 }
 
-func (router *Router) UnbindMail(w http.ResponseWriter, r *http.Request) *perror.PlutoError {
-	return nil
-}
+func (router *Router) Unbind(w http.ResponseWriter, r *http.Request) *perror.PlutoError {
+	payload, perr := routeUtils.GetAccessPayload(r)
+	if perr != nil {
+		return perr
+	}
 
-func (router *Router) UnbindGoogle(w http.ResponseWriter, r *http.Request) *perror.PlutoError {
-	return nil
-}
+	ub := &request.UnBinding{}
 
-func (router *Router) UnbindApple(w http.ResponseWriter, r *http.Request) *perror.PlutoError {
-	return nil
-}
+	if err := routeUtils.GetRequestData(r, &ub); err != nil {
+		return err
+	}
 
-func (router *Router) UnbindWechat(w http.ResponseWriter, r *http.Request) *perror.PlutoError {
+	if perr := router.manager.Unbind(ub, payload); perr != nil {
+		return perr
+	}
+
 	return nil
 }
 

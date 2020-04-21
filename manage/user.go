@@ -37,6 +37,42 @@ const (
 	APPLELOGIN  = "apple"
 )
 
+func (m *Manager) randomUserName(exec boil.Executor, prefix string) (string, *perror.PlutoError) {
+	randomTokenLen := 5
+	name := fmt.Sprintf("%s_%s", prefix, saltUtil.RandomToken(randomTokenLen))
+
+	for {
+		exists, err := models.Users(qm.Where("name = ?", name)).Exists(exec)
+		if err != nil {
+			return "", perror.ServerError.Wrapper(err)
+		}
+		if !exists {
+			break
+		}
+		name = fmt.Sprintf("%s_%s", prefix, saltUtil.RandomToken(randomTokenLen))
+	}
+
+	return name, nil
+}
+
+func (m *Manager) RandomUserName(prefix string) (string, *perror.PlutoError) {
+	randomTokenLen := 5
+	name := fmt.Sprintf("%s_%s", prefix, saltUtil.RandomToken(randomTokenLen))
+
+	for {
+		exists, err := models.Users(qm.Where("name = ?", name)).Exists(m.db)
+		if err != nil {
+			return "", perror.ServerError.Wrapper(err)
+		}
+		if !exists {
+			break
+		}
+		name = fmt.Sprintf("%s_%s", prefix, saltUtil.RandomToken(randomTokenLen))
+	}
+
+	return name, nil
+}
+
 func (m *Manager) MailPasswordLogin(login request.PasswordLogin) (*GrantResult, *perror.PlutoError) {
 	tx, err := m.db.Begin()
 
@@ -147,12 +183,19 @@ func (m *Manager) NamePasswordLogin(login request.PasswordLogin) (*GrantResult, 
 	return grantResult, nil
 }
 
-func (m *Manager) newUser(exec boil.Executor, name, avatar, password string) (*models.User, *perror.PlutoError) {
+func (m *Manager) newUser(exec boil.Executor, name, avatar, password string, verified bool) (*models.User, *perror.PlutoError) {
+	exists, err := models.Users(qm.Where("name = ?", name)).Exists(exec)
+	if err != nil {
+		return nil, perror.ServerError.Wrapper(err)
+	}
+	if exists {
+		return nil, perror.UsernameExists
+	}
 	user := &models.User{}
 	user.Avatar.SetValid(avatar)
 	user.Password.SetValid(password)
 	user.Name = name
-	user.Verified.SetValid(true)
+	user.Verified.SetValid(verified)
 	if err := user.Insert(exec, boil.Infer()); err != nil {
 		return nil, perror.ServerError.Wrapper(err)
 	}
@@ -160,12 +203,17 @@ func (m *Manager) newUser(exec boil.Executor, name, avatar, password string) (*m
 	return user, nil
 }
 
-func (m *Manager) newBinding(exec boil.Executor, userID uint, mail, loginType, identifyToken string) (*models.Binding, *perror.PlutoError) {
+func (m *Manager) newBinding(exec boil.Executor, userID uint, mail, loginType, identifyToken string, verified bool) (*models.Binding, *perror.PlutoError) {
 	binding := &models.Binding{}
 	binding.UserID = userID
 	binding.LoginType = loginType
 	binding.IdentifyToken = identifyToken
 	binding.Mail = mail
+	binding.Verified.SetValid(verified)
+
+	if err := binding.Insert(exec, boil.Infer()); err != nil {
+		return nil, perror.ServerError.Wrapper(err)
+	}
 	return binding, nil
 }
 
@@ -198,13 +246,27 @@ func (m *Manager) GoogleLoginMobile(login request.GoogleMobileLogin) (*GrantResu
 		return nil, perr
 	}
 
+	namePrefix := ""
+
+	if info.Name == "" {
+		namePrefix = "google_user"
+	} else {
+		namePrefix = info.Name
+	}
+
+	name, perr := m.randomUserName(tx, namePrefix)
+
+	if perr != nil {
+		return nil, perr
+	}
+
 	var user *models.User
-	if googleBinding != nil {
-		user, perr = m.newUser(tx, info.Name, info.Picture, encodedPassword)
+	if googleBinding == nil {
+		user, perr = m.newUser(tx, name, info.Picture, encodedPassword, true)
 		if perr != nil {
 			return nil, perr
 		}
-		googleBinding, perr = m.newBinding(tx, user.ID, info.Email, GOOGLELOGIN, info.Sub)
+		googleBinding, perr = m.newBinding(tx, user.ID, info.Email, GOOGLELOGIN, info.Sub, true)
 	} else {
 		googleBinding.Mail = info.Email
 		if _, err := googleBinding.Update(tx, boil.Infer()); err != nil {
@@ -312,13 +374,27 @@ func (m *Manager) WechatLoginMobile(login request.WechatMobileLogin) (*GrantResu
 		return nil, perr
 	}
 
+	namePrefix := ""
+
+	if info.Nickname == "" {
+		namePrefix = "wechat_user"
+	} else {
+		namePrefix = info.Nickname
+	}
+
+	name, perr := m.randomUserName(tx, namePrefix)
+
+	if perr != nil {
+		return nil, perr
+	}
+
 	var user *models.User
-	if wechatBinding != nil {
-		user, perr = m.newUser(tx, info.Nickname, info.HeadimgURL, encodedPassword)
+	if wechatBinding == nil {
+		user, perr = m.newUser(tx, name, info.HeadimgURL, encodedPassword, true)
 		if perr != nil {
 			return nil, perr
 		}
-		wechatBinding, perr = m.newBinding(tx, user.ID, "", WECHATLOGIN, info.Unionid)
+		wechatBinding, perr = m.newBinding(tx, user.ID, "", WECHATLOGIN, info.Unionid, true)
 	} else {
 		user, err = models.Users(qm.Where("id = ?", wechatBinding.UserID)).One(tx)
 		if err != nil {
@@ -502,13 +578,19 @@ func (m *Manager) AppleLoginMobile(login request.AppleMobileLogin) (*GrantResult
 		return nil, perr
 	}
 
+	name, perr := m.randomUserName(tx, "apple_user")
+
+	if perr != nil {
+		return nil, perr
+	}
+
 	var user *models.User
-	if appleBinding != nil {
-		user, perr = m.newUser(tx, login.Name, avatarURL, encodedPassword)
+	if appleBinding == nil {
+		user, perr = m.newUser(tx, name, avatarURL, encodedPassword, true)
 		if perr != nil {
 			return nil, perr
 		}
-		appleBinding, perr = m.newBinding(tx, user.ID, info.Email, APPLELOGIN, info.Sub)
+		appleBinding, perr = m.newBinding(tx, user.ID, info.Email, APPLELOGIN, info.Sub, true)
 	} else {
 		user, err = models.Users(qm.Where("id = ?", appleBinding.UserID)).One(tx)
 		if err != nil {
@@ -831,22 +913,20 @@ func (m *Manager) RegisterWithEmail(register request.MailRegister) (*models.User
 		avatarURL = remoteURL
 	}
 
-	user, perr := m.newUser(tx, register.Name, avatarURL, encodedPassword)
-	if perr != nil {
-		return nil, perr
-	}
-
-	_, perr = m.newBinding(tx, user.ID, register.Mail, MAILLOGIN, identifyToken)
-
-	if perr != nil {
-		return nil, perr
-	}
-
+	verified := false
 	if m.config.Server.SkipRegisterVerifyMail {
-		user.Verified.SetValid(true)
-		if err := user.Insert(tx, boil.Infer()); err != nil {
-			return nil, perror.ServerError.Wrapper(err)
-		}
+		verified = true
+	}
+
+	user, perr := m.newUser(tx, register.Name, avatarURL, encodedPassword, verified)
+	if perr != nil {
+		return nil, perr
+	}
+
+	_, perr = m.newBinding(tx, user.ID, register.Mail, MAILLOGIN, identifyToken, verified)
+
+	if perr != nil {
+		return nil, perr
 	}
 
 	saltModel := models.Salt{}
@@ -924,6 +1004,216 @@ func (m *Manager) RegisterVerify(token string) *perror.PlutoError {
 	user.Update(tx, boil.Whitelist("verified"))
 
 	tx.Commit()
+
+	return nil
+}
+
+func (m *Manager) BindMail(mb *request.MailBinding, accessPayload *jwt.AccessPayload) *perror.PlutoError {
+	tx, err := m.db.Begin()
+
+	if err != nil {
+		return perror.ServerError.Wrapper(err)
+	}
+
+	defer func() {
+		tx.Rollback()
+	}()
+
+	exists, err := models.Bindings(qm.Where("id = ? and login_type = ?", accessPayload.UserID, MAILLOGIN)).Exists(tx)
+	if err != nil {
+		return perror.ServerError.Wrapper(err)
+	}
+
+	if exists {
+		return perror.BindAlreadyExists
+	}
+
+	identifyToken := b64.RawStdEncoding.EncodeToString([]byte(mb.Mail))
+
+	exists, err = models.Bindings(qm.Where("login_type = ? and identify_token = ?", MAILLOGIN, identifyToken)).Exists(tx)
+	if err != nil {
+		return perror.ServerError.Wrapper(err)
+	}
+
+	if exists {
+		return perror.BindAlreadyExists
+	}
+
+	_, perr := m.newBinding(tx, accessPayload.UserID, mb.Mail, MAILLOGIN, identifyToken, false)
+	if perr != nil {
+		return perr
+	}
+
+	return nil
+}
+
+func (m *Manager) BindGoogle(gb *request.GoogleBinding, accessPayload *jwt.AccessPayload) *perror.PlutoError {
+
+	info, perr := verifyGoogleIdToken(gb.IDToken)
+	if perr != nil {
+		return perr
+	}
+
+	tx, err := m.db.Begin()
+
+	if err != nil {
+		return perror.ServerError.Wrapper(err)
+	}
+
+	defer func() {
+		tx.Rollback()
+	}()
+
+	exists, err := models.Bindings(qm.Where("id = ? and login_type = ?", accessPayload.UserID, GOOGLELOGIN)).Exists(tx)
+	if err != nil {
+		return perror.ServerError.Wrapper(err)
+	}
+
+	if exists {
+		return perror.BindAlreadyExists
+	}
+
+	identifyToken := b64.RawStdEncoding.EncodeToString([]byte(info.Sub))
+
+	exists, err = models.Bindings(qm.Where("login_type = ? and identify_token = ?", MAILLOGIN, identifyToken)).Exists(tx)
+	if err != nil {
+		return perror.ServerError.Wrapper(err)
+	}
+
+	if exists {
+		return perror.BindAlreadyExists
+	}
+
+	_, perr = m.newBinding(tx, accessPayload.UserID, info.Email, MAILLOGIN, identifyToken, false)
+	if perr != nil {
+		return perr
+	}
+
+	tx.Commit()
+
+	return nil
+}
+
+func (m *Manager) BindApple(ab *request.AppleBinding, accessPayload *jwt.AccessPayload) *perror.PlutoError {
+	info, perr := getAppleToken(m.config, ab.Code)
+	if perr != nil {
+		return perr
+	}
+
+	tx, err := m.db.Begin()
+
+	if err != nil {
+		return perror.ServerError.Wrapper(err)
+	}
+
+	defer func() {
+		tx.Rollback()
+	}()
+
+	exists, err := models.Bindings(qm.Where("id = ? and login_type = ?", accessPayload.UserID, APPLELOGIN)).Exists(tx)
+	if err != nil {
+		return perror.ServerError.Wrapper(err)
+	}
+
+	if exists {
+		return perror.BindAlreadyExists
+	}
+
+	identifyToken := b64.RawStdEncoding.EncodeToString([]byte(info.Sub))
+
+	exists, err = models.Bindings(qm.Where("login_type = ? and identify_token = ?", MAILLOGIN, identifyToken)).Exists(tx)
+	if err != nil {
+		return perror.ServerError.Wrapper(err)
+	}
+
+	if exists {
+		return perror.BindAlreadyExists
+	}
+
+	_, perr = m.newBinding(tx, accessPayload.UserID, info.Email, MAILLOGIN, identifyToken, false)
+	if perr != nil {
+		return perr
+	}
+
+	tx.Commit()
+
+	return nil
+}
+
+func (m *Manager) BindWechat(wb *request.WechatBinding, accessPayload *jwt.AccessPayload) *perror.PlutoError {
+
+	accessToken, openID, perr := getWechatAccessToken(wb.Code, m.config.WechatLogin)
+
+	if perr != nil {
+		return perr
+	}
+
+	info, perr := getWechatUserInfo(accessToken, openID)
+	if perr != nil {
+		return perr
+	}
+
+	tx, err := m.db.Begin()
+
+	if err != nil {
+		return perror.ServerError.Wrapper(err)
+	}
+
+	defer func() {
+		tx.Rollback()
+	}()
+
+	exists, err := models.Bindings(qm.Where("id = ? and login_type = ?", accessPayload.UserID, APPLELOGIN)).Exists(tx)
+	if err != nil {
+		return perror.ServerError.Wrapper(err)
+	}
+
+	if exists {
+		return perror.BindAlreadyExists
+	}
+
+	identifyToken := b64.RawStdEncoding.EncodeToString([]byte(info.Unionid))
+
+	exists, err = models.Bindings(qm.Where("login_type = ? and identify_token = ?", WECHATLOGIN, identifyToken)).Exists(tx)
+	if err != nil {
+		return perror.ServerError.Wrapper(err)
+	}
+
+	if exists {
+		return perror.BindAlreadyExists
+	}
+
+	_, perr = m.newBinding(tx, accessPayload.UserID, "", MAILLOGIN, identifyToken, false)
+	if perr != nil {
+		return perr
+	}
+
+	tx.Commit()
+
+	return nil
+}
+
+func (m *Manager) Unbind(ub *request.UnBinding, accessPayload *jwt.AccessPayload) *perror.PlutoError {
+	tx, err := m.db.Begin()
+
+	if err != nil {
+		return perror.ServerError.Wrapper(err)
+	}
+
+	defer func() {
+		tx.Rollback()
+	}()
+
+	binding, err := models.Bindings(qm.Where("id = ? and login_type = ?", accessPayload.UserID, ub.Type)).One(tx)
+	if err != nil && err != sql.ErrNoRows {
+		return perror.ServerError.Wrapper(err)
+	} else if err != sql.ErrNoRows {
+		return perror.BindAlreadyExists
+	}
+
+	if _, err := binding.Delete(tx); err != nil {
+		return perror.ServerError.Wrapper(err)
+	}
 
 	return nil
 }

@@ -35,8 +35,6 @@ type Router struct {
 func (router *Router) registerRoutes(routes []PlutoRoute, prefix string, isWeb bool) {
 	sub := router.mux.PathPrefix(prefix).Subrouter()
 	for _, r := range routes {
-		// p := path.Join(prefix, r.path)
-		// fmt.Println(fmt.Sprintf("* [`%s`](%s)", p, strings.Replace(p, "/", "", -1)))
 		if isWeb {
 			sub.Handle(r.path, r.middle(router.plutoWebHandlerWrapper, r.handler)).Methods(r.method)
 		} else {

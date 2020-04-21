@@ -158,10 +158,6 @@ func (m *Manager) AuthorizationCodeGrant(ot *request.OAuthTokens) (*GrantResult,
 		return nil, perror.OAuthAuthorizationCodeExpired
 	}
 
-	if ot.DeviceID == "" {
-		ot.DeviceID = "oauth"
-	}
-
 	// login
 	grantResult, perr := m.loginWithAppID(tx, authorizationCode.UserID, ot.DeviceID, authorizationCode.AppID, authorizationCode.Scopes)
 	if perr != nil {
@@ -201,10 +197,6 @@ func (m *Manager) PasswordGrant(ot *request.OAuthTokens) (*GrantResult, *perror.
 	scopes, perr := getValidScopes(tx, ot.Scopes, user.ID, ot.AppID)
 	if perr != nil {
 		return nil, perr
-	}
-
-	if ot.DeviceID == "" {
-		ot.DeviceID = "oauth"
 	}
 
 	grantResult, perr := m.loginWithAppName(tx, user.ID, ot.DeviceID, ot.AppID, scopes)

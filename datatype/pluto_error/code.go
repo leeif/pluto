@@ -5,7 +5,7 @@ import "net/http"
 var (
 	ServerError       = NewPlutoError(http.StatusInternalServerError, 1000, "Server Error", nil)
 	BadRequest        = NewPlutoError(http.StatusBadRequest, 1001, "Bad Request", nil)
-	Forbidden         = NewPlutoError(http.StatusForbidden, 1002, "Permission Forbidden", nil)
+	Forbidden         = NewPlutoError(http.StatusForbidden, 1002, "Operation Forbidden", nil)
 	Unauthorized      = NewPlutoError(http.StatusUnauthorized, 1003, "Request is unauthorized", nil)
 	HTTPResponseError = NewPlutoError(http.StatusInternalServerError, 1004, "http writer error", nil)
 	NotFound          = NewPlutoError(http.StatusNotFound, 1005, "Path not found", nil)
@@ -15,6 +15,9 @@ var (
 	MailIsNotVerified     = NewPlutoError(http.StatusForbidden, 2003, "Mail is not verified", nil)
 	MailAlreadyVerified   = NewPlutoError(http.StatusBadRequest, 2004, "Mail is already verified", nil)
 	UsernameNotExist      = NewPlutoError(http.StatusForbidden, 2005, "User name does not exist", nil)
+	UsernameExists        = NewPlutoError(http.StatusForbidden, 2006, "User name already exists", nil)
+	BindAlreadyExists     = NewPlutoError(http.StatusForbidden, 2007, "Bind already exists", nil)
+	BindNotExist          = NewPlutoError(http.StatusForbidden, 2008, "Bind does not exist", nil)
 
 	InvalidPassword      = NewPlutoError(http.StatusForbidden, 3001, "Invalid Password", nil)
 	InvalidRefreshToken  = NewPlutoError(http.StatusForbidden, 3002, "Invalid Refresh Token", nil)

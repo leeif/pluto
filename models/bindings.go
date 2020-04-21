@@ -30,6 +30,7 @@ type Binding struct {
 	LoginType     string    `boil:"login_type" json:"login_type" toml:"login_type" yaml:"login_type"`
 	IdentifyToken string    `boil:"identify_token" json:"identify_token" toml:"identify_token" yaml:"identify_token"`
 	Mail          string    `boil:"mail" json:"mail" toml:"mail" yaml:"mail"`
+	Verified      null.Bool `boil:"verified" json:"verified,omitempty" toml:"verified" yaml:"verified,omitempty"`
 	UserID        uint      `boil:"user_id" json:"user_id" toml:"user_id" yaml:"user_id"`
 
 	R *bindingR `boil:"-" json:"-" toml:"-" yaml:"-"`
@@ -44,6 +45,7 @@ var BindingColumns = struct {
 	LoginType     string
 	IdentifyToken string
 	Mail          string
+	Verified      string
 	UserID        string
 }{
 	ID:            "id",
@@ -53,10 +55,34 @@ var BindingColumns = struct {
 	LoginType:     "login_type",
 	IdentifyToken: "identify_token",
 	Mail:          "mail",
+	Verified:      "verified",
 	UserID:        "user_id",
 }
 
 // Generated where
+
+type whereHelpernull_Bool struct{ field string }
+
+func (w whereHelpernull_Bool) EQ(x null.Bool) qm.QueryMod {
+	return qmhelper.WhereNullEQ(w.field, false, x)
+}
+func (w whereHelpernull_Bool) NEQ(x null.Bool) qm.QueryMod {
+	return qmhelper.WhereNullEQ(w.field, true, x)
+}
+func (w whereHelpernull_Bool) IsNull() qm.QueryMod    { return qmhelper.WhereIsNull(w.field) }
+func (w whereHelpernull_Bool) IsNotNull() qm.QueryMod { return qmhelper.WhereIsNotNull(w.field) }
+func (w whereHelpernull_Bool) LT(x null.Bool) qm.QueryMod {
+	return qmhelper.Where(w.field, qmhelper.LT, x)
+}
+func (w whereHelpernull_Bool) LTE(x null.Bool) qm.QueryMod {
+	return qmhelper.Where(w.field, qmhelper.LTE, x)
+}
+func (w whereHelpernull_Bool) GT(x null.Bool) qm.QueryMod {
+	return qmhelper.Where(w.field, qmhelper.GT, x)
+}
+func (w whereHelpernull_Bool) GTE(x null.Bool) qm.QueryMod {
+	return qmhelper.Where(w.field, qmhelper.GTE, x)
+}
 
 var BindingWhere = struct {
 	ID            whereHelperuint
@@ -66,6 +92,7 @@ var BindingWhere = struct {
 	LoginType     whereHelperstring
 	IdentifyToken whereHelperstring
 	Mail          whereHelperstring
+	Verified      whereHelpernull_Bool
 	UserID        whereHelperuint
 }{
 	ID:            whereHelperuint{field: "`bindings`.`id`"},
@@ -75,6 +102,7 @@ var BindingWhere = struct {
 	LoginType:     whereHelperstring{field: "`bindings`.`login_type`"},
 	IdentifyToken: whereHelperstring{field: "`bindings`.`identify_token`"},
 	Mail:          whereHelperstring{field: "`bindings`.`mail`"},
+	Verified:      whereHelpernull_Bool{field: "`bindings`.`verified`"},
 	UserID:        whereHelperuint{field: "`bindings`.`user_id`"},
 }
 
@@ -95,8 +123,8 @@ func (*bindingR) NewStruct() *bindingR {
 type bindingL struct{}
 
 var (
-	bindingAllColumns            = []string{"id", "created_at", "updated_at", "deleted_at", "login_type", "identify_token", "mail", "user_id"}
-	bindingColumnsWithoutDefault = []string{"created_at", "updated_at", "deleted_at", "login_type", "identify_token", "mail", "user_id"}
+	bindingAllColumns            = []string{"id", "created_at", "updated_at", "deleted_at", "login_type", "identify_token", "mail", "verified", "user_id"}
+	bindingColumnsWithoutDefault = []string{"created_at", "updated_at", "deleted_at", "login_type", "identify_token", "mail", "verified", "user_id"}
 	bindingColumnsWithDefault    = []string{"id"}
 	bindingPrimaryKeyColumns     = []string{"id"}
 )

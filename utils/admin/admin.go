@@ -22,7 +22,7 @@ import (
 
 func Init(db *sql.DB, config *config.Config) *perror.PlutoError {
 
-	if config.Admin.Mail == "" || config.Admin.Name == "" {
+	if config.Admin.Mail == "" {
 		return nil
 	}
 
@@ -61,10 +61,14 @@ func Init(db *sql.DB, config *config.Config) *perror.PlutoError {
 	password := salt.RandomToken(20)
 	mr := request.MailRegister{}
 	mr.Mail = config.Admin.Mail
-	mr.Name = config.Admin.Name
+	name, err := manager.RandomUserName("pluto_admin_user")
+	if err != nil {
+		return err
+	}
+	mr.Name = name
 	mr.Password = password
 	user, err := manager.RegisterWithEmail(mr)
-	if err != nil && err.PlutoCode == perror.ServerError.PlutoCode {
+	if err != nil && err.PlutoCode != perror.MailIsAlreadyRegister.PlutoCode {
 		return err
 	}
 

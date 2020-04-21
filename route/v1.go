@@ -79,11 +79,11 @@ func (r *Router) registerUserV1Routes(prefix string) {
 			handler:     r.v1.FindUser,
 		},
 		{
-			path:        "/count",
-			description: "Get the count of the total users",
+			path:        "/summary",
+			description: "Get the summary of users",
 			method:      "GET",
 			middle:      middleware.AdminAuthMiddleware,
-			handler:     r.v1.UsersCount,
+			handler:     r.v1.UserSummary,
 		},
 		{
 			path:        "/info/{userID}",

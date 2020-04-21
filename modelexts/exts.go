@@ -3,9 +3,9 @@ package modelexts
 import "github.com/leeif/pluto/models"
 
 type User struct {
-	User    *models.User
-	Binding []*models.Binding
-	Role    string `json:"role"`
+	User     *models.User
+	Bindings []*models.Binding
+	Role     string `json:"role"`
 }
 
 func (u User) Format() map[string]interface{} {
@@ -17,6 +17,14 @@ func (u User) Format() map[string]interface{} {
 	res["verified"] = u.User.Verified
 	res["created_at"] = u.User.CreatedAt.Time.Unix()
 	res["updated_at"] = u.User.UpdatedAt.Time.Unix()
+	bindings := make([]interface{}, 0)
+	for _, binding := range u.Bindings {
+		b := make(map[string]interface{})
+		b["login_type"] = binding.LoginType
+		b["mail"] = binding.Mail
+		bindings = append(bindings, b)
+	}
+	res["bindings"] = bindings
 	return res
 }
 
@@ -95,7 +103,7 @@ type UserApplicationRole struct {
 
 type FindUser struct {
 	User         *models.User
-	Bindings     []*models.User
+	Bindings     []*models.Binding
 	Applications []*UserApplicationRole `json:"applications"`
 }
 
@@ -122,6 +130,15 @@ func (f FindUser) Format() map[string]interface{} {
 	}
 
 	res["applications"] = applications
+
+	bindings := make([]interface{}, 0)
+	for _, binding := range f.Bindings {
+		b := make(map[string]interface{})
+		b["login_type"] = binding.LoginType
+		b["mail"] = binding.Mail
+		bindings = append(bindings, b)
+	}
+	res["bindings"] = bindings
 
 	return res
 }

@@ -10,6 +10,10 @@ Pluto provides a set of HTTP resetful APIs.
 * [`/v1/user/password/reset/mail`](#v1userpasswordresetmail)
 * [`/v1/user/binding`](#v1userbinding)
 * [`/v1/user/unbinding`](#v1userunbinding)
+* [`/v1/user/search`](#v1usersearch)
+* [`/v1/user/count`](#v1usercount)
+* [`/v1/user/info/{userID}:GET`](#v1userinfo{userID}:GET)
+* [`/v1/user/info/{userID}:PUT`](#v1userinfo{userID}:PUT)
 * [`/v1/healthcheck`](#v1healthcheck)
 * [`/v1/rbac/role/create`](#v1rbacrolecreate)
 * [`/v1/rbac/scope/create`](#v1rbacscopecreate)
@@ -21,10 +25,6 @@ Pluto provides a set of HTTP resetful APIs.
 * [`/v1/rbac/role/list`](#v1rbacrolelist)
 * [`/v1/rbac/scope/list`](#v1rbacscopelist)
 * [`/v1/rbac/user/application/role`](#v1rbacuserapplicationrole)
-* [`/v1/user/search`](#v1usersearch)
-* [`/v1/user/count`](#v1usercount)
-* [`/v1/user/info/{userID}`](#v1userinfo{userID})
-* [`/v1/user/info/{userID}`](#v1userinfo{userID})
 * [`/v1/token/refresh`](#v1tokenrefresh)
 * [`/v1/token/publickey`](#v1tokenpublickey)
 * [`/v1/token/access/verify`](#v1tokenaccessverify)
@@ -236,6 +236,72 @@ Unbind mail, google, wechat, apple account
 {"mail":<string>}
 ```
 
+### /v1/user/summary
+
+Search the user using user name
+
+* Access token with `pluto.admin` scope needs
+
+* method: GET
+
+### /v1/user/count
+
+Get the count of the total users
+
+* Access token with `pluto.admin` scope needs
+
+* method: GET
+
+### /v1/user/info/{userID}:GET
+
+Get user info
+
+* Access token needs
+
+* method: GET
+
+* response example:
+
+```
+{
+  "status": "ok",
+  "body": {
+    "avatar": "",
+    "created_at": 1586925495,
+    "login_type": "mail",
+    "mail": "geeklyf92610@gmail.com",
+    "name": "yifan.li",
+    "roles": "admin",
+    "sub": 1,
+    "updated_at": 1586925495,
+    "verified": true
+  }
+}
+```
+
+### /v1/user/info/{userID}:PUT
+
+Update user info
+
+* Access token needs
+
+* method: PUT
+
+* request:
+
+```
+{"name":<string>, "gender":<string>, "avatar":<string>}
+```
+
+* response example:
+
+```
+{
+  "status": "ok",
+  "body": nil
+}
+```
+
 ## health check api
 
 ### /v1/healthcheck
@@ -397,82 +463,6 @@ Set the role of a user in application
 ```
 
 * response example:
-
-## user api
-
-### /v1/user/search
-
-Search the user using name or mail
-
-* Access token with `pluto.admin` scope needs
-
-* method: GET
-
-* request:
-
-```
-{"account":<string>}
-```
-
-### /v1/user/count
-
-Get the count of the total users
-
-* Access token with `pluto.admin` scope needs
-
-* method: GET
-
-### /v1/user/info/{userID}
-
-Get user info
-
-* Access token needs
-
-* method: GET
-
-* response example:
-
-```
-{
-  "status": "ok",
-  "body": {
-    "avatar": "",
-    "created_at": 1586925495,
-    "login_type": "mail",
-    "mail": "geeklyf92610@gmail.com",
-    "name": "yifan.li",
-    "roles": "admin",
-    "sub": 1,
-    "updated_at": 1586925495,
-    "verified": true
-  }
-}
-```
-
-### /v1/user/info/{userID}
-
-Update user info
-
-* Access token needs
-
-* method: PATCH
-
-* request:
-
-```
-{"name":<string>, "gender":<string>, "avatar":<string>}
-```
-
-* response example:
-
-```
-{
-  "status": "ok",
-  "body": nil
-}
-```
-
-
 
 ## token api
 

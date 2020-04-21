@@ -225,8 +225,8 @@ func (router *Router) FindUser(w http.ResponseWriter, r *http.Request) *perror.P
 	return nil
 }
 
-func (router *Router) UsersCount(w http.ResponseWriter, r *http.Request) *perror.PlutoError {
-	res, perr := router.manager.UsersCount()
+func (router *Router) UserSummary(w http.ResponseWriter, r *http.Request) *perror.PlutoError {
+	res, perr := router.manager.UserSummary()
 	if perr != nil {
 		return perr
 	}

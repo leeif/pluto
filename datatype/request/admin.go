@@ -1,11 +1,11 @@
 package request
 
 type FindUser struct {
-	Account string `json:"account"`
+	Name string `json:"name"`
 }
 
 func (fu *FindUser) Validation() bool {
-	if fu.Account == "" {
+	if fu.Name == "" {
 		return false
 	}
 	return true

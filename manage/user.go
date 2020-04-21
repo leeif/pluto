@@ -795,8 +795,15 @@ func (m *Manager) UserInfo(userID uint, accessPayload *jwt.AccessPayload) (*mode
 		return nil, perr
 	}
 
+	bindings, err := models.Bindings(qm.Where("user_id = ?", userID)).All(m.db)
+
+	if err != nil {
+		return nil, perror.ServerError.Wrapper(err)
+	}
+
 	userExt := &modelexts.User{
-		User: user,
+		User:     user,
+		Bindings: bindings,
 	}
 
 	if role != nil {

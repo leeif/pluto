@@ -35,10 +35,6 @@ update-tag:
 	git tag $(VERSION)
 	git push origin $(VERSION)
 
-update-changelog:
-	git-chglog $(VERSION).. | cat - CHANGELOG.md > temp && mv temp CHANGELOG.md
-	git commit -am "update CHANGELOG.md"
-
 server-binary-build:
 	mkdir -p bin
 	GO111MODULE=on go build -ldflags="-X 'main.VERSION=$(VERSION)'" -o bin/pluto-server cmd/pluto-server/main.go
@@ -52,6 +48,6 @@ unit-test:
 
 test: unit-test
 
-ci-build-production: test check-version-tag docker-build docker-push docker-clean update-tag update-changelog
+ci-build-production: test check-version-tag docker-build docker-push docker-clean update-tag
 
 ci-build-staging: test docker-build-staging docker-push-staging docker-clean-staging

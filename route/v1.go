@@ -23,7 +23,7 @@ func (r *Router) registerUserV1Routes(prefix string) {
 			handler:     r.v1.VerifyMail,
 		},
 		{
-			path:        "/login/account",
+			path:        "/login",
 			description: "Login with email or username",
 			method:      "POST",
 			middle:      middleware.NoAuthMiddleware,
@@ -86,21 +86,21 @@ func (r *Router) registerUserV1Routes(prefix string) {
 			handler:     r.v1.UserSummary,
 		},
 		{
-			path:        "/info",
+			path:        "/info/me",
 			description: "Get user info",
 			method:      "GET",
 			middle:      middleware.AccessTokenAuthMiddleware,
 			handler:     r.v1.UserInfo,
 		},
 		{
-			path:        "/info",
+			path:        "/info/me/update",
 			description: "Update user info",
 			method:      "PUT",
 			middle:      middleware.AccessTokenAuthMiddleware,
 			handler:     r.v1.UpdateUserInfo,
 		},
 	}
-	r.registerRoutes(routes, path.Join(prefix, "/user"), false)
+	r.registerRoutes(routes, path.Join(prefix, "/api/user"), false)
 }
 
 func (r *Router) registerWebV1Routes(prefix string) {
@@ -271,7 +271,7 @@ func (r *Router) registerTokenV1Routes(prefix string) {
 			handler:     r.v1.VerifyAccessToken,
 		},
 	}
-	r.registerRoutes(routes, path.Join(prefix, "/token"), false)
+	r.registerRoutes(routes, path.Join(prefix, "/api/auth"), false)
 }
 
 func (r *Router) registerOauthV1Routes(prefix string) {

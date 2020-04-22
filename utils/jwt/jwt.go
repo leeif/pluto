@@ -48,14 +48,14 @@ type Head struct {
 
 type Payload struct {
 	Type   string `json:"type"`
-	Create int64  `json:"iat"`
-	Expire int64  `json:"exp"`
+	Create int64  `json:"create_time"`
+	Expire int64  `json:"expire_time"`
 }
 
 type AccessPayload struct {
 	Payload
-	UserID uint     `json:"sub"`
-	AppID  string   `json:"iss"`
+	UserID uint     `json:"userId"`
+	AppID  string   `json:"appId"`
 	Scopes []string `json:"scopes"`
 }
 

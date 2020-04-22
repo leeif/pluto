@@ -11,7 +11,7 @@ type User struct {
 
 func (u User) Format() map[string]interface{} {
 	res := make(map[string]interface{})
-	res["sub"] = u.User.ID
+	res["id"] = u.User.ID
 	res["name"] = u.User.Name
 	res["app_id"] = u.AppID
 	res["avatar"] = u.User.Avatar
@@ -19,14 +19,14 @@ func (u User) Format() map[string]interface{} {
 	res["verified"] = u.User.Verified
 	res["created_at"] = u.User.CreatedAt.Time.Unix()
 	res["updated_at"] = u.User.UpdatedAt.Time.Unix()
-	bindings := make([]interface{}, 0)
+	mail := ""
 	for _, binding := range u.Bindings {
-		b := make(map[string]interface{})
-		b["login_type"] = binding.LoginType
-		b["mail"] = binding.Mail
-		bindings = append(bindings, b)
+		if binding.Mail != "" {
+			mail = binding.Mail
+			break
+		}
 	}
-	res["bindings"] = bindings
+	res["mail"] = mail
 	return res
 }
 

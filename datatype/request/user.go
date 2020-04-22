@@ -18,7 +18,7 @@ func (mr *MailRegister) Validation() bool {
 }
 
 type PasswordLogin struct {
-	Account  string `json:"account" schema:"account"`
+	Account  string `json:"mail" schema:"mail"`
 	Password string `json:"password" schema:"password"`
 	DeviceID string `json:"device_id" schema:"deviceID"`
 	AppID    string `json:"app_id" schema:"appID"`

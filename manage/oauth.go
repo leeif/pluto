@@ -30,7 +30,7 @@ const (
 type GrantResult struct {
 	RefreshToken         string `json:"refresh_token"`
 	RefreshTokenExpireAt int64  `json:"refresh_token_expire_at"`
-	AccessToken          string `json:"access_token"`
+	AccessToken          string `json:"jwt"`
 	Type                 string `json:"type"`
 }
 
@@ -394,8 +394,8 @@ func (m *Manager) newRefreshToken(exec boil.Executor, userID uint, deviceApp *mo
 }
 
 func (m *Manager) updateRefreshToken(exec boil.Executor, rt *models.RefreshToken, scopes string) *perror.PlutoError {
-	newToken := refresh.GenerateRefreshToken(string(rt.UserID) + string(rt.DeviceAppID))
-	rt.RefreshToken = newToken
+	// newToken := refresh.GenerateRefreshToken(string(rt.UserID) + string(rt.DeviceAppID))
+	// rt.RefreshToken = newToken
 	rt.ExpireAt = time.Now().Add(time.Duration(m.config.Token.RefreshTokenExpire) * time.Second)
 	rt.Scopes.SetValid(scopes)
 

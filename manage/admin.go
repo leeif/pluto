@@ -491,8 +491,16 @@ func (m *Manager) findUser(user *models.User) (*modelexts.FindUser, *perror.Plut
 		extApps = append(extApps, extApp)
 	}
 
-	res := &modelexts.FindUser{}
-	res.User = user
-	res.Applications = extApps
+	bindings, err := models.Bindings(qm.Where("user_id = ?", user.ID)).All(m.db)
+	if err != nil {
+		return nil, perror.ServerError.Wrapper(err)
+	}
+
+	res := &modelexts.FindUser{
+		User:         user,
+		Bindings:     bindings,
+		Applications: extApps,
+	}
+
 	return res, nil
 }

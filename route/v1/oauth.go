@@ -209,12 +209,7 @@ func (router *Router) OAuthCreateClient(w http.ResponseWriter, r *http.Request) 
 		return perr
 	}
 
-	data := make(map[string]interface{})
-
-	data["key"] = client.Key
-	data["status"] = client.Status
-
-	if perr := routeUtils.ResponseOK(data, w); perr != nil {
+	if perr := routeUtils.ResponseOK(client.Format(), w); perr != nil {
 		return perr
 	}
 

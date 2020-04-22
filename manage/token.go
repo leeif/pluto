@@ -35,6 +35,10 @@ func (m *Manager) RefreshAccessToken(rat request.RefreshAccessToken) (*GrantResu
 		return nil, perror.ServerError.Wrapper(err)
 	}
 
+	if time.Now().After(rt.ExpireAt) {
+		return nil, perror.RefreshTokenExpired
+	}
+
 	da, err := models.DeviceApps(qm.Where("id = ?", rt.DeviceAppID)).One(tx)
 	if err != nil && err == sql.ErrNoRows {
 		return nil, perror.InvalidRefreshToken
@@ -60,7 +64,7 @@ func (m *Manager) RefreshAccessToken(rat request.RefreshAccessToken) (*GrantResu
 		return nil, perr
 	}
 
-	grantResult, perr := m.grantToken(rt.UserID, rt.RefreshToken, scopes, rat.AppID, m.config.Token.AccessTokenExpire)
+	grantResult, perr := m.grantToken(rt.UserID, rt, scopes, rat.AppID, m.config.Token.AccessTokenExpire)
 	if perr != nil {
 		return nil, perr
 	}

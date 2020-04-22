@@ -5,8 +5,6 @@ import (
 	"fmt"
 	"log"
 
-	"github.com/volatiletech/sqlboiler/boil"
-
 	"github.com/leeif/pluto/utils/general"
 	"github.com/leeif/pluto/utils/mail"
 	"github.com/leeif/pluto/utils/salt"
@@ -67,17 +65,12 @@ func Init(db *sql.DB, config *config.Config) *perror.PlutoError {
 	}
 	mr.Name = name
 	mr.Password = password
-	user, err := manager.RegisterWithEmail(mr)
+	user, err := manager.RegisterWithEmail(mr, true)
 	if err != nil && err.PlutoCode != perror.MailIsAlreadyRegister.PlutoCode {
 		return err
 	}
 
 	if err == nil {
-
-		user.Verified.SetValid(true)
-		if _, err := user.Update(db, boil.Infer()); err != nil {
-			return perror.ServerError.Wrapper(err)
-		}
 
 		mailBody := fmt.Sprintf("Your Pluto Admin Mail : %s, Password : %s", mr.Mail, mr.Password)
 
@@ -91,7 +84,7 @@ func Init(db *sql.DB, config *config.Config) *perror.PlutoError {
 			if err := ml.SendPlainText(mr.Mail, "[Pluto]Admin Password", mailBody); err != nil {
 				logger.Error("send mail failed: " + err.LogError.Error())
 			} else {
-				logger.Error("Mail with your admin login info has been sent")
+				logger.Info("Mail with your admin login info has been sent")
 			}
 		}()
 	}

@@ -98,7 +98,7 @@ func (m *Manager) MailPasswordLogin(login request.PasswordLogin) (*GrantResult, 
 		return nil, perror.ServerError.Wrapper(err)
 	}
 
-	if user.Verified.Bool == false {
+	if user.Verified.Bool == false || mailBinding.Verified.Bool == false {
 		return nil, perror.MailIsNotVerified
 	}
 
@@ -669,7 +669,7 @@ func parseAppleIDToken(idToken string) (*appleIdTokenInfo, *perror.PlutoError) {
 func (m *Manager) ResetPasswordMail(rpm request.ResetPasswordMail) *perror.PlutoError {
 
 	identifyToken := b64.RawStdEncoding.EncodeToString([]byte(rpm.Mail))
-	_, err := models.Users(qm.Where("login_type = ? and identify_token = ?", MAILLOGIN, identifyToken)).One(m.db)
+	_, err := models.Bindings(qm.Where("login_type = ? and identify_token = ?", MAILLOGIN, identifyToken)).One(m.db)
 	if err != nil && err == sql.ErrNoRows {
 		return perror.MailNotExist
 	} else if err != nil {
@@ -699,10 +699,16 @@ func (m *Manager) ResetPasswordPage(token string) *perror.PlutoError {
 	}
 
 	identifyToken := b64.RawStdEncoding.EncodeToString([]byte(prp.Mail))
-	user, err := models.Users(qm.Where("login_type = ? and identify_token = ?", MAILLOGIN, identifyToken)).One(m.db)
+	binding, err := models.Bindings(qm.Where("login_type = ? and identify_token = ?", MAILLOGIN, identifyToken)).One(m.db)
 	if err != nil && err == sql.ErrNoRows {
 		return perror.ServerError.Wrapper(errors.New("mail not found"))
 	} else if err != nil {
+		return perror.ServerError.Wrapper(err)
+	}
+
+	user, err := models.Users(qm.Where("id = ?", binding.UserID)).One(m.db)
+
+	if err != nil {
 		return perror.ServerError.Wrapper(err)
 	}
 
@@ -743,10 +749,16 @@ func (m *Manager) ResetPassword(token string, rp request.ResetPasswordWeb) *perr
 	}()
 
 	identifyToken := b64.RawStdEncoding.EncodeToString([]byte(prp.Mail))
-	user, err := models.Users(qm.Where("login_type = ? and identify_token = ?", MAILLOGIN, identifyToken)).One(tx)
+	binding, err := models.Bindings(qm.Where("login_type = ? and identify_token = ?", MAILLOGIN, identifyToken)).One(tx)
 	if err != nil && err == sql.ErrNoRows {
 		return perror.ServerError.Wrapper(errors.New("mail not found"))
 	} else if err != nil {
+		return perror.ServerError.Wrapper(err)
+	}
+
+	user, err := models.Users(qm.Where("id = ?", binding.UserID)).One(tx)
+
+	if err != nil {
 		return perror.ServerError.Wrapper(err)
 	}
 
@@ -804,6 +816,7 @@ func (m *Manager) UserInfo(userID uint, accessPayload *jwt.AccessPayload) (*mode
 	userExt := &modelexts.User{
 		User:     user,
 		Bindings: bindings,
+		AppID:    accessPayload.AppID,
 	}
 
 	if role != nil {
@@ -851,6 +864,13 @@ func (m *Manager) UpdateUserInfo(accessPayload *jwt.AccessPayload, uui request.U
 	}
 
 	if uui.Name != "" {
+		exists, err := models.Users(qm.Where("name = ?", uui.Name)).Exists(tx)
+		if err != nil {
+			return perror.ServerError.Wrapper(err)
+		}
+		if exists {
+			return perror.UsernameExists
+		}
 		user.Name = uui.Name
 	}
 
@@ -876,7 +896,7 @@ func (m *Manager) isValidBase64(toTest string) bool {
 	return true
 }
 
-func (m *Manager) RegisterWithEmail(register request.MailRegister) (*models.User, *perror.PlutoError) {
+func (m *Manager) RegisterWithEmail(register request.MailRegister, admin bool) (*models.User, *perror.PlutoError) {
 
 	tx, err := m.db.Begin()
 	if err != nil {
@@ -893,7 +913,10 @@ func (m *Manager) RegisterWithEmail(register request.MailRegister) (*models.User
 	}
 
 	if mailBinding != nil {
-		return nil, perror.MailIsAlreadyRegister
+		user := &models.User{
+			ID: mailBinding.ID,
+		}
+		return user, perror.MailIsAlreadyRegister
 	}
 
 	salt := saltUtil.RandomSalt(identifyToken)
@@ -921,7 +944,7 @@ func (m *Manager) RegisterWithEmail(register request.MailRegister) (*models.User
 	}
 
 	verified := false
-	if m.config.Server.SkipRegisterVerifyMail {
+	if m.config.Server.SkipRegisterVerifyMail || admin {
 		verified = true
 	}
 
@@ -951,15 +974,21 @@ func (m *Manager) RegisterWithEmail(register request.MailRegister) (*models.User
 func (m *Manager) RegisterVerifyMail(rvm request.RegisterVerifyMail) (*models.User, *perror.PlutoError) {
 
 	identifyToken := b64.RawStdEncoding.EncodeToString([]byte(rvm.Mail))
-	user, err := models.Users(qm.Where("login_type = ? and identify_token = ?", MAILLOGIN, identifyToken)).One(m.db)
+	binding, err := models.Bindings(qm.Where("login_type = ? and identify_token = ?", MAILLOGIN, identifyToken)).One(m.db)
 	if err != nil && err == sql.ErrNoRows {
 		return nil, perror.MailNotExist
 	} else if err != nil {
 		return nil, perror.ServerError.Wrapper(err)
 	}
 
-	if user.Verified.Bool == true {
+	if binding.Verified.Bool == true {
 		return nil, perror.MailAlreadyVerified
+	}
+
+	user, err := models.Users(qm.Where("id = ?", binding.ID)).One(m.db)
+
+	if err != nil {
+		return nil, perror.ServerError.Wrapper(err)
 	}
 
 	return user, nil
@@ -1002,13 +1031,26 @@ func (m *Manager) RegisterVerify(token string) *perror.PlutoError {
 		return perror.ServerError.Wrapper(err)
 	}
 
-	if user.Verified.Bool == true {
+	user.Verified.SetValid(true)
+
+	if _, err := user.Update(tx, boil.Whitelist("verified")); err != nil {
+		return perror.ServerError.Wrapper(err)
+	}
+
+	binding, err := models.Bindings(qm.Where("user_id = ? and login_type = ?", verifyPayload.UserID, MAILLOGIN)).One(tx)
+	if err != nil {
+		return perror.ServerError.Wrapper(err)
+	}
+
+	if binding.Verified.Bool == true {
 		return perror.MailAlreadyVerified
 	}
 
-	user.Verified.SetValid(true)
+	binding.Verified.SetValid(true)
 
-	user.Update(tx, boil.Whitelist("verified"))
+	if _, err := binding.Update(tx, boil.Whitelist("verified")); err != nil {
+		return perror.ServerError.Wrapper(err)
+	}
 
 	tx.Commit()
 
@@ -1211,16 +1253,20 @@ func (m *Manager) Unbind(ub *request.UnBinding, accessPayload *jwt.AccessPayload
 		tx.Rollback()
 	}()
 
-	binding, err := models.Bindings(qm.Where("id = ? and login_type = ?", accessPayload.UserID, ub.Type)).One(tx)
+	binding, err := models.Bindings(qm.Where("user_id = ? and login_type = ?", accessPayload.UserID, ub.Type)).One(tx)
 	if err != nil && err != sql.ErrNoRows {
 		return perror.ServerError.Wrapper(err)
-	} else if err != sql.ErrNoRows {
-		return perror.BindAlreadyExists
+	} else if err == sql.ErrNoRows {
+		return perror.BindNotExist
 	}
+
+	fmt.Println(binding)
 
 	if _, err := binding.Delete(tx); err != nil {
 		return perror.ServerError.Wrapper(err)
 	}
+
+	tx.Commit()
 
 	return nil
 }

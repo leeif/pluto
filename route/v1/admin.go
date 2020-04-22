@@ -62,7 +62,10 @@ func (router *Router) CreateApplication(w http.ResponseWriter, r *http.Request) 
 		return perr
 	}
 	res := make(map[string]interface{})
-	res["application"] = application
+	res["id"] = application.ID
+	res["name"] = application.Name
+	res["webhook"] = application.Webhook
+	res["defatul_role"] = application.DefaultRole
 	if err := routeUtils.ResponseOK(res, w); err != nil {
 		return err
 	}

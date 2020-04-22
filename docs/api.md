@@ -11,9 +11,9 @@ Pluto provides a set of HTTP resetful APIs.
 * [`/v1/user/binding`](#v1userbinding)
 * [`/v1/user/unbinding`](#v1userunbinding)
 * [`/v1/user/search`](#v1usersearch)
-* [`/v1/user/count`](#v1usercount)
-* [`/v1/user/info/{userID}:GET`](#v1userinfo{userID}:GET)
-* [`/v1/user/info/{userID}:PUT`](#v1userinfo{userID}:PUT)
+* [`/v1/user/summary`](#v1usersummary)
+* [`/v1/user/info:GET`](#v1userinfo:GET)
+* [`/v1/user/info:PUT`](#v1userinfo:PUT)
 * [`/v1/healthcheck`](#v1healthcheck)
 * [`/v1/rbac/role/create`](#v1rbacrolecreate)
 * [`/v1/rbac/scope/create`](#v1rbacscopecreate)
@@ -252,7 +252,7 @@ Get the count of the total users
 
 * method: GET
 
-### /v1/user/info/{userID}:GET
+### /v1/user/info:GET
 
 Get user info
 
@@ -279,7 +279,7 @@ Get user info
 }
 ```
 
-### /v1/user/info/{userID}:PUT
+### /v1/user/info:PUT
 
 Update user info
 

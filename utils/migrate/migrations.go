@@ -113,6 +113,7 @@ func createRefreshTokensTable(db *sql.DB, name string) error {
 		"`deleted_at` timestamp NULL DEFAULT NULL," +
 		"`user_id` int(10) unsigned NOT NULL," +
 		"`refresh_token` varchar(255) NOT NULL," +
+		"`expire_at` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP," +
 		"`device_app_id` int(10) unsigned NOT NULL," +
 		"PRIMARY KEY (`id`)," +
 		"KEY `refresh_tokens_deleted_at` (`deleted_at`)," +

@@ -6,12 +6,14 @@ type User struct {
 	User     *models.User
 	Bindings []*models.Binding
 	Role     string `json:"role"`
+	AppID    string `json:"app_id"`
 }
 
 func (u User) Format() map[string]interface{} {
 	res := make(map[string]interface{})
 	res["sub"] = u.User.ID
 	res["name"] = u.User.Name
+	res["app_id"] = u.AppID
 	res["avatar"] = u.User.Avatar
 	res["role"] = u.Role
 	res["verified"] = u.User.Verified
@@ -140,5 +142,19 @@ func (f FindUser) Format() map[string]interface{} {
 	}
 	res["bindings"] = bindings
 
+	return res
+}
+
+type OauthClient struct {
+	Client       *models.OauthClient
+	OriginSecret string
+}
+
+func (oc *OauthClient) Format() map[string]interface{} {
+	res := make(map[string]interface{})
+	res["key"] = oc.Client.Key
+	res["status"] = oc.Client.Status
+	res["redirect_uri"] = oc.Client.RedirectURI
+	res["origin_secret"] = oc.OriginSecret
 	return res
 }

@@ -2,9 +2,7 @@ package v1
 
 import (
 	"net/http"
-	"strconv"
 
-	"github.com/gorilla/mux"
 	perror "github.com/leeif/pluto/datatype/pluto_error"
 	"github.com/leeif/pluto/datatype/request"
 	"github.com/leeif/pluto/manage"
@@ -144,15 +142,12 @@ func (router *Router) Unbinding(w http.ResponseWriter, r *http.Request) *perror.
 
 	ub := &request.UnBinding{}
 
-	if err := routeUtils.GetRequestData(r, &ub); err != nil {
+	if err := routeUtils.GetRequestData(r, ub); err != nil {
 		return err
 	}
 
 	switch ub.Type {
-	case manage.MAILLOGIN:
-	case manage.GOOGLELOGIN:
-	case manage.APPLELOGIN:
-	case manage.WECHATLOGIN:
+	case manage.MAILLOGIN, manage.GOOGLELOGIN, manage.APPLELOGIN, manage.WECHATLOGIN:
 		perr = router.manager.Unbind(ub, payload)
 	default:
 		return perror.Forbidden
@@ -161,6 +156,8 @@ func (router *Router) Unbinding(w http.ResponseWriter, r *http.Request) *perror.
 	if perr != nil {
 		return perr
 	}
+
+	routeUtils.ResponseOK(nil, w)
 
 	return nil
 }
@@ -199,15 +196,7 @@ func (router *Router) UserInfo(w http.ResponseWriter, r *http.Request) *perror.P
 		return perr
 	}
 
-	vars := mux.Vars(r)
-
-	userID, err := strconv.Atoi(vars["userID"])
-
-	if err != nil {
-		return perror.BadRequest.Wrapper(err)
-	}
-
-	res, perr := router.manager.UserInfo(uint(userID), payload)
+	res, perr := router.manager.UserInfo(payload.UserID, payload)
 
 	if perr != nil {
 		return perr
@@ -222,18 +211,6 @@ func (router *Router) UpdateUserInfo(w http.ResponseWriter, r *http.Request) *pe
 	payload, perr := routeUtils.GetAccessPayload(r)
 	if perr != nil {
 		return perr
-	}
-
-	vars := mux.Vars(r)
-
-	userID, err := strconv.Atoi(vars["userID"])
-
-	if err != nil {
-		return perror.BadRequest.Wrapper(err)
-	}
-
-	if uint(userID) != payload.UserID {
-		return perror.InvalidAccessToken
 	}
 
 	uui := request.UpdateUserInfo{}
@@ -257,7 +234,7 @@ func (router *Router) Register(w http.ResponseWriter, r *http.Request) *perror.P
 		return err
 	}
 
-	user, err := router.manager.RegisterWithEmail(register)
+	user, err := router.manager.RegisterWithEmail(register, false)
 	if err != nil {
 		return err
 	}

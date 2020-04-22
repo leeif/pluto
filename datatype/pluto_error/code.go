@@ -29,6 +29,7 @@ var (
 	JWTTokenExpired      = NewPlutoError(http.StatusForbidden, 3008, "JWT Token Expired", nil)
 	InvalidAccessToken   = NewPlutoError(http.StatusForbidden, 3009, "Invalid Access Token", nil)
 	InvalidApplication   = NewPlutoError(http.StatusForbidden, 3010, "Invalid Application", nil)
+	RefreshTokenExpired  = NewPlutoError(http.StatusForbidden, 3011, "Refresh token expired", nil)
 
 	ScopeExists         = NewPlutoError(http.StatusForbidden, 4001, "Scope already exists", nil)
 	ScopeNotExist       = NewPlutoError(http.StatusForbidden, 4002, "Scope not exist", nil)

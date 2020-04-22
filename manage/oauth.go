@@ -11,6 +11,7 @@ import (
 	"github.com/leeif/pluto/datatype/pluto_error"
 	perror "github.com/leeif/pluto/datatype/pluto_error"
 	"github.com/leeif/pluto/datatype/request"
+	"github.com/leeif/pluto/modelexts"
 	"github.com/leeif/pluto/models"
 	"github.com/leeif/pluto/utils/general"
 	"github.com/leeif/pluto/utils/jwt"
@@ -27,9 +28,10 @@ const (
 )
 
 type GrantResult struct {
-	RefreshToken string `json:"refresh_token"`
-	AccessToken  string `json:"access_token"`
-	Type         string `json:"type"`
+	RefreshToken         string `json:"refresh_token"`
+	RefreshTokenExpireAt int64  `json:"refresh_token_expire_at"`
+	AccessToken          string `json:"access_token"`
+	Type                 string `json:"type"`
 }
 
 type AuthorizeResult struct {
@@ -158,10 +160,6 @@ func (m *Manager) AuthorizationCodeGrant(ot *request.OAuthTokens) (*GrantResult,
 		return nil, perror.OAuthAuthorizationCodeExpired
 	}
 
-	if ot.DeviceID == "" {
-		ot.DeviceID = "oauth"
-	}
-
 	// login
 	grantResult, perr := m.loginWithAppID(tx, authorizationCode.UserID, ot.DeviceID, authorizationCode.AppID, authorizationCode.Scopes)
 	if perr != nil {
@@ -203,10 +201,6 @@ func (m *Manager) PasswordGrant(ot *request.OAuthTokens) (*GrantResult, *perror.
 		return nil, perr
 	}
 
-	if ot.DeviceID == "" {
-		ot.DeviceID = "oauth"
-	}
-
 	grantResult, perr := m.loginWithAppName(tx, user.ID, ot.DeviceID, ot.AppID, scopes)
 	if perr != nil {
 		return nil, perr
@@ -230,7 +224,7 @@ func (m *Manager) ClientCredentialGrant(ot *request.OAuthTokens) (*GrantResult, 
 	}
 
 	// empty user, scopes, refreshToken
-	return m.grantToken(0, "", "", application.Name, m.config.Token.AccessTokenExpire)
+	return m.grantToken(0, nil, "", application.Name, m.config.Token.AccessTokenExpire)
 }
 
 func (m *Manager) RefreshTokenGrant(ot *request.OAuthTokens) (*GrantResult, *perror.PlutoError) {
@@ -282,7 +276,7 @@ func (m *Manager) RefreshTokenGrant(ot *request.OAuthTokens) (*GrantResult, *per
 		return nil, perr
 	}
 
-	grantResult, perr := m.grantToken(rt.UserID, rt.RefreshToken, scopes, ot.AppID, m.config.Token.AccessTokenExpire)
+	grantResult, perr := m.grantToken(rt.UserID, rt, scopes, ot.AppID, m.config.Token.AccessTokenExpire)
 	if perr != nil {
 		return nil, perr
 	}
@@ -356,7 +350,7 @@ func (m *Manager) loginWithAppName(exec boil.Executor, userID uint, deviceID, ap
 	}
 
 	// grant access token
-	return m.grantToken(userID, refreshToken.RefreshToken, scopes, application.Name, m.config.Token.AccessTokenExpire)
+	return m.grantToken(userID, refreshToken, scopes, application.Name, m.config.Token.AccessTokenExpire)
 }
 
 func (m *Manager) loginWithAppID(exec boil.Executor, userID uint, deviceID string, appID uint, scopes string) (*GrantResult, *perror.PlutoError) {
@@ -380,7 +374,7 @@ func (m *Manager) loginWithAppID(exec boil.Executor, userID uint, deviceID strin
 	}
 
 	// grant access token
-	return m.grantToken(userID, refreshToken.RefreshToken, scopes, application.Name, m.config.Token.AccessTokenExpire)
+	return m.grantToken(userID, refreshToken, scopes, application.Name, m.config.Token.AccessTokenExpire)
 }
 
 func (m *Manager) newRefreshToken(exec boil.Executor, userID uint, deviceApp *models.DeviceApp, scopes string) (*models.RefreshToken, *perror.PlutoError) {
@@ -390,6 +384,7 @@ func (m *Manager) newRefreshToken(exec boil.Executor, userID uint, deviceApp *mo
 	rt.DeviceAppID = deviceApp.ID
 	rt.UserID = userID
 	rt.RefreshToken = refreshToken
+	rt.ExpireAt = time.Now().Add(time.Duration(m.config.Token.RefreshTokenExpire) * time.Second)
 	rt.Scopes.SetValid(scopes)
 	if err := rt.Insert(exec, boil.Infer()); err != nil {
 		return nil, perror.ServerError.Wrapper(err)
@@ -401,6 +396,7 @@ func (m *Manager) newRefreshToken(exec boil.Executor, userID uint, deviceApp *mo
 func (m *Manager) updateRefreshToken(exec boil.Executor, rt *models.RefreshToken, scopes string) *perror.PlutoError {
 	newToken := refresh.GenerateRefreshToken(string(rt.UserID) + string(rt.DeviceAppID))
 	rt.RefreshToken = newToken
+	rt.ExpireAt = time.Now().Add(time.Duration(m.config.Token.RefreshTokenExpire) * time.Second)
 	rt.Scopes.SetValid(scopes)
 
 	if _, err := rt.Update(exec, boil.Infer()); err != nil {
@@ -427,7 +423,7 @@ func (m *Manager) getDeviceApp(exec boil.Executor, deviceID string, application 
 	return deviceApp, nil
 }
 
-func (m *Manager) grantToken(userID uint, refreshToken, scopes, appID string, expire int64) (*GrantResult, *perror.PlutoError) {
+func (m *Manager) grantToken(userID uint, rt *models.RefreshToken, scopes, appID string, expire int64) (*GrantResult, *perror.PlutoError) {
 	// generate jwt token
 	up := jwt.NewAccessPayload(userID, scopes, appID, expire)
 	accessToken, perr := jwt.GenerateRSAJWT(up)
@@ -437,9 +433,13 @@ func (m *Manager) grantToken(userID uint, refreshToken, scopes, appID string, ex
 	}
 
 	grantResult := &GrantResult{
-		Type:         "Bearer",
-		AccessToken:  accessToken.String(),
-		RefreshToken: refreshToken,
+		Type:        "Bearer",
+		AccessToken: accessToken.String(),
+	}
+
+	if rt != nil {
+		grantResult.RefreshToken = rt.RefreshToken
+		grantResult.RefreshTokenExpireAt = rt.ExpireAt.Unix()
 	}
 
 	return grantResult, nil
@@ -556,7 +556,7 @@ func (m *Manager) GrantAccessToken(oa *request.OAuthAuthorize, accessPayload *jw
 		oa.LifeTime = m.config.Token.AccessTokenExpire
 	}
 
-	grantResult, perr := m.grantToken(user.ID, "", scopes, application.Name, oa.LifeTime)
+	grantResult, perr := m.grantToken(user.ID, nil, scopes, application.Name, oa.LifeTime)
 
 	if perr != nil {
 		return nil, redirectURI, perr
@@ -570,7 +570,7 @@ func (m *Manager) GrantAccessToken(oa *request.OAuthAuthorize, accessPayload *jw
 	}, redirectURI, nil
 }
 
-func (m *Manager) OAuthCreateClient(occ *request.OAuthCreateClient) (*models.OauthClient, *perror.PlutoError) {
+func (m *Manager) OAuthCreateClient(occ *request.OAuthCreateClient) (*modelexts.OauthClient, *perror.PlutoError) {
 	tx, err := m.db.Begin()
 	if err != nil {
 		return nil, perror.ServerError.Wrapper(err)
@@ -602,7 +602,12 @@ func (m *Manager) OAuthCreateClient(occ *request.OAuthCreateClient) (*models.Oau
 
 	tx.Commit()
 
-	return client, nil
+	ocExts := &modelexts.OauthClient{
+		Client:       client,
+		OriginSecret: occ.Secret,
+	}
+
+	return ocExts, nil
 }
 
 func (m *Manager) UpdateOAuthClientStatus(occ *request.OAuthClientStatus) (*models.OauthClient, *perror.PlutoError) {
@@ -631,6 +636,8 @@ func (m *Manager) UpdateOAuthClientStatus(occ *request.OAuthClientStatus) (*mode
 	if _, err := client.Update(tx, boil.Infer()); err != nil {
 		return nil, perror.ServerError.Wrapper(err)
 	}
+
+	tx.Commit()
 
 	return client, nil
 }

@@ -8,7 +8,6 @@ import (
 	perror "github.com/leeif/pluto/datatype/pluto_error"
 	"github.com/leeif/pluto/datatype/request"
 	"github.com/leeif/pluto/models"
-	"github.com/leeif/pluto/utils/general"
 	"github.com/volatiletech/sqlboiler/boil"
 	"github.com/volatiletech/sqlboiler/queries/qm"
 )
@@ -399,38 +398,20 @@ func (m *Manager) SetUserRole(ur request.UserRole) *perror.PlutoError {
 	return nil
 }
 
-func (m *Manager) UsersCount() (map[string]int, *perror.PlutoError) {
-	users, err := models.Users(qm.SQL("select login_type from users")).All(m.db)
-	if err != nil && err != sql.ErrNoRows {
+func (m *Manager) UserSummary() (map[string]int, *perror.PlutoError) {
+	res := make(map[string]int)
+	users, err := models.Users().All(m.db)
+	if err != nil {
 		return nil, perror.ServerError.Wrapper(err)
 	}
-	res := make(map[string]int)
 	res["total"] = len(users)
-	google, apple, mail := 0, 0, 0
-	for _, user := range users {
-		if user.LoginType == GOOGLELOGIN {
-			google++
-		} else if user.LoginType == APPLELOGIN {
-			apple++
-		} else if user.LoginType == MAILLOGIN {
-			mail++
-		}
-	}
-	res["google"] = google
-	res["apple"] = apple
-	res["mail"] = mail
 	return res, nil
 }
 
 func (m *Manager) FindUser(fu *request.FindUser) ([]*modelexts.FindUser, *perror.PlutoError) {
 
-	field := "name"
-	if general.ValidMail(fu.Account) {
-		field = "mail"
-	}
+	users, err := models.Users(qm.Where("name = ?", fu.Name)).All(m.db)
 
-	users, err := models.Users(qm.Where(field+" = ?", fu.Account)).All(m.db)
-	
 	if err != nil && len(users) == 0 {
 		return nil, perror.UserNotExist
 	} else if err != nil {
@@ -510,8 +491,16 @@ func (m *Manager) findUser(user *models.User) (*modelexts.FindUser, *perror.Plut
 		extApps = append(extApps, extApp)
 	}
 
-	res := &modelexts.FindUser{}
-	res.User = user
-	res.Applications = extApps
+	bindings, err := models.Bindings(qm.Where("user_id = ?", user.ID)).All(m.db)
+	if err != nil {
+		return nil, perror.ServerError.Wrapper(err)
+	}
+
+	res := &modelexts.FindUser{
+		User:         user,
+		Bindings:     bindings,
+		Applications: extApps,
+	}
+
 	return res, nil
 }

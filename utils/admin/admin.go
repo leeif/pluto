@@ -5,8 +5,6 @@ import (
 	"fmt"
 	"log"
 
-	"github.com/volatiletech/sqlboiler/boil"
-
 	"github.com/leeif/pluto/utils/general"
 	"github.com/leeif/pluto/utils/mail"
 	"github.com/leeif/pluto/utils/salt"
@@ -17,15 +15,22 @@ import (
 	"github.com/leeif/pluto/manage"
 
 	"github.com/leeif/pluto/config"
+	plog "github.com/leeif/pluto/log"
 )
 
 func Init(db *sql.DB, config *config.Config) *perror.PlutoError {
 
-	if config.Admin.Mail == "" || config.Admin.Name == "" {
+	if config.Admin.Mail == "" {
 		return nil
 	}
 
-	manager := manage.NewManager(db, config, nil)
+	logger, perr := plog.NewLogger(config)
+
+	manager, perr := manage.NewManager(db, config, nil)
+
+	if perr != nil {
+		return perror.ServerError.Wrapper(perr)
+	}
 
 	ca := request.CreateApplication{}
 	ca.Name = general.PlutoAdminApplication
@@ -54,19 +59,18 @@ func Init(db *sql.DB, config *config.Config) *perror.PlutoError {
 	password := salt.RandomToken(20)
 	mr := request.MailRegister{}
 	mr.Mail = config.Admin.Mail
-	mr.Name = config.Admin.Name
+	name, err := manager.RandomUserName("pluto_admin_user")
+	if err != nil {
+		return err
+	}
+	mr.Name = name
 	mr.Password = password
-	user, err := manager.RegisterWithEmail(mr)
-	if err != nil && err.PlutoCode == perror.ServerError.PlutoCode {
+	user, err := manager.RegisterWithEmail(mr, true)
+	if err != nil && err.PlutoCode != perror.MailIsAlreadyRegister.PlutoCode {
 		return err
 	}
 
 	if err == nil {
-
-		user.Verified.SetValid(true)
-		if _, err := user.Update(db, boil.Infer()); err != nil {
-			return perror.ServerError.Wrapper(err)
-		}
 
 		mailBody := fmt.Sprintf("Your Pluto Admin Mail : %s, Password : %s", mr.Mail, mr.Password)
 
@@ -75,12 +79,13 @@ func Init(db *sql.DB, config *config.Config) *perror.PlutoError {
 		go func() {
 			ml, err := mail.NewMail(config)
 			if err != nil {
-				log.Println("smtp server is not set, mail can't be send")
+				logger.Error("smtp server is not set, can't send the mail")
 			}
 			if err := ml.SendPlainText(mr.Mail, "[Pluto]Admin Password", mailBody); err != nil {
-				log.Println("send mail failed: " + err.LogError.Error())
+				logger.Error("send mail failed: " + err.LogError.Error())
+			} else {
+				logger.Info("Mail with your admin login info has been sent")
 			}
-			log.Println("Mail with your admin login info is send")
 		}()
 	}
 

@@ -10,6 +10,7 @@ import (
 	"github.com/leeif/pluto/config"
 	perror "github.com/leeif/pluto/datatype/pluto_error"
 	"github.com/leeif/pluto/log"
+	plog "github.com/leeif/pluto/log"
 	"github.com/leeif/pluto/models"
 	"github.com/leeif/pluto/utils/general"
 	"github.com/volatiletech/sqlboiler/queries/qm"
@@ -162,15 +163,21 @@ type Manager struct {
 	db     *sql.DB
 }
 
-func NewManager(db *sql.DB, config *config.Config, logger *log.PlutoLog) *Manager {
+func NewManager(db *sql.DB, config *config.Config, logger *plog.PlutoLog) (*Manager, error) {
 	manager := &Manager{
 		config: config,
 		db:     db,
 	}
 
-	if logger != nil {
-		manager.logger = logger.With("component", "manager")
+	if logger == nil {
+		var err error
+		logger, err = plog.NewLogger(config)
+		if err != nil {
+			return nil, err
+		}
 	}
 
-	return manager
+	manager.logger = logger
+
+	return manager, nil
 }

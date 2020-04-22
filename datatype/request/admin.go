@@ -1,11 +1,11 @@
 package request
 
 type FindUser struct {
-	Account string `json:"account"`
+	Name string `json:"name"`
 }
 
 func (fu *FindUser) Validation() bool {
-	if fu.Account == "" {
+	if fu.Name == "" {
 		return false
 	}
 	return true
@@ -81,16 +81,48 @@ type ApplicationRole struct {
 	RoleID uint `json:"role_id"`
 }
 
+func (ar *ApplicationRole) Validation() bool {
+	if ar.AppID == 0 || ar.RoleID == 0 {
+		return false
+	}
+
+	return true
+}
+
 type ListRoles struct {
-	AppID uint `json:"app_id" schema:"app_id,required"`
+	AppID uint `json:"app_id" schema:"app_id"`
+}
+
+func (lr *ListRoles) Validation() bool {
+	if lr.AppID == 0 {
+		return false
+	}
+
+	return true
 }
 
 type ListScopes struct {
-	AppID uint `json:"app_id" schema:"app_id,required"`
+	AppID uint `json:"app_id" schema:"app_id"`
+}
+
+func (ls *ListScopes) Validation() bool {
+	if ls.AppID == 0 {
+		return false
+	}
+
+	return true
 }
 
 type UserRole struct {
-	UserID uint `json:"user_id" schema:"user_id,required"`
-	AppID  uint `json:"app_id" schema:"app_id,required"`
-	RoleID uint `json:"role_id" schema:"role_id,required"`
+	UserID uint `json:"user_id" schema:"user_id"`
+	AppID  uint `json:"app_id" schema:"app_id"`
+	RoleID uint `json:"role_id" schema:"role_id"`
+}
+
+func (ur *UserRole) Validation() bool {
+	if ur.AppID == 0 || ur.UserID == 0 || ur.RoleID == 0 {
+		return false
+	}
+
+	return true
 }

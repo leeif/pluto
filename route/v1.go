@@ -6,7 +6,7 @@ import (
 	"github.com/leeif/pluto/middleware"
 )
 
-func (r *Router) registerLoginV1Routes(prefix string) {
+func (r *Router) registerUserV1Routes(prefix string) {
 	routes := []PlutoRoute{
 		{
 			path:        "/register",
@@ -51,14 +51,56 @@ func (r *Router) registerLoginV1Routes(prefix string) {
 			handler:     r.v1.WechatLoginMobile,
 		},
 		{
+			path:        "/binding",
+			description: "Bind mail, google, wechat, apple account",
+			method:      "POST",
+			middle:      middleware.AccessTokenAuthMiddleware,
+			handler:     r.v1.Binding,
+		},
+		{
+			path:        "/unbinding",
+			description: "Unbind mail, google, wechat, apple account",
+			method:      "POST",
+			middle:      middleware.AccessTokenAuthMiddleware,
+			handler:     r.v1.Unbinding,
+		},
+		{
 			path:        "/password/reset/mail",
 			description: "Send password reset mail",
 			method:      "POST",
 			middle:      middleware.NoAuthMiddleware,
 			handler:     r.v1.PasswordResetMail,
 		},
+		{
+			path:        "/search",
+			description: "Search the user using name or mail",
+			method:      "GET",
+			middle:      middleware.AdminAuthMiddleware,
+			handler:     r.v1.FindUser,
+		},
+		{
+			path:        "/summary",
+			description: "Get the summary of users",
+			method:      "GET",
+			middle:      middleware.AdminAuthMiddleware,
+			handler:     r.v1.UserSummary,
+		},
+		{
+			path:        "/info",
+			description: "Get user info",
+			method:      "GET",
+			middle:      middleware.AccessTokenAuthMiddleware,
+			handler:     r.v1.UserInfo,
+		},
+		{
+			path:        "/info",
+			description: "Update user info",
+			method:      "PUT",
+			middle:      middleware.AccessTokenAuthMiddleware,
+			handler:     r.v1.UpdateUserInfo,
+		},
 	}
-	r.registerRoutes(routes, path.Join(prefix, "/"), false)
+	r.registerRoutes(routes, path.Join(prefix, "/user"), false)
 }
 
 func (r *Router) registerWebV1Routes(prefix string) {
@@ -203,40 +245,6 @@ func (r *Router) registerRBACV1Routes(prefix string) {
 		},
 	}
 	r.registerRoutes(routes, path.Join(prefix, "/rbac"), false)
-}
-
-func (r *Router) registerUserV1Routers(prefix string) {
-	routes := []PlutoRoute{
-		{
-			path:        "/search",
-			description: "Search the user using name or mail",
-			method:      "GET",
-			middle:      middleware.AdminAuthMiddleware,
-			handler:     r.v1.FindUser,
-		},
-		{
-			path:        "/count",
-			description: "Get the count of the total users",
-			method:      "GET",
-			middle:      middleware.AdminAuthMiddleware,
-			handler:     r.v1.UsersCount,
-		},
-		{
-			path:        "/info/{userID}",
-			description: "Get user info",
-			method:      "GET",
-			middle:      middleware.AccessTokenAuthMiddleware,
-			handler:     r.v1.UserInfo,
-		},
-		{
-			path:        "/info/{userID}",
-			description: "Update user info",
-			method:      "PUT",
-			middle:      middleware.AccessTokenAuthMiddleware,
-			handler:     r.v1.UpdateUserInfo,
-		},
-	}
-	r.registerRoutes(routes, path.Join(prefix, "/user"), false)
 }
 
 func (r *Router) registerTokenV1Routes(prefix string) {

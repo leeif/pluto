@@ -40,6 +40,10 @@ func (token *OAuthTokens) Validation() bool {
 		return false
 	}
 
+	if token.DeviceID == "" {
+		token.DeviceID = defaultDeviceID
+	}
+
 	return true
 }
 

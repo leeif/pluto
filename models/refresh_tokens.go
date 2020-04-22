@@ -29,6 +29,7 @@ type RefreshToken struct {
 	DeletedAt    null.Time   `boil:"deleted_at" json:"deleted_at,omitempty" toml:"deleted_at" yaml:"deleted_at,omitempty"`
 	UserID       uint        `boil:"user_id" json:"user_id" toml:"user_id" yaml:"user_id"`
 	RefreshToken string      `boil:"refresh_token" json:"refresh_token" toml:"refresh_token" yaml:"refresh_token"`
+	ExpireAt     time.Time   `boil:"expire_at" json:"expire_at" toml:"expire_at" yaml:"expire_at"`
 	DeviceAppID  uint        `boil:"device_app_id" json:"device_app_id" toml:"device_app_id" yaml:"device_app_id"`
 	Scopes       null.String `boil:"scopes" json:"scopes,omitempty" toml:"scopes" yaml:"scopes,omitempty"`
 
@@ -43,6 +44,7 @@ var RefreshTokenColumns = struct {
 	DeletedAt    string
 	UserID       string
 	RefreshToken string
+	ExpireAt     string
 	DeviceAppID  string
 	Scopes       string
 }{
@@ -52,6 +54,7 @@ var RefreshTokenColumns = struct {
 	DeletedAt:    "deleted_at",
 	UserID:       "user_id",
 	RefreshToken: "refresh_token",
+	ExpireAt:     "expire_at",
 	DeviceAppID:  "device_app_id",
 	Scopes:       "scopes",
 }
@@ -88,6 +91,7 @@ var RefreshTokenWhere = struct {
 	DeletedAt    whereHelpernull_Time
 	UserID       whereHelperuint
 	RefreshToken whereHelperstring
+	ExpireAt     whereHelpertime_Time
 	DeviceAppID  whereHelperuint
 	Scopes       whereHelpernull_String
 }{
@@ -97,6 +101,7 @@ var RefreshTokenWhere = struct {
 	DeletedAt:    whereHelpernull_Time{field: "`refresh_tokens`.`deleted_at`"},
 	UserID:       whereHelperuint{field: "`refresh_tokens`.`user_id`"},
 	RefreshToken: whereHelperstring{field: "`refresh_tokens`.`refresh_token`"},
+	ExpireAt:     whereHelpertime_Time{field: "`refresh_tokens`.`expire_at`"},
 	DeviceAppID:  whereHelperuint{field: "`refresh_tokens`.`device_app_id`"},
 	Scopes:       whereHelpernull_String{field: "`refresh_tokens`.`scopes`"},
 }
@@ -118,9 +123,9 @@ func (*refreshTokenR) NewStruct() *refreshTokenR {
 type refreshTokenL struct{}
 
 var (
-	refreshTokenAllColumns            = []string{"id", "created_at", "updated_at", "deleted_at", "user_id", "refresh_token", "device_app_id", "scopes"}
+	refreshTokenAllColumns            = []string{"id", "created_at", "updated_at", "deleted_at", "user_id", "refresh_token", "expire_at", "device_app_id", "scopes"}
 	refreshTokenColumnsWithoutDefault = []string{"created_at", "updated_at", "deleted_at", "user_id", "refresh_token", "device_app_id", "scopes"}
-	refreshTokenColumnsWithDefault    = []string{"id"}
+	refreshTokenColumnsWithDefault    = []string{"id", "expire_at"}
 	refreshTokenPrimaryKeyColumns     = []string{"id"}
 )
 

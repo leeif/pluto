@@ -62,7 +62,10 @@ func (router *Router) CreateApplication(w http.ResponseWriter, r *http.Request) 
 		return perr
 	}
 	res := make(map[string]interface{})
-	res["application"] = application
+	res["id"] = application.ID
+	res["name"] = application.Name
+	res["webhook"] = application.Webhook
+	res["defatul_role"] = application.DefaultRole
 	if err := routeUtils.ResponseOK(res, w); err != nil {
 		return err
 	}
@@ -225,8 +228,8 @@ func (router *Router) FindUser(w http.ResponseWriter, r *http.Request) *perror.P
 	return nil
 }
 
-func (router *Router) UsersCount(w http.ResponseWriter, r *http.Request) *perror.PlutoError {
-	res, perr := router.manager.UsersCount()
+func (router *Router) UserSummary(w http.ResponseWriter, r *http.Request) *perror.PlutoError {
+	res, perr := router.manager.UserSummary()
 	if perr != nil {
 		return perr
 	}

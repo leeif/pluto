@@ -91,11 +91,10 @@ type AppleMobileLogin struct {
 	Code     string `json:"code"`
 	DeviceID string `json:"device_id"`
 	AppID    string `json:"app_id"`
-	Name     string `json:"name"`
 }
 
 func (aml *AppleMobileLogin) Validation() bool {
-	if aml.Code == "" || aml.Name == "" {
+	if aml.Code == "" {
 		return false
 	}
 
@@ -178,6 +177,32 @@ type VerifyIDToken struct {
 
 func (vit *VerifyIDToken) Validation() bool {
 	if vit.Token == "" {
+		return false
+	}
+
+	return true
+}
+
+type Binding struct {
+	Mail    string `json:"mail"`
+	Code    string `json:"code"`
+	IDToken string `json:"id_token"`
+	Type    string `json:"type"`
+}
+
+func (binding *Binding) Validation() bool {
+	if binding.Type == "" {
+		return false
+	}
+	return true
+}
+
+type UnBinding struct {
+	Type string `json:"type"`
+}
+
+func (ub *UnBinding) Validation() bool {
+	if ub.Type == "" {
 		return false
 	}
 

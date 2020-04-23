@@ -45,8 +45,8 @@ func formatUsersTableData(db *sql.DB) {
 		name := fmt.Sprintf("%s-%d", user.Name, user.ID)
 		res := fmt.Sprintf("insert into users (id, created_at, updated_at, name, password, avatar, verified) values (%d, '%s', '%s', '%s', '%s', '%s', %d);",
 			user.ID,
-			user.CreatedAt.Time.Local().Format("2006-Jan-02 15:04:05"),
-			user.UpdatedAt.Time.Local().Format("2006-Jan-02 15:04:05"),
+			user.CreatedAt.Time.Local().Format("2006-01-02 15:04:05"),
+			user.UpdatedAt.Time.Local().Format("2006-01-02 15:04:05"),
 			name,
 			user.Password.String,
 			user.Avatar.String,
@@ -66,8 +66,8 @@ func formatBindingsTableData(db *sql.DB) {
 			user.Name = "user"
 		}
 		res := fmt.Sprintf("insert into bindings (created_at, updated_at, login_type, identify_token, mail, verified, user_id) values ('%s', '%s', '%s', '%s', '%s', %d, %d);",
-			user.CreatedAt.Time.Local().Format("2006-Jan-02 15:04:05"),
-			user.UpdatedAt.Time.Local().Format("2006-Jan-02 15:04:05"),
+			user.CreatedAt.Time.Local().Format("2006-01-02 15:04:05"),
+			user.UpdatedAt.Time.Local().Format("2006-01-02 15:04:05"),
 			user.LoginType,
 			user.IdentifyToken,
 			user.Mail.String,

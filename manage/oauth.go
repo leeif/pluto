@@ -161,7 +161,7 @@ func (m *Manager) AuthorizationCodeGrant(ot *request.OAuthTokens) (*GrantResult,
 	}
 
 	// login
-	grantResult, perr := m.loginWithAppID(tx, authorizationCode.UserID, ot.DeviceID, authorizationCode.AppID, authorizationCode.Scopes)
+	grantResult, perr := m.loginWithAppID(tx, authorizationCode.UserID, ot.DeviceID, "oauth", authorizationCode.AppID, authorizationCode.Scopes)
 	if perr != nil {
 		return nil, perr
 	}
@@ -201,7 +201,7 @@ func (m *Manager) PasswordGrant(ot *request.OAuthTokens) (*GrantResult, *perror.
 		return nil, perr
 	}
 
-	grantResult, perr := m.loginWithAppName(tx, user.ID, ot.DeviceID, ot.AppID, scopes)
+	grantResult, perr := m.loginWithAppName(tx, user.ID, ot.DeviceID, ot.AppID, "oauth", scopes)
 	if perr != nil {
 		return nil, perr
 	}
@@ -224,7 +224,7 @@ func (m *Manager) ClientCredentialGrant(ot *request.OAuthTokens) (*GrantResult, 
 	}
 
 	// empty user, scopes, refreshToken
-	return m.grantToken(0, nil, "", application.Name, m.config.Token.AccessTokenExpire)
+	return m.grantToken(0, nil, "", ot.DeviceID, application.Name, "", m.config.Token.AccessTokenExpire)
 }
 
 func (m *Manager) RefreshTokenGrant(ot *request.OAuthTokens) (*GrantResult, *perror.PlutoError) {
@@ -276,7 +276,7 @@ func (m *Manager) RefreshTokenGrant(ot *request.OAuthTokens) (*GrantResult, *per
 		return nil, perr
 	}
 
-	grantResult, perr := m.grantToken(rt.UserID, rt, scopes, ot.AppID, m.config.Token.AccessTokenExpire)
+	grantResult, perr := m.grantToken(rt.UserID, rt, scopes, deviceApp.DeviceID, ot.AppID, "", m.config.Token.AccessTokenExpire)
 	if perr != nil {
 		return nil, perr
 	}
@@ -329,7 +329,7 @@ func (m *Manager) authPassword(exec boil.Executor, mail, password string) (*mode
 	return user, nil
 }
 
-func (m *Manager) loginWithAppName(exec boil.Executor, userID uint, deviceID, appName string, scopes string) (*GrantResult, *perror.PlutoError) {
+func (m *Manager) loginWithAppName(exec boil.Executor, userID uint, deviceID, appName, loginType string, scopes string) (*GrantResult, *perror.PlutoError) {
 
 	application, perr := m.getApplication(exec, appName)
 	if perr != nil {
@@ -350,10 +350,10 @@ func (m *Manager) loginWithAppName(exec boil.Executor, userID uint, deviceID, ap
 	}
 
 	// grant access token
-	return m.grantToken(userID, refreshToken, scopes, application.Name, m.config.Token.AccessTokenExpire)
+	return m.grantToken(userID, refreshToken, scopes, deviceID, application.Name, loginType, m.config.Token.AccessTokenExpire)
 }
 
-func (m *Manager) loginWithAppID(exec boil.Executor, userID uint, deviceID string, appID uint, scopes string) (*GrantResult, *perror.PlutoError) {
+func (m *Manager) loginWithAppID(exec boil.Executor, userID uint, deviceID, loginType string, appID uint, scopes string) (*GrantResult, *perror.PlutoError) {
 
 	application, perr := m.getApplicationByID(exec, appID)
 	if perr != nil {
@@ -374,7 +374,7 @@ func (m *Manager) loginWithAppID(exec boil.Executor, userID uint, deviceID strin
 	}
 
 	// grant access token
-	return m.grantToken(userID, refreshToken, scopes, application.Name, m.config.Token.AccessTokenExpire)
+	return m.grantToken(userID, refreshToken, scopes, deviceID, application.Name, loginType, m.config.Token.AccessTokenExpire)
 }
 
 func (m *Manager) newRefreshToken(exec boil.Executor, userID uint, deviceApp *models.DeviceApp, scopes string) (*models.RefreshToken, *perror.PlutoError) {
@@ -423,9 +423,9 @@ func (m *Manager) getDeviceApp(exec boil.Executor, deviceID string, application 
 	return deviceApp, nil
 }
 
-func (m *Manager) grantToken(userID uint, rt *models.RefreshToken, scopes, appID string, expire int64) (*GrantResult, *perror.PlutoError) {
+func (m *Manager) grantToken(userID uint, rt *models.RefreshToken, scopes, deviceId, appID, loginType string, expire int64) (*GrantResult, *perror.PlutoError) {
 	// generate jwt token
-	up := jwt.NewAccessPayload(userID, scopes, appID, expire)
+	up := jwt.NewAccessPayload(userID, scopes, deviceId, appID, loginType, expire)
 	accessToken, perr := jwt.GenerateRSAJWT(up)
 
 	if perr != nil {
@@ -556,7 +556,7 @@ func (m *Manager) GrantAccessToken(oa *request.OAuthAuthorize, accessPayload *jw
 		oa.LifeTime = m.config.Token.AccessTokenExpire
 	}
 
-	grantResult, perr := m.grantToken(user.ID, nil, scopes, application.Name, oa.LifeTime)
+	grantResult, perr := m.grantToken(user.ID, nil, scopes, "oauth", application.Name, "oauth", oa.LifeTime)
 
 	if perr != nil {
 		return nil, redirectURI, perr

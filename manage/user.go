@@ -122,7 +122,7 @@ func (m *Manager) MailPasswordLogin(login request.PasswordLogin) (*GrantResult, 
 		return nil, perr
 	}
 
-	grantResult, perr := m.loginWithAppName(tx, user.ID, login.DeviceID, login.AppID, strings.Join(scopes, ","))
+	grantResult, perr := m.loginWithAppName(tx, user.ID, login.DeviceID, login.AppID, MAILLOGIN, strings.Join(scopes, ","))
 	if perr != nil {
 		return nil, perr
 	}
@@ -173,7 +173,7 @@ func (m *Manager) NamePasswordLogin(login request.PasswordLogin) (*GrantResult, 
 		return nil, perr
 	}
 
-	grantResult, perr := m.loginWithAppName(tx, user.ID, login.DeviceID, login.AppID, strings.Join(scopes, ","))
+	grantResult, perr := m.loginWithAppName(tx, user.ID, login.DeviceID, login.AppID, "", strings.Join(scopes, ","))
 	if perr != nil {
 		return nil, perr
 	}
@@ -283,7 +283,7 @@ func (m *Manager) GoogleLoginMobile(login request.GoogleMobileLogin) (*GrantResu
 		return nil, perr
 	}
 
-	grantResult, perr := m.loginWithAppName(tx, user.ID, login.DeviceID, login.AppID, strings.Join(scopes, ","))
+	grantResult, perr := m.loginWithAppName(tx, user.ID, login.DeviceID, login.AppID, GOOGLELOGIN, strings.Join(scopes, ","))
 	if perr != nil {
 		return nil, perr
 	}
@@ -407,7 +407,7 @@ func (m *Manager) WechatLoginMobile(login request.WechatMobileLogin) (*GrantResu
 		return nil, perr
 	}
 
-	grantResult, perr := m.loginWithAppName(tx, user.ID, login.DeviceID, login.AppID, strings.Join(scopes, ","))
+	grantResult, perr := m.loginWithAppName(tx, user.ID, login.DeviceID, login.AppID, WECHATLOGIN, strings.Join(scopes, ","))
 	if perr != nil {
 		return nil, perr
 	}
@@ -603,7 +603,7 @@ func (m *Manager) AppleLoginMobile(login request.AppleMobileLogin) (*GrantResult
 		return nil, perr
 	}
 
-	grantResult, perr := m.loginWithAppName(tx, user.ID, login.DeviceID, login.AppID, strings.Join(scopes, ","))
+	grantResult, perr := m.loginWithAppName(tx, user.ID, login.DeviceID, login.AppID, APPLELOGIN, strings.Join(scopes, ","))
 	if perr != nil {
 		return nil, perr
 	}

@@ -64,7 +64,7 @@ func (m *Manager) RefreshAccessToken(rat request.RefreshAccessToken) (*GrantResu
 		return nil, perr
 	}
 
-	grantResult, perr := m.grantToken(rt.UserID, rt, scopes, rat.AppID, m.config.Token.AccessTokenExpire)
+	grantResult, perr := m.grantToken(rt.UserID, rt, scopes, da.DeviceID, rat.AppID, "", m.config.Token.AccessTokenExpire)
 	if perr != nil {
 		return nil, perr
 	}

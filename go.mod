@@ -5,6 +5,7 @@ go 1.12
 require (
 	github.com/BillSJC/appleLogin v0.0.0-20190916123152-090c3039745d
 	github.com/DATA-DOG/go-sqlmock v1.3.3 // indirect
+	github.com/RichardKnop/uuid v0.0.0-20160216163710-c55201b03606 // indirect
 	github.com/alecthomas/template v0.0.0-20190718012654-fb15b899a751
 	github.com/aliyun/aliyun-oss-go-sdk v2.0.2+incompatible
 	github.com/dgrijalva/jwt-go v3.2.0+incompatible

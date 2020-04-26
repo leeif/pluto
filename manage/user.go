@@ -847,7 +847,7 @@ func (m *Manager) UpdateUserInfo(accessPayload *jwt.AccessPayload, uui request.U
 
 	if uui.Avatar != "" && m.isValidURL(uui.Avatar) {
 		user.Avatar.SetValid(uui.Avatar)
-	} else if uui.Avatar != "" && m.isValidBase64(uui.Avatar) {
+	} else if uui.Avatar != "" {
 		ag := avatar.AvatarGen{}
 		ar, err := ag.GenFromBase64String(uui.Avatar)
 		if err != nil {
@@ -888,8 +888,8 @@ func (m *Manager) isValidURL(toTest string) bool {
 	return err == nil && u.Scheme != "" && u.Host != ""
 }
 
-func (m *Manager) isValidBase64(toTest string) bool {
-	_, err := b64.RawStdEncoding.DecodeString(toTest)
+func (m *Manager) isValidStdEncodingBase64(toTest string) bool {
+	_, err := b64.StdEncoding.DecodeString(toTest)
 	if err != nil {
 		return false
 	}

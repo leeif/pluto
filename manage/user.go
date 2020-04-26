@@ -847,7 +847,7 @@ func (m *Manager) UpdateUserInfo(accessPayload *jwt.AccessPayload, uui request.U
 
 	if uui.Avatar != "" && m.isValidURL(uui.Avatar) {
 		user.Avatar.SetValid(uui.Avatar)
-	} else if uui.Avatar != "" && m.isValidBase64(uui.Avatar) {
+	} else if uui.Avatar != "" {
 		ag := avatar.AvatarGen{}
 		ar, err := ag.GenFromBase64String(uui.Avatar)
 		if err != nil {
@@ -859,8 +859,6 @@ func (m *Manager) UpdateUserInfo(accessPayload *jwt.AccessPayload, uui request.U
 			return err
 		}
 		user.Avatar.SetValid(url)
-	} else if uui.Avatar != "" {
-		return perror.InvalidAvatarFormat
 	}
 
 	if uui.Name != "" {

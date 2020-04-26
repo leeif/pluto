@@ -266,6 +266,9 @@ func (m *Manager) GoogleLoginMobile(login request.GoogleMobileLogin) (*GrantResu
 			return nil, perr
 		}
 		googleBinding, perr = m.newBinding(tx, user.ID, info.Email, GOOGLELOGIN, info.Sub, true)
+		if perr != nil {
+			return nil, perr
+		}
 	} else {
 		googleBinding.Mail = info.Email
 		if _, err := googleBinding.Update(tx, boil.Infer()); err != nil {
@@ -394,6 +397,9 @@ func (m *Manager) WechatLoginMobile(login request.WechatMobileLogin) (*GrantResu
 			return nil, perr
 		}
 		wechatBinding, perr = m.newBinding(tx, user.ID, "", WECHATLOGIN, info.Unionid, true)
+		if perr != nil {
+			return nil, perr
+		}
 	} else {
 		user, err = models.Users(qm.Where("id = ?", wechatBinding.UserID)).One(tx)
 		if err != nil {
@@ -590,6 +596,9 @@ func (m *Manager) AppleLoginMobile(login request.AppleMobileLogin) (*GrantResult
 			return nil, perr
 		}
 		appleBinding, perr = m.newBinding(tx, user.ID, info.Email, APPLELOGIN, info.Sub, true)
+		if perr != nil {
+			return nil, perr
+		}
 	} else {
 		user, err = models.Users(qm.Where("id = ?", appleBinding.UserID)).One(tx)
 		if err != nil {

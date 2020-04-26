@@ -232,13 +232,12 @@ func (m *Manager) GoogleLoginMobile(login request.GoogleMobileLogin) (*GrantResu
 		tx.Rollback()
 	}()
 
-	identifyToken := b64.RawStdEncoding.EncodeToString([]byte(info.Sub))
-	googleBinding, err := models.Bindings(qm.Where("login_type = ? and identify_token = ?", GOOGLELOGIN, identifyToken)).One(tx)
+	googleBinding, err := models.Bindings(qm.Where("login_type = ? and identify_token = ?", GOOGLELOGIN, info.Sub)).One(tx)
 	if err != nil && err != sql.ErrNoRows {
 		return nil, perror.ServerError.Wrapper(err)
 	}
 
-	salt := saltUtil.RandomSalt(identifyToken)
+	salt := saltUtil.RandomSalt(info.Sub)
 
 	randomPassword := saltUtil.RandomToken(10)
 	encodedPassword, perr := saltUtil.EncodePassword(randomPassword, salt)

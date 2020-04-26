@@ -565,7 +565,7 @@ func (m *Manager) AppleLoginMobile(login request.AppleMobileLogin) (*GrantResult
 	}
 
 	identifyToken := b64.RawStdEncoding.EncodeToString([]byte(info.Sub))
-	appleBinding, err := models.Bindings(qm.Where("login_type = ? and identify_token = ?", WECHATLOGIN, info.Sub)).One(tx)
+	appleBinding, err := models.Bindings(qm.Where("login_type = ? and identify_token = ?", APPLELOGIN, info.Sub)).One(tx)
 	if err != nil && err != sql.ErrNoRows {
 		return nil, perror.ServerError.Wrapper(err)
 	}

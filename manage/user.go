@@ -145,7 +145,9 @@ func (m *Manager) NamePasswordLogin(login request.PasswordLogin) (*GrantResult, 
 
 	user, err := models.Users(qm.Where("name = ?", login.Account)).One(tx)
 
-	if err != nil {
+	if err != nil && err == sql.ErrNoRows {
+		return nil, perror.UsernameExists
+	} else if err != nil {
 		return nil, perror.ServerError.Wrapper(err)
 	}
 

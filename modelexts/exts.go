@@ -115,6 +115,13 @@ func (f FindUser) Format() map[string]interface{} {
 	res["name"] = f.User.Name
 	res["avatar"] = f.User.Avatar.String
 
+	for _, binding := range f.Bindings {
+		if binding.Mail != "" {
+			res["mail"] = binding.Mail
+			break
+		}
+	}
+
 	applications := make([]interface{}, 0)
 	for _, application := range f.Applications {
 		a := make(map[string]interface{})

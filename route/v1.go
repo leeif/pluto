@@ -244,7 +244,7 @@ func (r *Router) registerRBACV1Routes(prefix string) {
 			handler:     r.v1.SetUserRole,
 		},
 	}
-	r.registerRoutes(routes, path.Join(prefix, "/rbac"), false)
+	r.registerRoutes(routes, path.Join(prefix, "/api/rbac"), false)
 }
 
 func (r *Router) registerTokenV1Routes(prefix string) {

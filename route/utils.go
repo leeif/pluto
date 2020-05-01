@@ -2,14 +2,12 @@ package route
 
 import (
 	"errors"
-	"fmt"
 	"net/http"
 	"net/url"
 	"path"
 
 	"github.com/urfave/negroni"
 
-	"github.com/leeif/pluto/log"
 	routeUtils "github.com/leeif/pluto/utils/route"
 
 	perror "github.com/leeif/pluto/datatype/pluto_error"
@@ -17,7 +15,7 @@ import (
 
 func (router *Router) plutoHandlerWrapper(handler func(http.ResponseWriter, *http.Request) *perror.PlutoError) negroni.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request, next http.HandlerFunc) {
-		
+
 		defer func() {
 			if err := recover(); err != nil {
 				var perr *perror.PlutoError
@@ -89,15 +87,5 @@ func (router *Router) plutoWebHandlerWrapper(handler func(http.ResponseWriter, *
 		}
 
 		next(w, r)
-	}
-}
-
-func (router *Router) plutoLog(logger *log.PlutoLog, pe *perror.PlutoError, r *http.Request) {
-	url := r.URL.String()
-	if pe.LogError != nil {
-		logger.Error(fmt.Sprintf("[%s]:%s", url, pe.LogError.Error()))
-	}
-	if pe.HTTPError != nil {
-		logger.Debug(fmt.Sprintf("[%s]:%s", url, pe.HTTPError.Error()))
 	}
 }

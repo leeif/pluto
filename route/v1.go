@@ -285,6 +285,13 @@ func (r *Router) registerOauthV1Routes(prefix string) {
 		},
 		{
 			path:        "/client",
+			description: "Get clients",
+			method:      "GET",
+			middle:      middleware.AccessTokenAuthMiddleware,
+			handler:     r.v1.OAuthGetClient,
+		},
+		{
+			path:        "/client",
 			description: "Create client",
 			method:      "POST",
 			middle:      middleware.AccessTokenAuthMiddleware,

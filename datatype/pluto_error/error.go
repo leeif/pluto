@@ -13,6 +13,9 @@ type PlutoError struct {
 }
 
 func (pe PlutoError) Wrapper(err error) *PlutoError {
+	if pe.LogError == nil {
+		pe.LogError = errors.New("")
+	}
 	pe.LogError = fmt.Errorf("%s\n%w", err.Error(), pe.LogError)
 	return &pe
 }

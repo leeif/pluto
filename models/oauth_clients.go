@@ -30,6 +30,7 @@ type OauthClient struct {
 	Key         string    `boil:"key" json:"key" toml:"key" yaml:"key"`
 	Secret      string    `boil:"secret" json:"secret" toml:"secret" yaml:"secret"`
 	Status      string    `boil:"status" json:"status" toml:"status" yaml:"status"`
+	UserID      uint      `boil:"user_id" json:"user_id" toml:"user_id" yaml:"user_id"`
 	RedirectURI string    `boil:"redirect_uri" json:"redirect_uri" toml:"redirect_uri" yaml:"redirect_uri"`
 
 	R *oauthClientR `boil:"-" json:"-" toml:"-" yaml:"-"`
@@ -44,6 +45,7 @@ var OauthClientColumns = struct {
 	Key         string
 	Secret      string
 	Status      string
+	UserID      string
 	RedirectURI string
 }{
 	ID:          "id",
@@ -53,6 +55,7 @@ var OauthClientColumns = struct {
 	Key:         "key",
 	Secret:      "secret",
 	Status:      "status",
+	UserID:      "user_id",
 	RedirectURI: "redirect_uri",
 }
 
@@ -66,6 +69,7 @@ var OauthClientWhere = struct {
 	Key         whereHelperstring
 	Secret      whereHelperstring
 	Status      whereHelperstring
+	UserID      whereHelperuint
 	RedirectURI whereHelperstring
 }{
 	ID:          whereHelperuint{field: "`oauth_clients`.`id`"},
@@ -75,6 +79,7 @@ var OauthClientWhere = struct {
 	Key:         whereHelperstring{field: "`oauth_clients`.`key`"},
 	Secret:      whereHelperstring{field: "`oauth_clients`.`secret`"},
 	Status:      whereHelperstring{field: "`oauth_clients`.`status`"},
+	UserID:      whereHelperuint{field: "`oauth_clients`.`user_id`"},
 	RedirectURI: whereHelperstring{field: "`oauth_clients`.`redirect_uri`"},
 }
 
@@ -95,8 +100,8 @@ func (*oauthClientR) NewStruct() *oauthClientR {
 type oauthClientL struct{}
 
 var (
-	oauthClientAllColumns            = []string{"id", "created_at", "updated_at", "deleted_at", "key", "secret", "status", "redirect_uri"}
-	oauthClientColumnsWithoutDefault = []string{"created_at", "updated_at", "deleted_at", "key", "secret", "status", "redirect_uri"}
+	oauthClientAllColumns            = []string{"id", "created_at", "updated_at", "deleted_at", "key", "secret", "status", "user_id", "redirect_uri"}
+	oauthClientColumnsWithoutDefault = []string{"created_at", "updated_at", "deleted_at", "key", "secret", "status", "user_id", "redirect_uri"}
 	oauthClientColumnsWithDefault    = []string{"id"}
 	oauthClientPrimaryKeyColumns     = []string{"id"}
 )

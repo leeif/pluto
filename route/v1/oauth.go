@@ -197,13 +197,41 @@ func (router *Router) OAuthLogin(w http.ResponseWriter, r *http.Request) *perror
 	return nil
 }
 
+func (router *Router) OAuthGetClient(w http.ResponseWriter, r *http.Request) *perror.PlutoError {
+	accessPayload, perr := routeUtils.GetAccessPayload(r)
+
+	if perr != nil {
+		return perr
+	}
+
+	clients, perr := router.manager.OAuthGetClient(accessPayload)
+
+	if perr != nil {
+		return perr
+	}
+
+	data := make(map[string]interface{})
+
+	data["clients"] = clients
+
+	routeUtils.ResponseOK(data, w)
+
+	return nil
+}
+
 func (router *Router) OAuthCreateClient(w http.ResponseWriter, r *http.Request) *perror.PlutoError {
+	accessPayload, perr := routeUtils.GetAccessPayload(r)
+
+	if perr != nil {
+		return perr
+	}
+
 	occ := &request.OAuthCreateClient{}
 	if perr := routeUtils.GetRequestData(r, occ); perr != nil {
 		return perr
 	}
 
-	client, perr := router.manager.OAuthCreateClient(occ)
+	client, perr := router.manager.OAuthCreateClient(accessPayload, occ)
 
 	if perr != nil {
 		return perr

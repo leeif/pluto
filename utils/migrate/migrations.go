@@ -297,6 +297,7 @@ func createOauthClientsTable(db *sql.DB, name string) error {
 		"`key` varchar(255) NOT NULL," +
 		"`secret` varchar(60) NOT NULL," +
 		"`status` varchar(60) NOT NULL," +
+		"`user_id` int(10) unsigned NOT NULL," +
 		"`redirect_uri` varchar(200) NOT NULL," +
 		"PRIMARY KEY (`id`)," +
 		"UNIQUE KEY `client_key` (`key`)" +

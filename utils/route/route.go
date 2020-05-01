@@ -228,9 +228,9 @@ func GetQueryString(query url.Values, except ...string) string {
 func PlutoLog(logger *log.PlutoLog, pe *perror.PlutoError, r *http.Request) {
 	url := r.URL.String()
 	if pe.LogError != nil {
-		logger.Error(fmt.Sprintf("[%s]:%s", url, pe.LogError.Error()))
+		logger.Error(fmt.Sprintf("[(%s)%s]:%s", r.Method, url, pe.LogError.Error()))
 	}
 	if pe.HTTPError != nil {
-		logger.Debug(fmt.Sprintf("[%s]:%s", url, pe.HTTPError.Error()))
+		logger.Debug(fmt.Sprintf("[(%s)%s]:%s", r.Method, url, pe.HTTPError.Error()))
 	}
 }

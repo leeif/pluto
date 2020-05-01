@@ -19,6 +19,7 @@ import (
 	saltUtil "github.com/leeif/pluto/utils/salt"
 	"github.com/volatiletech/sqlboiler/boil"
 	"github.com/volatiletech/sqlboiler/queries/qm"
+	"github.com/wxnacy/wgo/arrays"
 )
 
 const (
@@ -570,7 +571,39 @@ func (m *Manager) GrantAccessToken(oa *request.OAuthAuthorize, accessPayload *jw
 	}, redirectURI, nil
 }
 
-func (m *Manager) OAuthCreateClient(occ *request.OAuthCreateClient) (*modelexts.OauthClient, *perror.PlutoError) {
+func (m *Manager) OAuthGetClient(accessPayload *jwt.AccessPayload) ([]interface{}, *perror.PlutoError) {
+	admin := false
+	if arrays.Contains(accessPayload.Scopes, general.PlutoAdminScope) != -1 {
+		admin = true
+	}
+
+	var clients []*models.OauthClient
+	var err error
+	if admin {
+		clients, err = models.OauthClients().All(m.db)
+	} else {
+		clients, err = models.OauthClients(qm.Where("user_id = ?", accessPayload.UserID)).All(m.db)
+	}
+
+	if err != nil {
+		return nil, perror.ServerError.Wrapper(err)
+	}
+
+	res := make([]interface{}, 0)
+
+	for _, client := range clients {
+		c := make(map[string]interface{})
+		c["key"] = client.Key
+		c["status"] = client.Status
+		c["user_id"] = client.UserID
+		res = append(res, c)
+	}
+
+	return res, nil
+
+}
+
+func (m *Manager) OAuthCreateClient(accessPayload *jwt.AccessPayload, occ *request.OAuthCreateClient) (*modelexts.OauthClient, *perror.PlutoError) {
 	tx, err := m.db.Begin()
 	if err != nil {
 		return nil, perror.ServerError.Wrapper(err)
@@ -594,6 +627,7 @@ func (m *Manager) OAuthCreateClient(occ *request.OAuthCreateClient) (*modelexts.
 	}
 	client.Secret = string(secretHash)
 	client.Status = ClientPend
+	client.UserID = accessPayload.UserID
 	client.RedirectURI = occ.RedirectURI
 
 	if err := client.Insert(tx, boil.Infer()); err != nil {

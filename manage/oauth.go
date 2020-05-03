@@ -655,7 +655,7 @@ func (m *Manager) UpdateOAuthClientStatus(occ *request.OAuthClientStatus) (*mode
 	}()
 
 	if occ.Status != ClientApproved && occ.Status != ClientDenied {
-		return nil, perror.InvalidAccessToken
+		return nil, perror.OAuthInvalidClientStatus
 	}
 
 	client, err := models.OauthClients(qm.Where("`key`=?", occ.Key)).One(tx)

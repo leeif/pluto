@@ -19,7 +19,16 @@ func AccessTokenAuthMiddleware(handlerWrapper HandlerWrapper, handlers ...func(h
 	return ng
 }
 
-func AdminAuthMiddleware(handlerWrapper HandlerWrapper, handlers ...func(http.ResponseWriter, *http.Request) *perror.PlutoError) http.Handler {
+func PlutoUserAuthMiddleware(handlerWrapper HandlerWrapper, handlers ...func(http.ResponseWriter, *http.Request) *perror.PlutoError) http.Handler {
+	ng := negroni.New()
+	ng.UseFunc(handlerWrapper(PlutoUser))
+	for _, handler := range handlers {
+		ng.UseFunc(handlerWrapper(handler))
+	}
+	return ng
+}
+
+func PlutoAdminAuthMiddleware(handlerWrapper HandlerWrapper, handlers ...func(http.ResponseWriter, *http.Request) *perror.PlutoError) http.Handler {
 	ng := negroni.New()
 	ng.UseFunc(handlerWrapper(PlutoAdmin))
 	for _, handler := range handlers {

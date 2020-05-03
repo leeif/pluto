@@ -1,7 +1,9 @@
 package general
 
 const (
-	PlutoAdminApplication = "pluto"
-	PlutoAdminRole        = "admin"
-	PlutoAdminScope       = "pluto.admin"
+	PlutoApplication = "pluto"
+	PlutoAdminRole   = "admin"
+	PlutoUserRole    = "user"
+	PlutoAdminScope  = "pluto.admin"
+	PlutoUserScope   = "pluto.user"
 )

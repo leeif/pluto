@@ -24,50 +24,92 @@ func Init(db *sql.DB, config *config.Config) *perror.PlutoError {
 		return nil
 	}
 
-	logger, perr := plog.NewLogger(config)
+	logger, err := plog.NewLogger(config)
 
-	manager, perr := manage.NewManager(db, config, nil)
+	if err != nil {
+		return perror.ServerError.Wrapper(err)
+	}
+
+	manager, err := manage.NewManager(db, config, nil)
+
+	if err != nil {
+		return perror.ServerError.Wrapper(err)
+	}
+
+	apps, perr := manager.ListApplications()
 
 	if perr != nil {
-		return perror.ServerError.Wrapper(perr)
+		return perr
+	}
+
+	for _, app := range apps {
+		// skip if the pluto application already exists
+		if app.Name == general.PlutoApplication {
+			return nil
+		}
 	}
 
 	ca := request.CreateApplication{}
-	ca.Name = general.PlutoAdminApplication
-	application, err := manager.CreateApplication(ca)
-	if err != nil && err.PlutoCode == perror.ServerError.PlutoCode {
-		return err
+	ca.Name = general.PlutoApplication
+	application, perr := manager.CreateApplication(ca)
+	if perr != nil && perr.PlutoCode == perror.ServerError.PlutoCode {
+		return perr
 	}
 
 	cr := request.CreateRole{}
 	cr.Name = general.PlutoAdminRole
 	cr.AppID = application.ID
 
-	role, err := manager.CreateRole(cr)
-	if err != nil && err.PlutoCode == perror.ServerError.PlutoCode {
-		return err
+	adminRole, perr := manager.CreateRole(cr)
+	if perr != nil && perr.PlutoCode == perror.ServerError.PlutoCode {
+		return perr
+	}
+
+	cr = request.CreateRole{}
+	cr.Name = general.PlutoUserRole
+	cr.AppID = application.ID
+
+	userRole, perr := manager.CreateRole(cr)
+	if perr != nil && perr.PlutoCode == perror.ServerError.PlutoCode {
+		return perr
+	}
+
+	ar := request.ApplicationRole{}
+	ar.AppID = application.ID
+	ar.RoleID = userRole.ID
+
+	if perr := manager.ApplicationDefaultRole(ar); perr != nil {
+		return perr
 	}
 
 	cs := request.CreateScope{}
 	cs.Name = general.PlutoAdminScope
 	cs.AppID = application.ID
-	scope, err := manager.CreateScope(cs)
-	if err != nil && err.PlutoCode == perror.ServerError.PlutoCode {
-		return err
+	adminScope, perr := manager.CreateScope(cs)
+	if perr != nil && perr.PlutoCode == perror.ServerError.PlutoCode {
+		return perr
+	}
+
+	cs = request.CreateScope{}
+	cs.Name = general.PlutoUserScope
+	cs.AppID = application.ID
+	userScope, perr := manager.CreateScope(cs)
+	if perr != nil && perr.PlutoCode == perror.ServerError.PlutoCode {
+		return perr
 	}
 
 	password := salt.RandomToken(20)
 	mr := request.MailRegister{}
 	mr.Mail = config.Admin.Mail
-	name, err := manager.RandomUserName("pluto_admin_user")
-	if err != nil {
-		return err
+	name, perr := manager.RandomUserName("pluto_admin_user")
+	if perr != nil {
+		return perr
 	}
 	mr.Name = name
 	mr.Password = password
-	user, err := manager.RegisterWithEmail(mr, true)
-	if err != nil && err.PlutoCode != perror.MailIsAlreadyRegister.PlutoCode {
-		return err
+	user, perr := manager.RegisterWithEmail(mr, true)
+	if perr != nil && perr.PlutoCode != perror.MailIsAlreadyRegister.PlutoCode {
+		return perr
 	}
 
 	if err == nil {
@@ -90,16 +132,32 @@ func Init(db *sql.DB, config *config.Config) *perror.PlutoError {
 	}
 
 	rsu := request.RoleScopeUpdate{}
-	rsu.RoleID = role.ID
-	rsu.Scopes = []uint{scope.ID}
+	rsu.RoleID = adminRole.ID
+	rsu.Scopes = []uint{adminScope.ID}
+
+	if err := manager.RoleScopeUpdate(rsu); err != nil && err.PlutoCode == perror.ServerError.PlutoCode {
+		return err
+	}
+
+	rsu = request.RoleScopeUpdate{}
+	rsu.RoleID = userRole.ID
+	rsu.Scopes = []uint{userScope.ID}
 
 	if err := manager.RoleScopeUpdate(rsu); err != nil && err.PlutoCode == perror.ServerError.PlutoCode {
 		return err
 	}
 
 	rs := request.RoleScope{}
-	rs.RoleID = role.ID
-	rs.ScopeID = scope.ID
+	rs.RoleID = adminRole.ID
+	rs.ScopeID = adminScope.ID
+
+	if err := manager.RoleDefaultScope(rs); err != nil && err.PlutoCode == perror.ServerError.PlutoCode {
+		return err
+	}
+
+	rs = request.RoleScope{}
+	rs.RoleID = userRole.ID
+	rs.ScopeID = userScope.ID
 
 	if err := manager.RoleDefaultScope(rs); err != nil && err.PlutoCode == perror.ServerError.PlutoCode {
 		return err
@@ -107,7 +165,7 @@ func Init(db *sql.DB, config *config.Config) *perror.PlutoError {
 
 	ur := request.UserRole{}
 	ur.AppID = application.ID
-	ur.RoleID = role.ID
+	ur.RoleID = adminRole.ID
 	ur.UserID = user.ID
 
 	if err := manager.SetUserRole(ur); err != nil && err.PlutoCode == perror.ServerError.PlutoCode {

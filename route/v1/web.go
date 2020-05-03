@@ -125,7 +125,7 @@ func (router *Router) LoginPage(w http.ResponseWriter, r *http.Request) *perror.
 	query := r.URL.Query()
 
 	if query.Get("app_id") == "" {
-		query.Set("app_id", general.PlutoAdminApplication)
+		query.Set("app_id", general.PlutoApplication)
 		routeUtils.RedirectWithQueryString(r.URL.Path, query, w, r)
 		return nil
 	}

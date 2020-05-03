@@ -12,7 +12,6 @@ import (
 	"github.com/leeif/pluto/log"
 	plog "github.com/leeif/pluto/log"
 	"github.com/leeif/pluto/models"
-	"github.com/leeif/pluto/utils/general"
 	"github.com/volatiletech/sqlboiler/queries/qm"
 )
 
@@ -42,8 +41,7 @@ func getUserRole(exec boil.Executor, userID uint, appID string) (*models.RbacRol
 		return role, nil
 	}
 
-	// forbidd pluto admin application with default role assign
-	if !app.DefaultRole.IsZero() && app.Name != general.PlutoAdminApplication {
+	if !app.DefaultRole.IsZero() {
 		role, err = models.RbacRoles(qm.Where("id = ?", app.DefaultRole.Uint)).One(exec)
 		if err != nil {
 			return nil, perror.ServerError.Wrapper(err)

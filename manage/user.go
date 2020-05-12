@@ -117,7 +117,7 @@ func (m *Manager) MailPasswordLogin(login request.PasswordLogin) (*GrantResult, 
 		return nil, perror.InvalidPassword
 	}
 
-	scopes, perr := getUserDefaultScopes(tx, user.ID, login.AppID)
+	scopes, perr := getUserAllScopes(tx, user.ID, login.AppID)
 	if perr != nil {
 		return nil, perr
 	}
@@ -170,7 +170,7 @@ func (m *Manager) NamePasswordLogin(login request.PasswordLogin) (*GrantResult, 
 		return nil, perror.InvalidPassword
 	}
 
-	scopes, perr := getUserDefaultScopes(tx, user.ID, login.AppID)
+	scopes, perr := getUserAllScopes(tx, user.ID, login.AppID)
 	if perr != nil {
 		return nil, perr
 	}
@@ -282,7 +282,7 @@ func (m *Manager) GoogleLoginMobile(login request.GoogleMobileLogin) (*GrantResu
 		}
 	}
 
-	scopes, perr := getUserDefaultScopes(tx, user.ID, login.AppID)
+	scopes, perr := getUserAllScopes(tx, user.ID, login.AppID)
 	if perr != nil {
 		return nil, perr
 	}
@@ -409,7 +409,7 @@ func (m *Manager) WechatLoginMobile(login request.WechatMobileLogin) (*GrantResu
 		}
 	}
 
-	scopes, perr := getUserDefaultScopes(tx, user.ID, login.AppID)
+	scopes, perr := getUserAllScopes(tx, user.ID, login.AppID)
 	if perr != nil {
 		return nil, perr
 	}
@@ -608,7 +608,7 @@ func (m *Manager) AppleLoginMobile(login request.AppleMobileLogin) (*GrantResult
 		}
 	}
 
-	scopes, perr := getUserDefaultScopes(tx, user.ID, login.AppID)
+	scopes, perr := getUserAllScopes(tx, user.ID, login.AppID)
 	if perr != nil {
 		return nil, perr
 	}

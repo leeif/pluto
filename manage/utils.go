@@ -120,6 +120,30 @@ func getUserDefaultScopes(exec boil.Executor, userID uint, appID string) ([]stri
 	return res, nil
 }
 
+func getUserAllScopes(exec boil.Executor, userID uint, appID string) ([]string, *perror.PlutoError) {
+	res := make([]string, 0)
+	role, err := getUserRole(exec, userID, appID)
+	if err != nil {
+		return nil, err
+	}
+
+	if role == nil {
+		return res, nil
+	}
+
+	scopes, err := getRoleAllScopes(exec, role)
+
+	if err != nil {
+		return nil, err
+	}
+
+	for _, scope := range scopes {
+		res = append(res, scope.Name)
+	}
+
+	return res, nil
+}
+
 func getValidScopes(exec boil.Executor, requestScopes string, userID uint, appID string) (string, *perror.PlutoError) {
 
 	scopesSlice := strings.Split(requestScopes, ",")

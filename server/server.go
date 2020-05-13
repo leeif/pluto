@@ -2,6 +2,7 @@ package server
 
 import (
 	"context"
+	"net/http"
 	"time"
 
 	"log"
@@ -26,6 +27,14 @@ func NewMux(lc fx.Lifecycle, config *config.Config) *mux.Router {
 	address := ":" + config.Server.Port.String()
 	router := mux.NewRouter()
 	c := cors.New(cors.Options{
+		AllowedMethods: []string{
+			http.MethodHead,
+			http.MethodGet,
+			http.MethodPost,
+			http.MethodPut,
+			http.MethodPatch,
+			http.MethodDelete,
+		},
 		AllowedOrigins: config.Cors.AllowedOrigins,
 		AllowedHeaders: config.Cors.AllowedHeaders,
 	})

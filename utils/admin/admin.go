@@ -24,53 +24,70 @@ func Init(db *sql.DB, config *config.Config) *perror.PlutoError {
 		return nil
 	}
 
-	logger, perr := plog.NewLogger(config)
+	logger, err := plog.NewLogger(config)
 
-	manager, perr := manage.NewManager(db, config, nil)
+	if err != nil {
+		return perror.ServerError.Wrapper(err)
+	}
+
+	manager, err := manage.NewManager(db, config, nil)
+
+	if err != nil {
+		return perror.ServerError.Wrapper(err)
+	}
+
+	apps, perr := manager.ListApplications()
 
 	if perr != nil {
-		return perror.ServerError.Wrapper(perr)
+		return perr
+	}
+
+	for _, app := range apps {
+		// skip if the pluto application already exists
+		if app.Name == general.PlutoAdminApplication {
+			return nil
+		}
 	}
 
 	ca := request.CreateApplication{}
 	ca.Name = general.PlutoAdminApplication
-	application, err := manager.CreateApplication(ca)
-	if err != nil && err.PlutoCode == perror.ServerError.PlutoCode {
-		return err
+	application, perr := manager.CreateApplication(ca)
+	if perr != nil && perr.PlutoCode == perror.ServerError.PlutoCode {
+		return perr
 	}
 
 	cr := request.CreateRole{}
 	cr.Name = general.PlutoAdminRole
 	cr.AppID = application.ID
 
-	role, err := manager.CreateRole(cr)
-	if err != nil && err.PlutoCode == perror.ServerError.PlutoCode {
-		return err
+	role, perr := manager.CreateRole(cr)
+	if perr != nil && perr.PlutoCode == perror.ServerError.PlutoCode {
+		return perr
 	}
 
 	cs := request.CreateScope{}
 	cs.Name = general.PlutoAdminScope
 	cs.AppID = application.ID
-	scope, err := manager.CreateScope(cs)
-	if err != nil && err.PlutoCode == perror.ServerError.PlutoCode {
-		return err
+	scope, perr := manager.CreateScope(cs)
+	if perr != nil && perr.PlutoCode == perror.ServerError.PlutoCode {
+		return perr
 	}
 
 	password := salt.RandomToken(20)
 	mr := request.MailRegister{}
 	mr.Mail = config.Admin.Mail
-	name, err := manager.RandomUserName("pluto_admin_user")
-	if err != nil {
-		return err
+	name, perr := manager.RandomUserName("pluto_admin_user")
+	if perr != nil {
+		return perr
 	}
 	mr.Name = name
 	mr.Password = password
-	user, err := manager.RegisterWithEmail(mr, true)
-	if err != nil && err.PlutoCode != perror.MailIsAlreadyRegister.PlutoCode {
-		return err
+	user, perr := manager.RegisterWithEmail(mr, true)
+	if perr != nil && perr.PlutoCode != perror.MailIsAlreadyRegister.PlutoCode {
+		return perr
 	}
 
-	if err == nil {
+	if perr == nil {
 
 		mailBody := fmt.Sprintf("Your Pluto Admin Mail : %s, Password : %s", mr.Mail, mr.Password)
 

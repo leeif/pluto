@@ -71,7 +71,7 @@ func getRoleDefaultScopes(exec boil.Executor, role *models.RbacRole) (*models.Rb
 
 func getRoleAllScopes(exec boil.Executor, role *models.RbacRole) (models.RbacScopeSlice, *perror.PlutoError) {
 
-	if role == nil || role.DefaultScope.IsZero() {
+	if role == nil {
 		return nil, nil
 	}
 
@@ -83,7 +83,7 @@ func getRoleAllScopes(exec boil.Executor, role *models.RbacRole) (models.RbacSco
 	roleScopesIn := make([]interface{}, 0)
 
 	for _, roleScope := range roleScopes {
-		roleScopesIn = append(roleScopesIn, roleScope.ID)
+		roleScopesIn = append(roleScopesIn, roleScope.ScopeID)
 	}
 
 	scopes, err := models.RbacScopes(qm.WhereIn("id in ?", roleScopesIn...)).All(exec)

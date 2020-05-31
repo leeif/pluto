@@ -80,6 +80,11 @@ func getRoleAllScopes(exec boil.Executor, role *models.RbacRole) (models.RbacSco
 		return nil, perror.ServerError.Wrapper(err)
 	}
 
+	// empty if no scopes binding
+	if len(roleScopes) == 0 {
+		return nil, nil
+	}
+
 	roleScopesIn := make([]interface{}, 0)
 
 	for _, roleScope := range roleScopes {

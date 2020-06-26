@@ -30,6 +30,14 @@ func (u User) Format() map[string]interface{} {
 	return res
 }
 
+func (u User) PublicInfo() map[string]interface{} {
+	res := make(map[string]interface{})
+	res["name"] = u.User.Name
+	res["app_id"] = u.AppID
+	res["avatar"] = u.User.Avatar
+	return res
+}
+
 type Scopes struct {
 	Application *models.Application `json:"application"`
 	Scopes      []*models.RbacScope `json:"scopes"`

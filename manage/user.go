@@ -836,6 +836,30 @@ func (m *Manager) UserInfo(userID uint, accessPayload *jwt.AccessPayload) (*mode
 	return userExt, nil
 }
 
+func (m *Manager) OtherUserInfo(userID uint, appID string) (*modelexts.User, *perror.PlutoError) {
+
+	user, err := models.Users(qm.Where("id = ?", userID)).One(m.db)
+	if err != nil && err == sql.ErrNoRows {
+		return nil, perror.UserNotExist
+	} else if err != nil {
+		return nil, perror.ServerError.Wrapper(err)
+	}
+
+	bindings, err := models.Bindings(qm.Where("user_id = ?", userID)).All(m.db)
+
+	if err != nil {
+		return nil, perror.ServerError.Wrapper(err)
+	}
+
+	userExt := &modelexts.User{
+		User:     user,
+		Bindings: bindings,
+		AppID:    appID,
+	}
+
+	return userExt, nil
+}
+
 func (m *Manager) UpdateUserInfo(accessPayload *jwt.AccessPayload, uui request.UpdateUserInfo) *perror.PlutoError {
 
 	tx, err := m.db.Begin()

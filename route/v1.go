@@ -93,6 +93,13 @@ func (r *Router) registerUserV1Routes(prefix string) {
 			handler:     r.v1.UserInfo,
 		},
 		{
+			path:        "/info/{id}",
+			description: "Get other user avatar, name info",
+			method:      "GET",
+			middle:      middleware.AccessTokenAuthMiddleware,
+			handler:     r.v1.OtherUserInfo,
+		},
+		{
 			path:        "/info/me/update",
 			description: "Update user info",
 			method:      "PUT",

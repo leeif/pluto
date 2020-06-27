@@ -93,7 +93,7 @@ func (r *Router) registerUserV1Routes(prefix string) {
 			handler:     r.v1.UserInfo,
 		},
 		{
-			path:        "/info/{id}",
+			path:        "/info/{ids}",
 			description: "Get other user avatar, name info",
 			method:      "GET",
 			middle:      middleware.NoAuthMiddleware,

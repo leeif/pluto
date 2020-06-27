@@ -3,6 +3,7 @@ package v1
 import (
 	"net/http"
 	"strconv"
+	"strings"
 
 	"github.com/gorilla/mux"
 	perror "github.com/leeif/pluto/datatype/pluto_error"
@@ -211,19 +212,31 @@ func (router *Router) UserInfo(w http.ResponseWriter, r *http.Request) *perror.P
 
 func (router *Router) OtherUserInfo(w http.ResponseWriter, r *http.Request) *perror.PlutoError {
 	vars := mux.Vars(r)
-	id, err := strconv.Atoi(vars["id"])
+	ids := vars["ids"]
 
-	if err != nil {
-		return perror.UserNotExist
+	res := make([]map[string]interface{}, 0)
+	for _, id := range strings.Split(ids, "-") {
+		id, err := strconv.Atoi(id)
+
+		if err != nil {
+			continue
+		}
+
+		info, perr := router.manager.OtherUserInfo(uint(id))
+
+		if perr != nil {
+			e := make(map[string]interface{})
+			e["id"] = id
+			e["err_code"] = perr.HTTPCode
+			e["err_msg"] = perr.HTTPError.Error()
+			res = append(res, e)
+			continue
+		}
+
+		res = append(res, info.PublicInfo())
 	}
 
-	res, perr := router.manager.OtherUserInfo(uint(id))
-
-	if perr != nil {
-		return perr
-	}
-
-	routeUtils.ResponseOK(res.PublicInfo(), w)
+	routeUtils.ResponseOK(res, w)
 
 	return nil
 }

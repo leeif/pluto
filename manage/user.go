@@ -836,7 +836,7 @@ func (m *Manager) UserInfo(userID uint, accessPayload *jwt.AccessPayload) (*mode
 	return userExt, nil
 }
 
-func (m *Manager) OtherUserInfo(userID uint, appID string) (*modelexts.User, *perror.PlutoError) {
+func (m *Manager) OtherUserInfo(userID uint) (*modelexts.User, *perror.PlutoError) {
 
 	user, err := models.Users(qm.Where("id = ?", userID)).One(m.db)
 	if err != nil && err == sql.ErrNoRows {
@@ -854,7 +854,6 @@ func (m *Manager) OtherUserInfo(userID uint, appID string) (*modelexts.User, *pe
 	userExt := &modelexts.User{
 		User:     user,
 		Bindings: bindings,
-		AppID:    appID,
 	}
 
 	return userExt, nil

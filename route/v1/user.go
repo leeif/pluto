@@ -210,11 +210,6 @@ func (router *Router) UserInfo(w http.ResponseWriter, r *http.Request) *perror.P
 }
 
 func (router *Router) OtherUserInfo(w http.ResponseWriter, r *http.Request) *perror.PlutoError {
-	payload, perr := routeUtils.GetAccessPayload(r)
-	if perr != nil {
-		return perr
-	}
-
 	vars := mux.Vars(r)
 	id, err := strconv.Atoi(vars["id"])
 
@@ -222,7 +217,7 @@ func (router *Router) OtherUserInfo(w http.ResponseWriter, r *http.Request) *per
 		return perror.UserNotExist
 	}
 
-	res, perr := router.manager.OtherUserInfo(uint(id), payload.AppID)
+	res, perr := router.manager.OtherUserInfo(uint(id))
 
 	if perr != nil {
 		return perr

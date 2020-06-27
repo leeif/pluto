@@ -96,7 +96,7 @@ func (r *Router) registerUserV1Routes(prefix string) {
 			path:        "/info/{id}",
 			description: "Get other user avatar, name info",
 			method:      "GET",
-			middle:      middleware.AccessTokenAuthMiddleware,
+			middle:      middleware.NoAuthMiddleware,
 			handler:     r.v1.OtherUserInfo,
 		},
 		{

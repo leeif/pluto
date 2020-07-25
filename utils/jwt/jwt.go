@@ -14,7 +14,7 @@ import (
 )
 
 const (
-	ALGRAS         = "rsa"
+	RS256ALGRAS    = "RS256"
 	ACCESS         = "access"
 	REGISTERVERIFY = "register_verify"
 	PASSWORDRESET  = "password_reset"
@@ -129,10 +129,10 @@ type PasswordResetResultPayload struct {
 	Successed bool `json:"successed"`
 }
 
-func GenerateRSAJWT(payload interface{}) (*JWT, *perror.PlutoError) {
+func GenerateRSA256JWT(payload interface{}) (*JWT, *perror.PlutoError) {
 	jwt := &JWT{}
 	head := Head{}
-	head.Alg = ALGRAS
+	head.Alg = RS256ALGRAS
 	head.Type = "jwt"
 	h, err := json.Marshal(head)
 	if err != nil {
@@ -159,7 +159,7 @@ func GenerateRSAJWT(payload interface{}) (*JWT, *perror.PlutoError) {
 	return jwt, nil
 }
 
-func VerifyJWT(token string) (*JWT, *perror.PlutoError) {
+func VerifyRS256JWT(token string) (*JWT, *perror.PlutoError) {
 	jwt := &JWT{}
 	parts := strings.Split(token, ".")
 	if len(parts) != 3 {
@@ -192,12 +192,12 @@ func VerifyJWT(token string) (*JWT, *perror.PlutoError) {
 	return jwt, nil
 }
 
-func VerifyB64JWT(b64JWTToken string) (*JWT, *perror.PlutoError) {
+func VerifyB64RS256JWT(b64JWTToken string) (*JWT, *perror.PlutoError) {
 	b, err := b64.RawStdEncoding.DecodeString(b64JWTToken)
 	if err != nil {
 		return nil, perror.InvalidJWTToken
 	}
-	jwt, perr := VerifyJWT(string(b))
+	jwt, perr := VerifyRS256JWT(string(b))
 	if perr != nil {
 		return nil, perr
 	}

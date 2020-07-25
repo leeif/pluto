@@ -16,7 +16,7 @@ func AccessTokenAuth(w http.ResponseWriter, r *http.Request) *perror.PlutoError 
 		return perr
 	}
 
-	jwtToken, perr := jwt.VerifyJWT(accessToken)
+	jwtToken, perr := jwt.VerifyRS256JWT(accessToken)
 	if perr != nil {
 		return perr
 	}

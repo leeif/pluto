@@ -84,7 +84,7 @@ func (m *Manager) VerifyAccessToken(accessToken string) (*jwt.AccessPayload, *pe
 		tx.Rollback()
 	}()
 
-	jwtToken, perr := jwt.VerifyJWT(accessToken)
+	jwtToken, perr := jwt.VerifyRS256JWT(accessToken)
 
 	if perr != nil {
 		return nil, perror.InvalidJWTToken

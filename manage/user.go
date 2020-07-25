@@ -691,7 +691,7 @@ func (m *Manager) ResetPasswordMail(rpm request.ResetPasswordMail) *perror.Pluto
 
 func (m *Manager) ResetPasswordPage(token string) *perror.PlutoError {
 
-	jwtToken, perr := jwt.VerifyB64JWT(token)
+	jwtToken, perr := jwt.VerifyB64RS256JWT(token)
 	// token verify failed
 	if perr != nil {
 		return perr
@@ -732,7 +732,7 @@ func (m *Manager) ResetPasswordPage(token string) *perror.PlutoError {
 
 func (m *Manager) ResetPassword(token string, rp request.ResetPasswordWeb) *perror.PlutoError {
 
-	jwtToken, perr := jwt.VerifyB64JWT(token)
+	jwtToken, perr := jwt.VerifyB64RS256JWT(token)
 	if perr != nil {
 		return perr
 	}
@@ -1004,7 +1004,7 @@ func (m *Manager) RegisterVerifyMail(rvm request.RegisterVerifyMail) (*models.Us
 
 func (m *Manager) RegisterVerify(token string) *perror.PlutoError {
 
-	jwtToken, perr := jwt.VerifyB64JWT(token)
+	jwtToken, perr := jwt.VerifyB64RS256JWT(token)
 	if perr != nil {
 		return perr
 	}

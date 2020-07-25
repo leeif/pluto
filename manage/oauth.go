@@ -427,7 +427,7 @@ func (m *Manager) getDeviceApp(exec boil.Executor, deviceID string, application 
 func (m *Manager) grantToken(userID uint, rt *models.RefreshToken, scopes, appID string, expire int64) (*GrantResult, *perror.PlutoError) {
 	// generate jwt token
 	up := jwt.NewAccessPayload(userID, scopes, appID, expire)
-	accessToken, perr := jwt.GenerateRSAJWT(up)
+	accessToken, perr := jwt.GenerateRSA256JWT(up)
 
 	if perr != nil {
 		return nil, perr.Wrapper(errors.New("JWT token generate failed"))

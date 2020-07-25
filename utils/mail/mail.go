@@ -114,7 +114,7 @@ func (m *Mail) SendPlainText(address, subject, text string) *perror.PlutoError {
 
 func (m *Mail) SendRegisterVerify(userID uint, address string, baseURL string, language string) *perror.PlutoError {
 	rvp := jwt.NewRegisterVerifyPayload(userID, m.config.Token.RegisterVerifyTokenExpire)
-	token, perr := jwt.GenerateRSAJWT(rvp)
+	token, perr := jwt.GenerateRSA256JWT(rvp)
 	if perr != nil {
 		return perr.Wrapper(errors.New("JWT token generate failed"))
 	}
@@ -143,7 +143,7 @@ func (m *Mail) SendRegisterVerify(userID uint, address string, baseURL string, l
 
 func (m *Mail) SendResetPassword(address string, baseURL string, language string) *perror.PlutoError {
 	prp := jwt.NewPasswordResetPayload(address, m.config.Token.ResetPasswordTokenExpire)
-	token, perr := jwt.GenerateRSAJWT(prp)
+	token, perr := jwt.GenerateRSA256JWT(prp)
 	if perr != nil {
 		return perr.Wrapper(errors.New("JWT token generate failed"))
 	}

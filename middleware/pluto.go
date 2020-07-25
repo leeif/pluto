@@ -20,7 +20,7 @@ func getAccessPayload(r *http.Request) (*jwt.AccessPayload, *perror.PlutoError) 
 		return nil, perr
 	}
 
-	jwtToken, perr := jwt.VerifyJWT(accessToken)
+	jwtToken, perr := jwt.VerifyRS256JWT(accessToken)
 	if perr != nil {
 		return nil, perr
 	}

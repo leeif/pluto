@@ -697,8 +697,11 @@ func (m *Manager) ResetPasswordPage(token string) *perror.PlutoError {
 		return perr
 	}
 
-	prp := jwt.PasswordResetPayload{}
-	json.Unmarshal(jwtToken.Payload, &prp)
+	prp := &jwt.PasswordResetPayload{}
+
+	if perr := jwtToken.UnmarshalPayload(prp); perr != nil {
+		return perr
+	}
 
 	if prp.Type != jwt.PASSWORDRESET {
 		return perror.InvalidJWTToken
@@ -737,8 +740,11 @@ func (m *Manager) ResetPassword(token string, rp request.ResetPasswordWeb) *perr
 		return perr
 	}
 
-	prp := jwt.PasswordResetPayload{}
-	json.Unmarshal(jwtToken.Payload, &prp)
+	prp := &jwt.PasswordResetPayload{}
+
+	if perr := jwtToken.UnmarshalPayload(prp); perr != nil {
+		return perr
+	}
 
 	if prp.Type != jwt.PASSWORDRESET {
 		return perror.InvalidJWTToken
@@ -896,14 +902,6 @@ func (m *Manager) isValidURL(toTest string) bool {
 	return err == nil && u.Scheme != "" && u.Host != ""
 }
 
-func (m *Manager) isValidBase64(toTest string) bool {
-	_, err := b64.RawStdEncoding.DecodeString(toTest)
-	if err != nil {
-		return false
-	}
-	return true
-}
-
 func (m *Manager) RegisterWithEmail(register request.MailRegister, admin bool) (*models.User, *perror.PlutoError) {
 
 	tx, err := m.db.Begin()
@@ -1009,9 +1007,9 @@ func (m *Manager) RegisterVerify(token string) *perror.PlutoError {
 		return perr
 	}
 
-	verifyPayload := jwt.RegisterVerifyPayload{}
-	if err := json.Unmarshal(jwtToken.Payload, &verifyPayload); err != nil {
-		return perror.ServerError.Wrapper(errors.New("parse user payload failed")).Wrapper(err)
+	verifyPayload := &jwt.RegisterVerifyPayload{}
+	if perr := jwtToken.UnmarshalPayload(verifyPayload); perr != nil {
+		return perr
 	}
 
 	if verifyPayload.Type != jwt.REGISTERVERIFY {

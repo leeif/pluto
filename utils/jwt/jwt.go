@@ -21,24 +21,30 @@ const (
 )
 
 type JWT struct {
-	Head    []byte
-	Payload []byte
-	Sign    []byte
+	Head    string
+	Payload string
+	Sign    string
 }
 
 func (jwt *JWT) String() string {
-	headB64 := b64.RawStdEncoding.EncodeToString(jwt.Head)
-	payloadB64 := b64.RawStdEncoding.EncodeToString(jwt.Payload)
-	signB64 := b64.RawStdEncoding.EncodeToString(jwt.Sign)
-	return fmt.Sprintf("%s.%s.%s", headB64, payloadB64, signB64)
+	return fmt.Sprintf("%s.%s.%s", jwt.Head, jwt.Payload, jwt.Sign)
 }
 
 func (jwt *JWT) B64String() string {
-	headB64 := b64.RawStdEncoding.EncodeToString(jwt.Head)
-	payloadB64 := b64.RawStdEncoding.EncodeToString(jwt.Payload)
-	signB64 := b64.RawStdEncoding.EncodeToString(jwt.Sign)
-	plain := fmt.Sprintf("%s.%s.%s", headB64, payloadB64, signB64)
-	return b64.RawStdEncoding.EncodeToString([]byte(plain))
+	plain := fmt.Sprintf("%s.%s.%s", jwt.Head, jwt.Payload, jwt.Sign)
+	return b64.RawURLEncoding.EncodeToString([]byte(plain))
+}
+
+func (jwt *JWT) UnmarshalPayload(v interface{}) *perror.PlutoError {
+	b, err := b64.RawURLEncoding.DecodeString(jwt.Payload)
+	if err != nil {
+		return perror.ServerError.Wrapper(err)
+	}
+	if err := json.Unmarshal(b, v); err != nil {
+		return perror.ServerError.Wrapper(err)
+	}
+
+	return nil
 }
 
 type Head struct {
@@ -139,22 +145,22 @@ func GenerateRSA256JWT(payload interface{}) (*JWT, *perror.PlutoError) {
 		return nil, perror.ServerError.Wrapper(err)
 	}
 
-	jwt.Head = h
+	jwt.Head = b64.RawURLEncoding.EncodeToString(h)
 
 	p, err := json.Marshal(payload)
 	if err != nil {
 		return nil, perror.ServerError.Wrapper(err)
 	}
 
-	jwt.Payload = p
+	jwt.Payload = b64.RawURLEncoding.EncodeToString(p)
 
-	sig, err := rsa.SignWithPrivateKey([]byte(string(h)+string(p)), crypto.SHA256)
+	sig, err := rsa.SignWithPrivateKey([]byte(fmt.Sprintf("%s.%s", jwt.Head, jwt.Payload)), crypto.SHA256)
 
 	if err != nil {
 		return nil, perror.ServerError.Wrapper(err)
 	}
 
-	jwt.Sign = sig
+	jwt.Sign = b64.RawURLEncoding.EncodeToString(sig)
 
 	return jwt, nil
 }
@@ -165,35 +171,27 @@ func VerifyRS256JWT(token string) (*JWT, *perror.PlutoError) {
 	if len(parts) != 3 {
 		return nil, perror.InvalidJWTToken
 	}
-	head, err := b64.RawStdEncoding.DecodeString(parts[0])
+
+	jwt.Head = parts[0]
+	jwt.Payload = parts[1]
+
+	decodedSign, err := b64.RawURLEncoding.DecodeString(parts[2])
 	if err != nil {
 		return nil, perror.InvalidJWTToken
 	}
 
-	jwt.Head = head
+	jwt.Sign = parts[2]
 
-	payload, err := b64.RawStdEncoding.DecodeString(parts[1])
-	if err != nil {
-		return nil, perror.InvalidJWTToken
-	}
+	concat := fmt.Sprintf("%s.%s", parts[0], parts[1])
 
-	jwt.Payload = payload
-
-	sign, err := b64.RawStdEncoding.DecodeString(parts[2])
-	if err != nil {
-		return nil, perror.InvalidJWTToken
-	}
-
-	jwt.Sign = sign
-
-	if err := rsa.VerifySignWithPublicKey(append(head, payload...), sign, crypto.SHA256); err != nil {
+	if err := rsa.VerifySignWithPublicKey([]byte(concat), decodedSign, crypto.SHA256); err != nil {
 		return nil, perror.InvalidJWTToken
 	}
 	return jwt, nil
 }
 
 func VerifyB64RS256JWT(b64JWTToken string) (*JWT, *perror.PlutoError) {
-	b, err := b64.RawStdEncoding.DecodeString(b64JWTToken)
+	b, err := b64.RawURLEncoding.DecodeString(b64JWTToken)
 	if err != nil {
 		return nil, perror.InvalidJWTToken
 	}

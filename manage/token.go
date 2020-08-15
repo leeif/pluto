@@ -2,7 +2,6 @@ package manage
 
 import (
 	"database/sql"
-	"encoding/json"
 	"time"
 
 	perror "github.com/leeif/pluto/datatype/pluto_error"
@@ -92,8 +91,8 @@ func (m *Manager) VerifyAccessToken(accessToken string) (*jwt.AccessPayload, *pe
 
 	accessPayload := &jwt.AccessPayload{}
 
-	if err := json.Unmarshal(jwtToken.Payload, &accessPayload); err != nil {
-		return nil, perror.ServerError.Wrapper(err)
+	if perr := jwtToken.UnmarshalPayload(accessPayload); perr != nil {
+		return nil, perr
 	}
 
 	if accessPayload.Type != jwt.ACCESS {

@@ -1,7 +1,6 @@
 package middleware
 
 import (
-	"encoding/json"
 	"net/http"
 	"time"
 
@@ -27,8 +26,8 @@ func getAccessPayload(r *http.Request) (*jwt.AccessPayload, *perror.PlutoError) 
 
 	accessPayload := &jwt.AccessPayload{}
 
-	if err := json.Unmarshal(jwtToken.Payload, &accessPayload); err != nil {
-		return nil, perror.ServerError.Wrapper(err)
+	if perr := jwtToken.UnmarshalPayload(accessPayload); perr != nil {
+		return nil, perr
 	}
 
 	if accessPayload.Type != jwt.ACCESS {

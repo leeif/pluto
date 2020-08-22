@@ -208,3 +208,7 @@ func (ub *UnBinding) Validation() bool {
 
 	return true
 }
+
+type PublicUserInfos struct {
+	IDs []string `schema:"ids"`
+}

@@ -99,6 +99,13 @@ func (r *Router) registerUserV1Routes(prefix string) {
 			middle:      middleware.AccessTokenAuthMiddleware,
 			handler:     r.v1.UpdateUserInfo,
 		},
+		{
+			path:        "/info/public",
+			description: "Get user public info like avatar, name",
+			method:      "GET",
+			middle:      middleware.NoAuthMiddleware,
+			handler:     r.v1.PublicUserInfo,
+		},
 	}
 	r.registerRoutes(routes, path.Join(prefix, "/user"), false)
 }

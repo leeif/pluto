@@ -9,6 +9,7 @@ import (
 	"io/ioutil"
 	"net/http"
 	"net/url"
+	"strconv"
 	"strings"
 	"time"
 
@@ -1275,4 +1276,32 @@ func (m *Manager) Unbind(ub *request.UnBinding, accessPayload *jwt.AccessPayload
 	tx.Commit()
 
 	return nil
+}
+
+func (m *Manager) PublicUserInfo(userID string) (map[string]interface{}, *perror.PlutoError) {
+
+	id, err := strconv.Atoi(userID)
+	if err != nil {
+		return nil, perror.Forbidden
+	}
+	
+	user, err := models.Users(qm.Where("id = ?", id)).One(m.db)
+	if err != nil && err == sql.ErrNoRows {
+		return nil, perror.UserNotExist
+	} else if err != nil {
+		return nil, perror.ServerError.Wrapper(err)
+	}
+
+	bindings, err := models.Bindings(qm.Where("user_id = ?", id)).All(m.db)
+
+	if err != nil {
+		return nil, perror.ServerError.Wrapper(err)
+	}
+
+	userExt := &modelexts.User{
+		User:     user,
+		Bindings: bindings,
+	}
+
+	return userExt.PublicInfo(), nil
 }

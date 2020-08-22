@@ -288,3 +288,27 @@ func (router *Router) VerifyMail(w http.ResponseWriter, r *http.Request) *perror
 
 	return nil
 }
+
+func (router *Router) PublicUserInfo(w http.ResponseWriter, r *http.Request) *perror.PlutoError {
+
+	pui := request.PublicUserInfos{}
+
+	if perr := routeUtils.GetRequestData(r, &pui); perr != nil {
+		return perr
+	}
+
+	res := make(map[string]map[string]interface{})
+	for _, id := range pui.IDs {
+		info, perr := router.manager.PublicUserInfo(id)
+
+		if perr != nil {
+			continue
+		}
+
+		res[id] = info
+	}
+
+	routeUtils.ResponseOK(res, w)
+
+	return nil
+}

@@ -180,7 +180,7 @@ func (router *Router) PasswordResetMail(w http.ResponseWriter, r *http.Request) 
 			router.logger.Error(err.LogError.Error())
 		}
 
-		if err := ml.SendResetPassword(rpm.Mail, routeUtils.GetBaseURL(r)+"/web/", r.Header.Get("Accept-Language")); err != nil {
+		if err := ml.SendResetPassword(rpm.Mail, "https://"+routeUtils.GetBaseURL(r)+"/web", r.Header.Get("Accept-Language")); err != nil {
 			router.logger.Error(err.LogError.Error())
 		}
 	}()
@@ -251,7 +251,7 @@ func (router *Router) Register(w http.ResponseWriter, r *http.Request) *perror.P
 		if err != nil {
 			router.logger.Error("send mail failed: " + err.LogError.Error())
 		}
-		if err := ml.SendRegisterVerify(user.ID, register.Mail, routeUtils.GetBaseURL(r)+"/web/", r.Header.Get("Accept-Language")); err != nil {
+		if err := ml.SendRegisterVerify(user.ID, register.Mail, "https://"+routeUtils.GetBaseURL(r)+"/web", r.Header.Get("Accept-Language")); err != nil {
 			router.logger.Error("send mail failed: " + err.LogError.Error())
 		}
 	}()

@@ -1,5 +1,3 @@
-VERSION=$(shell cat VERSION)
-
 docker-build:
 	docker build --build-arg VERSION=$(VERSION) -t mushare/pluto:latest .
 	docker tag mushare/pluto:latest mushare/pluto:$(VERSION)

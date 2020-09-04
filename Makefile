@@ -48,6 +48,6 @@ unit-test:
 
 test: unit-test
 
-ci-build-production: check-version-tag docker-build docker-push docker-clean update-tag
+ci-build-production: test check-version-tag docker-build docker-push docker-clean update-tag
 
-ci-build-staging: docker-build-staging docker-push-staging docker-clean-staging
+ci-build-staging: test docker-build-staging docker-push-staging docker-clean-staging

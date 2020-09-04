@@ -11,3 +11,5 @@ env
 sqlboiler.toml
 bin/
 *.p8
+pluto-server
+pluto-migrate

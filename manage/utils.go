@@ -7,11 +7,11 @@ import (
 	"github.com/volatiletech/sqlboiler/boil"
 	"github.com/wxnacy/wgo/arrays"
 
-	"github.com/leeif/pluto/config"
-	perror "github.com/leeif/pluto/datatype/pluto_error"
-	"github.com/leeif/pluto/log"
-	plog "github.com/leeif/pluto/log"
-	"github.com/leeif/pluto/models"
+	"github.com/MuShare/pluto/config"
+	perror "github.com/MuShare/pluto/datatype/pluto_error"
+	"github.com/MuShare/pluto/log"
+	plog "github.com/MuShare/pluto/log"
+	"github.com/MuShare/pluto/models"
 	"github.com/volatiletech/sqlboiler/queries/qm"
 )
 

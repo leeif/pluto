@@ -1,9 +1,9 @@
 package v1
 
 import (
-	"github.com/leeif/pluto/config"
-	"github.com/leeif/pluto/log"
-	"github.com/leeif/pluto/manage"
+	"github.com/MuShare/pluto/config"
+	"github.com/MuShare/pluto/log"
+	"github.com/MuShare/pluto/manage"
 )
 
 type Router struct {

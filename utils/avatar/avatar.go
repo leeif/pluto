@@ -13,8 +13,8 @@ import (
 	b64 "encoding/base64"
 
 	"github.com/aliyun/aliyun-oss-go-sdk/oss"
-	"github.com/leeif/pluto/config"
-	perror "github.com/leeif/pluto/datatype/pluto_error"
+	"github.com/MuShare/pluto/config"
+	perror "github.com/MuShare/pluto/datatype/pluto_error"
 )
 
 var validAvatarType = []string{"jpeg", "jpg", "png"}

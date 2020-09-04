@@ -1,4 +1,4 @@
-module github.com/leeif/pluto
+module github.com/MuShare/pluto
 
 go 1.12
 

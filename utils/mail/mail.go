@@ -9,12 +9,12 @@ import (
 	"net/mail"
 	"net/smtp"
 
-	"github.com/leeif/pluto/utils/view"
+	"github.com/MuShare/pluto/utils/view"
 
-	"github.com/leeif/pluto/config"
-	"github.com/leeif/pluto/utils/jwt"
+	"github.com/MuShare/pluto/config"
+	"github.com/MuShare/pluto/utils/jwt"
 
-	perror "github.com/leeif/pluto/datatype/pluto_error"
+	perror "github.com/MuShare/pluto/datatype/pluto_error"
 )
 
 type Mail struct {

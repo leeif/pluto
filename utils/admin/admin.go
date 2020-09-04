@@ -5,17 +5,17 @@ import (
 	"fmt"
 	"log"
 
-	"github.com/leeif/pluto/utils/general"
-	"github.com/leeif/pluto/utils/mail"
-	"github.com/leeif/pluto/utils/salt"
+	"github.com/MuShare/pluto/utils/general"
+	"github.com/MuShare/pluto/utils/mail"
+	"github.com/MuShare/pluto/utils/salt"
 
-	"github.com/leeif/pluto/datatype/request"
+	"github.com/MuShare/pluto/datatype/request"
 
-	perror "github.com/leeif/pluto/datatype/pluto_error"
-	"github.com/leeif/pluto/manage"
+	perror "github.com/MuShare/pluto/datatype/pluto_error"
+	"github.com/MuShare/pluto/manage"
 
-	"github.com/leeif/pluto/config"
-	plog "github.com/leeif/pluto/log"
+	"github.com/MuShare/pluto/config"
+	plog "github.com/MuShare/pluto/log"
 )
 
 func Init(db *sql.DB, config *config.Config) *perror.PlutoError {

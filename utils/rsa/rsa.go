@@ -13,7 +13,7 @@ import (
 
 	"log"
 
-	"github.com/leeif/pluto/config"
+	"github.com/MuShare/pluto/config"
 )
 
 var (

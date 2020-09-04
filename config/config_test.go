@@ -4,7 +4,7 @@ import (
 	"os"
 	"testing"
 
-	"github.com/leeif/pluto/config"
+	"github.com/MuShare/pluto/config"
 	"github.com/stretchr/testify/assert"
 )
 

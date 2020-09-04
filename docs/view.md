@@ -54,6 +54,6 @@ Error <pluto_error>
 # Replace the default views
 Docker
 ```
-docker run -v ./config.json:/etc/pluto/config.json -v ./views:/views --name pluto -d leeif/pluto:latest
+docker run -v ./config.json:/etc/pluto/config.json -v ./views:/views --name pluto -d mushare/pluto:latest
 ```
 Replace the default views in container, remember the name of your files should be the same as above except the files under the [views/template/](https://github.com/MuShare/pluto/blob/master/views/template/).

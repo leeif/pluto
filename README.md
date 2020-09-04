@@ -1,6 +1,6 @@
 # Pluto
 
-[![Build Status](https://travis-ci.org/leeif/pluto.svg?branch=master)](https://travis-ci.org/leeif/pluto)
+[![Build Status](https://travis-ci.org/mushare/pluto.svg?branch=master)](https://travis-ci.org/mushare/pluto)
 [![Go Report Card](https://goreportcard.com/badge/github.com/MuShare/pluto)](https://goreportcard.com/report/github.com/MuShare/pluto)
 [![Gitter](https://badges.gitter.im/pluto-discuss/community.svg)](https://gitter.im/pluto-discuss/community?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge)
 

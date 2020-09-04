@@ -17,8 +17,5 @@ jobs:
       - name: Build image
         run: make ci-build-staging
       
-      - name: Notify to slack
-        run: curl --fail -X POST --data-urlencode "payload={'text': '[docker] pluto:staging built'}" "${{ secrets.SLACK_WEBHOOK }}"
-        
       - name: Deploy to staging
-        run: curl "${{ secrets.STAGING_DEPLOY_WEBHOOK }}"
+        run: curl ${{ secrets.STAGING_DEPLOY_WEBHOOK }}

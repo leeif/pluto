@@ -1,27 +1,27 @@
 VERSION=$(shell cat VERSION)
 
 docker-build:
-	docker build --build-arg VERSION=$(VERSION) -t leeif/pluto:latest .
-	docker tag leeif/pluto:latest leeif/pluto:$(VERSION)
+	docker build --build-arg VERSION=$(VERSION) -t mushare/pluto:latest .
+	docker tag mushare/pluto:latest mushare/pluto:$(VERSION)
 
 docker-build-staging:
-	docker build --build-arg VERSION=staging -t leeif/pluto:staging .
+	docker build --build-arg VERSION=staging -t mushare/pluto:staging .
 
 docker-push:
-	docker push leeif/pluto:latest
-	docker push leeif/pluto:$(VERSION)
+	docker push mushare/pluto:latest
+	docker push mushare/pluto:$(VERSION)
 
 docker-push-staging:
-	docker push leeif/pluto:staging
+	docker push mushare/pluto:staging
 
 docker-clean:
-	docker rmi leeif/pluto:latest || true
-	docker rmi leeif/pluto:$(VERSION) || true
+	docker rmi mushare/pluto:latest || true
+	docker rmi mushare/pluto:$(VERSION) || true
 	docker rm -v $(shell docker ps --filter status=exited -q 2>/dev/null) 2>/dev/null || true
 	docker rmi $(shell docker images --filter dangling=true -q 2>/dev/null) 2>/dev/null || true
 
 docker-clean-staging:
-	docker rmi leeif/pluto:staging || true
+	docker rmi mushare/pluto:staging || true
 	docker rm -v $(shell docker ps --filter status=exited -q 2>/dev/null) 2>/dev/null || true
 	docker rmi $(shell docker images --filter dangling=true -q 2>/dev/null) 2>/dev/null || true
 

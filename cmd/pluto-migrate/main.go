@@ -4,12 +4,12 @@ import (
 	"log"
 	"os"
 
-	"github.com/leeif/pluto/config"
+	"github.com/MuShare/pluto/config"
 
-	"github.com/leeif/pluto/database"
+	"github.com/MuShare/pluto/database"
 
 	_ "github.com/go-sql-driver/mysql"
-	"github.com/leeif/pluto/utils/migrate"
+	"github.com/MuShare/pluto/utils/migrate"
 )
 
 func main() {

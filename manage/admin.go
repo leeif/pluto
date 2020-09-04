@@ -3,11 +3,11 @@ package manage
 import (
 	"database/sql"
 
-	"github.com/leeif/pluto/modelexts"
+	"github.com/MuShare/pluto/modelexts"
 
-	perror "github.com/leeif/pluto/datatype/pluto_error"
-	"github.com/leeif/pluto/datatype/request"
-	"github.com/leeif/pluto/models"
+	perror "github.com/MuShare/pluto/datatype/pluto_error"
+	"github.com/MuShare/pluto/datatype/request"
+	"github.com/MuShare/pluto/models"
 	"github.com/volatiletech/sqlboiler/boil"
 	"github.com/volatiletech/sqlboiler/queries/qm"
 )

@@ -4,10 +4,10 @@ import (
 	"net/http"
 
 	"github.com/gorilla/mux"
-	perror "github.com/leeif/pluto/datatype/pluto_error"
-	"github.com/leeif/pluto/datatype/request"
-	"github.com/leeif/pluto/utils/general"
-	routeUtils "github.com/leeif/pluto/utils/route"
+	perror "github.com/MuShare/pluto/datatype/pluto_error"
+	"github.com/MuShare/pluto/datatype/request"
+	"github.com/MuShare/pluto/utils/general"
+	routeUtils "github.com/MuShare/pluto/utils/route"
 )
 
 func (router *Router) RegistrationVerifyPage(w http.ResponseWriter, r *http.Request) *perror.PlutoError {

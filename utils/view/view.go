@@ -10,7 +10,7 @@ import (
 	"regexp"
 
 	"github.com/alecthomas/template"
-	"github.com/leeif/pluto/config"
+	"github.com/MuShare/pluto/config"
 	"golang.org/x/text/language"
 )
 

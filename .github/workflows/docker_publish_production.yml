@@ -17,9 +17,6 @@ jobs:
 
       - name: Strip git ref prefix from version
         run: VERSION=$(echo "${{ github.ref }}" | sed -e 's,.*/\(.*\),\1,')
-          
-      - name: Strip "v" prefix from tag name
-        run: [[ "${{ github.ref }}" == "refs/tags/"* ]] && VERSION=$(echo $VERSION | sed -e 's/^v//')
 
       - name: Build image
         run: make ci-build-production

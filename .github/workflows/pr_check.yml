@@ -29,4 +29,4 @@ jobs:
         fi
 
     - name: Build
-      run: make test
+      run: export GO111MODULE=on GOPROXY=https://proxy.golang.org && go build -o pluto-server cmd/pluto-server/main.go && go build -o pluto-migrate cmd/pluto-migrate/main.go

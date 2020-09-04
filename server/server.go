@@ -16,7 +16,7 @@ import (
 	"github.com/rs/cors"
 	"go.uber.org/fx"
 
-	"github.com/leeif/pluto/config"
+	"github.com/MuShare/pluto/config"
 	httpServer "github.com/micro/go-plugins/server/http"
 )
 

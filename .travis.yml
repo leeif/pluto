@@ -8,7 +8,7 @@ language: go
 go:
   - 1.13.x
 
-go_import_path: github.com/leeif/pluto
+go_import_path: github.com/MuShare/pluto
 
 # Skip the install step. Don't `go get` dependencies. Only build with the code
 # in vendor/

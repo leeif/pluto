@@ -5,7 +5,7 @@
 Pluto provides a database migration tool to create database tables.
 
 ```
-git clone https://github.com/leeif/pluto.git
+git clone https://github.com/MuShare/pluto.git
 cd pluto/
 make migrate-binary-build
 
@@ -19,7 +19,7 @@ Requirement: Go (> 1.13)
 
 Download the source file.
 ```
-git clone https://github.com/leeif/pluto.git
+git clone https://github.com/MuShare/pluto.git
 cd pluto/
 make server-binary-build
 ./bin/pluto-server --config.file=config.yaml
@@ -27,16 +27,16 @@ make server-binary-build
 
 ## Run Pluto with Docker image
 ```
-docker run -v ${PWD}/config.json:/etc/pluto/config.json --name pluto -d leeif/pluto:latest
+docker run -v ${PWD}/config.json:/etc/pluto/config.json --name pluto -d mushare/pluto:latest
 docker logs pluto
 ```
 The default config file location in Pluto container is /etc/pluto/config.json.
-Here we mount a local config file into container. About config, please see here [Configuration](https://github.com/leeif/pluto/blob/master/docs/configuration.md) for more information.
+Here we mount a local config file into container. About config, please see here [Configuration](https://github.com/MuShare/pluto/blob/master/docs/configuration.md) for more information.
 
 Pluto also support several other formats of config file like YAML, TOML.
 To use these kinds , you need to pass an env variable like this,
 ```
-docker run --env ConfigFile=/etc/pluto/config.yaml -v ${PWD}/config.yaml:/etc/pluto/config.yaml --name pluto -d leeif/pluto:latest
+docker run --env ConfigFile=/etc/pluto/config.yaml -v ${PWD}/config.yaml:/etc/pluto/config.yaml --name pluto -d mushare/pluto:latest
 ```
 
 ## Run Pluto in Kubernetes
@@ -63,7 +63,7 @@ spec:
     spec:
       containers:
       - name: pluto
-        image: leeif/pluto:latest
+        image: mushare/pluto:latest
         volumeMounts:
         - name: config-volume
           mountPath: /etc/pluto/config.json

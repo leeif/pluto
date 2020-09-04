@@ -6,7 +6,7 @@ import (
 
 	"github.com/go-kit/kit/log"
 	"github.com/go-kit/kit/log/level"
-	"github.com/leeif/pluto/config"
+	"github.com/MuShare/pluto/config"
 )
 
 type PlutoLog struct {

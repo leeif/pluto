@@ -2,9 +2,9 @@ FROM golang:1.13 as build
 
 ARG VERSION
 
-ADD . /go/src/github.com/leeif/pluto
+ADD . /go/src/github.com/MuShare/pluto
 
-WORKDIR /go/src/github.com/leeif/pluto
+WORKDIR /go/src/github.com/MuShare/pluto
 
 RUN  export GO111MODULE=on GOPROXY=https://proxy.golang.org && \ 
   go build -ldflags="-X 'main.VERSION=${VERSION}'" -o pluto-server cmd/pluto-server/main.go && \
@@ -19,10 +19,10 @@ RUN wget https://github.com/jwilder/dockerize/releases/download/$DOCKERIZE_VERSI
     && tar -C /usr/local/bin -xzvf dockerize-linux-amd64-$DOCKERIZE_VERSION.tar.gz \
     && rm dockerize-linux-amd64-$DOCKERIZE_VERSION.tar.gz
 
-COPY --from=build /go/src/github.com/leeif/pluto/pluto-server /usr/bin/
+COPY --from=build /go/src/github.com/MuShare/pluto/pluto-server /usr/bin/
 
-COPY --from=build /go/src/github.com/leeif/pluto/pluto-migrate /usr/bin/
+COPY --from=build /go/src/github.com/MuShare/pluto/pluto-migrate /usr/bin/
 
-COPY --from=build /go/src/github.com/leeif/pluto/views views/
+COPY --from=build /go/src/github.com/MuShare/pluto/views views/
 
 ENTRYPOINT ["/usr/bin/pluto-server"]

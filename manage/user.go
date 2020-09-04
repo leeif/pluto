@@ -18,16 +18,16 @@ import (
 
 	"github.com/volatiletech/sqlboiler/queries/qm"
 
-	"github.com/leeif/pluto/config"
-	"github.com/leeif/pluto/modelexts"
+	"github.com/MuShare/pluto/config"
+	"github.com/MuShare/pluto/modelexts"
 
 	gjwt "github.com/dgrijalva/jwt-go"
-	perror "github.com/leeif/pluto/datatype/pluto_error"
-	"github.com/leeif/pluto/datatype/request"
-	"github.com/leeif/pluto/models"
-	"github.com/leeif/pluto/utils/avatar"
-	"github.com/leeif/pluto/utils/jwt"
-	saltUtil "github.com/leeif/pluto/utils/salt"
+	perror "github.com/MuShare/pluto/datatype/pluto_error"
+	"github.com/MuShare/pluto/datatype/request"
+	"github.com/MuShare/pluto/models"
+	"github.com/MuShare/pluto/utils/avatar"
+	"github.com/MuShare/pluto/utils/jwt"
+	saltUtil "github.com/MuShare/pluto/utils/salt"
 	"google.golang.org/api/oauth2/v2"
 )
 

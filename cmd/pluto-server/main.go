@@ -8,23 +8,23 @@ import (
 	"os/signal"
 	"time"
 
-	"github.com/leeif/pluto/manage"
-	"github.com/leeif/pluto/utils/admin"
+	"github.com/MuShare/pluto/manage"
+	"github.com/MuShare/pluto/utils/admin"
 
-	"github.com/leeif/pluto/server"
+	"github.com/MuShare/pluto/server"
 
-	plog "github.com/leeif/pluto/log"
-	"github.com/leeif/pluto/route"
+	plog "github.com/MuShare/pluto/log"
+	"github.com/MuShare/pluto/route"
 
-	"github.com/leeif/pluto/config"
+	"github.com/MuShare/pluto/config"
 	"go.uber.org/fx"
 
-	"github.com/leeif/pluto/database"
+	"github.com/MuShare/pluto/database"
 
 	_ "github.com/go-sql-driver/mysql"
-	perror "github.com/leeif/pluto/datatype/pluto_error"
-	"github.com/leeif/pluto/utils/rsa"
-	"github.com/leeif/pluto/utils/view"
+	perror "github.com/MuShare/pluto/datatype/pluto_error"
+	"github.com/MuShare/pluto/utils/rsa"
+	"github.com/MuShare/pluto/utils/view"
 )
 
 // VERSION is the pluto build version

@@ -1,6 +1,6 @@
 package modelexts
 
-import "github.com/leeif/pluto/models"
+import "github.com/MuShare/pluto/models"
 
 type User struct {
 	User     *models.User

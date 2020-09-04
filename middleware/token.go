@@ -5,8 +5,8 @@ import (
 	"time"
 
 	"github.com/gorilla/context"
-	perror "github.com/leeif/pluto/datatype/pluto_error"
-	"github.com/leeif/pluto/utils/jwt"
+	perror "github.com/MuShare/pluto/datatype/pluto_error"
+	"github.com/MuShare/pluto/utils/jwt"
 )
 
 func AccessTokenAuth(w http.ResponseWriter, r *http.Request) *perror.PlutoError {

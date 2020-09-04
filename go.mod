@@ -1,4 +1,4 @@
-module github.com/leeif/pluto
+module github.com/MuShare/pluto
 
 go 1.12
 
@@ -10,19 +10,15 @@ require (
 	github.com/aliyun/aliyun-oss-go-sdk v2.0.2+incompatible
 	github.com/dgrijalva/jwt-go v3.2.0+incompatible
 	github.com/friendsofgo/errors v0.9.2
-	github.com/go-acme/lego/v3 v3.1.0
 	github.com/go-kit/kit v0.9.0
 	github.com/go-sql-driver/mysql v1.4.1
 	github.com/gorilla/context v1.1.1
 	github.com/gorilla/mux v1.7.3
 	github.com/gorilla/schema v1.1.0
-	github.com/gorilla/sessions v1.2.0
 	github.com/leeif/kiper v0.3.0
 	github.com/micro/go-micro v1.18.0
 	github.com/micro/go-plugins/registry/consul v0.0.0-20200119172437-4fe21aa238fd
 	github.com/micro/go-plugins/server/http v0.0.0-20200119172437-4fe21aa238fd
-	github.com/pelletier/go-toml v1.2.0
-	github.com/prometheus/common v0.6.0
 	github.com/rs/cors v1.7.0
 	github.com/stretchr/testify v1.4.0
 	github.com/urfave/negroni v1.0.0

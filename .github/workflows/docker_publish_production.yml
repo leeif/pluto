@@ -1,7 +1,7 @@
 name: docker_publish_production
 
 on:
-  push:
+  create:
     tags:
       - v*
 

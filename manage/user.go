@@ -824,7 +824,7 @@ func (m *Manager) UserInfo(userID uint, accessPayload *jwt.AccessPayload) (*mode
 		return nil, perr
 	}
 
-	bindings, err := models.Bindings(qm.Where("user_id = ?", userID)).All(m.db)
+	bindings, err := models.Bindings(qm.Where("user_id = ? and verified = ?", userID, true)).All(m.db)
 
 	if err != nil {
 		return nil, perror.ServerError.Wrapper(err)
@@ -1075,18 +1075,26 @@ func (m *Manager) BindMail(binding *request.Binding, accessPayload *jwt.AccessPa
 		tx.Rollback()
 	}()
 
-	exists, err := models.Bindings(qm.Where("user_id = ? and login_type = ?", accessPayload.UserID, MAILLOGIN)).Exists(tx)
+	existBinding, err := models.Bindings(qm.Where("user_id = ? and login_type = ?", accessPayload.UserID, MAILLOGIN)).One(tx)
 	if err != nil {
 		return perror.ServerError.Wrapper(err)
 	}
 
-	if exists {
-		return perror.BindAlreadyExists
+	// If the existing binding is found and the mail is verified,
+	// this mail is not allow to bind again
+	if existBinding != nil {
+		if existBinding.Verified.Bool == true {
+			return perror.BindAlreadyExists
+		} else {
+			if _, err := existBinding.Delete(tx); err != nil {
+				return perror.ServerError.Wrapper(err)
+			}
+		}
 	}
 
 	identifyToken := b64.RawStdEncoding.EncodeToString([]byte(binding.Mail))
 
-	exists, err = models.Bindings(qm.Where("login_type = ? and identify_token = ?", MAILLOGIN, identifyToken)).Exists(tx)
+	exists, err := models.Bindings(qm.Where("login_type = ? and identify_token = ?", MAILLOGIN, identifyToken)).Exists(tx)
 	if err != nil {
 		return perror.ServerError.Wrapper(err)
 	}

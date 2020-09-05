@@ -131,6 +131,8 @@ func (router *Router) Binding(w http.ResponseWriter, r *http.Request) *perror.Pl
 		return perr
 	}
 
+	routeUtils.ResponseOK(nil, w)
+
 	return nil
 }
 

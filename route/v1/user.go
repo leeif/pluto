@@ -108,6 +108,21 @@ func (router *Router) Binding(w http.ResponseWriter, r *http.Request) *perror.Pl
 			return perror.BadRequest
 		}
 		perr = router.manager.BindMail(binding, payload)
+		if perr == nil {
+			go func() {
+				if router.config.Server.SkipRegisterVerifyMail {
+					router.logger.Info("skip sending register mail")
+					return
+				}
+				ml, err := mail.NewMail(router.config)
+				if err != nil {
+					router.logger.Error("send mail failed: " + err.LogError.Error())
+				}
+				if err := ml.SendRegisterVerify(payload.UserID, binding.Mail, routeUtils.GetBaseURL(r), r.Header.Get("Accept-Language")); err != nil {
+					router.logger.Error("send mail failed: " + err.LogError.Error())
+				}
+			}()
+		}
 	case manage.GOOGLELOGIN:
 		if binding.IDToken == "" {
 			return perror.BadRequest

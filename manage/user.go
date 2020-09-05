@@ -1075,7 +1075,7 @@ func (m *Manager) BindMail(binding *request.Binding, accessPayload *jwt.AccessPa
 		tx.Rollback()
 	}()
 
-	exists, err := models.Bindings(qm.Where("id = ? and login_type = ?", accessPayload.UserID, MAILLOGIN)).Exists(tx)
+	exists, err := models.Bindings(qm.Where("user_id = ? and login_type = ?", accessPayload.UserID, MAILLOGIN)).Exists(tx)
 	if err != nil {
 		return perror.ServerError.Wrapper(err)
 	}
@@ -1099,6 +1099,8 @@ func (m *Manager) BindMail(binding *request.Binding, accessPayload *jwt.AccessPa
 	if perr != nil {
 		return perr
 	}
+
+	tx.Commit()
 
 	return nil
 }

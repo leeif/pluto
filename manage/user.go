@@ -21,13 +21,13 @@ import (
 	"github.com/MuShare/pluto/config"
 	"github.com/MuShare/pluto/modelexts"
 
-	gjwt "github.com/dgrijalva/jwt-go"
 	perror "github.com/MuShare/pluto/datatype/pluto_error"
 	"github.com/MuShare/pluto/datatype/request"
 	"github.com/MuShare/pluto/models"
 	"github.com/MuShare/pluto/utils/avatar"
 	"github.com/MuShare/pluto/utils/jwt"
 	saltUtil "github.com/MuShare/pluto/utils/salt"
+	gjwt "github.com/dgrijalva/jwt-go"
 	"google.golang.org/api/oauth2/v2"
 )
 
@@ -1120,7 +1120,7 @@ func (m *Manager) BindGoogle(binding *request.Binding, accessPayload *jwt.Access
 		tx.Rollback()
 	}()
 
-	exists, err := models.Bindings(qm.Where("id = ? and login_type = ?", accessPayload.UserID, GOOGLELOGIN)).Exists(tx)
+	exists, err := models.Bindings(qm.Where("user_id = ? and login_type = ?", accessPayload.UserID, GOOGLELOGIN)).Exists(tx)
 	if err != nil {
 		return perror.ServerError.Wrapper(err)
 	}
@@ -1131,7 +1131,7 @@ func (m *Manager) BindGoogle(binding *request.Binding, accessPayload *jwt.Access
 
 	identifyToken := b64.RawStdEncoding.EncodeToString([]byte(info.Sub))
 
-	exists, err = models.Bindings(qm.Where("login_type = ? and identify_token = ?", MAILLOGIN, identifyToken)).Exists(tx)
+	exists, err = models.Bindings(qm.Where("login_type = ? and identify_token = ?", GOOGLELOGIN, identifyToken)).Exists(tx)
 	if err != nil {
 		return perror.ServerError.Wrapper(err)
 	}
@@ -1140,7 +1140,7 @@ func (m *Manager) BindGoogle(binding *request.Binding, accessPayload *jwt.Access
 		return perror.BindAlreadyExists
 	}
 
-	_, perr = m.newBinding(tx, accessPayload.UserID, info.Email, MAILLOGIN, identifyToken, false)
+	_, perr = m.newBinding(tx, accessPayload.UserID, info.Email, GOOGLELOGIN, identifyToken, true)
 	if perr != nil {
 		return perr
 	}
@@ -1284,7 +1284,7 @@ func (m *Manager) PublicUserInfo(userID string) (map[string]interface{}, *perror
 	if err != nil {
 		return nil, perror.Forbidden
 	}
-	
+
 	user, err := models.Users(qm.Where("id = ?", id)).One(m.db)
 	if err != nil && err == sql.ErrNoRows {
 		return nil, perror.UserNotExist

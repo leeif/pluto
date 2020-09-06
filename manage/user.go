@@ -96,9 +96,6 @@ func (m *Manager) MailPasswordLogin(login request.PasswordLogin) (*GrantResult, 
 	user, err := models.Users(qm.Where("id = ?", mailBinding.UserID)).One(tx)
 
 	if err != nil {
-		if err == sql.ErrNoRows {
-			return nil, perror.PasswordNotSet
-		}
 		return nil, perror.ServerError.Wrapper(err)
 	}
 
@@ -108,6 +105,9 @@ func (m *Manager) MailPasswordLogin(login request.PasswordLogin) (*GrantResult, 
 
 	salt, err := models.Salts(qm.Where("user_id = ?", user.ID)).One(tx)
 	if err != nil {
+		if err == sql.ErrNoRows {
+			return nil, perror.PasswordNotSet
+		}
 		return nil, perror.ServerError.Wrapper(errors.New("Salt is not found"))
 	}
 

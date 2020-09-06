@@ -158,6 +158,9 @@ func (m *Manager) NamePasswordLogin(login request.PasswordLogin) (*GrantResult, 
 
 	salt, err := models.Salts(qm.Where("user_id = ?", user.ID)).One(tx)
 	if err != nil {
+		if err == sql.ErrNoRows {
+			return nil, perror.PasswordNotSet
+		}
 		return nil, perror.ServerError.Wrapper(errors.New("Salt is not found"))
 	}
 

@@ -105,6 +105,9 @@ func (m *Manager) MailPasswordLogin(login request.PasswordLogin) (*GrantResult, 
 
 	salt, err := models.Salts(qm.Where("user_id = ?", user.ID)).One(tx)
 	if err != nil {
+		if err == sql.ErrNoRows {
+			return nil, perror.PasswordNotSet
+		}
 		return nil, perror.ServerError.Wrapper(errors.New("Salt is not found"))
 	}
 
@@ -158,6 +161,9 @@ func (m *Manager) NamePasswordLogin(login request.PasswordLogin) (*GrantResult, 
 
 	salt, err := models.Salts(qm.Where("user_id = ?", user.ID)).One(tx)
 	if err != nil {
+		if err == sql.ErrNoRows {
+			return nil, perror.PasswordNotSet
+		}
 		return nil, perror.ServerError.Wrapper(errors.New("Salt is not found"))
 	}
 
@@ -785,17 +791,26 @@ func (m *Manager) ResetPassword(token string, rp request.ResetPasswordWeb) *perr
 	}
 
 	salt, err := models.Salts(qm.Where("user_id = ?", user.ID)).One(tx)
-	if err != nil {
+	if err != nil && err != sql.ErrNoRows {
 		return perror.ServerError.Wrapper(err)
 	}
 
-	salt.Salt = saltUtil.RandomSalt(prp.Mail)
-
-	if _, err := salt.Update(tx, boil.Whitelist("salt")); err != nil {
-		return perror.ServerError.Wrapper(err)
+	saltString := saltUtil.RandomSalt(prp.Mail)
+	if salt == nil {
+		salt := models.Salt{}
+		salt.Salt = saltString
+		salt.UserID = user.ID
+		if err := salt.Insert(tx, boil.Infer()); err != nil {
+			return perror.ServerError.Wrapper(err)
+		}
+	} else {
+		salt.Salt = saltString
+		if _, err := salt.Update(tx, boil.Whitelist("salt")); err != nil {
+			return perror.ServerError.Wrapper(err)
+		}
 	}
 
-	encodedPassword, perr := saltUtil.EncodePassword(rp.Password, salt.Salt)
+	encodedPassword, perr := saltUtil.EncodePassword(rp.Password, saltString)
 	if perr != nil {
 		return perror.ServerError.Wrapper(errors.New("Salt encoding is failed"))
 	}
@@ -824,16 +839,22 @@ func (m *Manager) UserInfo(userID uint, accessPayload *jwt.AccessPayload) (*mode
 		return nil, perr
 	}
 
-	bindings, err := models.Bindings(qm.Where("user_id = ?", userID)).All(m.db)
+	bindings, err := models.Bindings(qm.Where("user_id = ? and verified = ?", userID, true)).All(m.db)
 
 	if err != nil {
 		return nil, perror.ServerError.Wrapper(err)
 	}
 
+	isSaltExsits, err := models.Salts(qm.Where("user_id = ?", user.ID)).Exists(m.db)
+	if err != nil {
+		return nil, perror.ServerError.Wrapper(err)
+	}
+
 	userExt := &modelexts.User{
-		User:     user,
-		Bindings: bindings,
-		AppID:    accessPayload.AppID,
+		User:			user,
+		Bindings:		bindings,
+		AppID:			accessPayload.AppID,
+		PasswordSet: 	isSaltExsits,
 	}
 
 	if role != nil {
@@ -1075,18 +1096,26 @@ func (m *Manager) BindMail(binding *request.Binding, accessPayload *jwt.AccessPa
 		tx.Rollback()
 	}()
 
-	exists, err := models.Bindings(qm.Where("id = ? and login_type = ?", accessPayload.UserID, MAILLOGIN)).Exists(tx)
-	if err != nil {
+	existBinding, err := models.Bindings(qm.Where("user_id = ? and login_type = ?", accessPayload.UserID, MAILLOGIN)).One(tx)
+
+	if err != nil && err != sql.ErrNoRows {
 		return perror.ServerError.Wrapper(err)
 	}
-
-	if exists {
-		return perror.BindAlreadyExists
+	// If the existing binding is found and the mail is verified,
+	// this mail is not allow to bind again
+	if existBinding != nil {
+		if existBinding.Verified.Bool == true {
+			return perror.BindAlreadyExists
+		} else {
+			if _, err := existBinding.Delete(tx); err != nil {
+				return perror.ServerError.Wrapper(err)
+			}
+		}
 	}
 
 	identifyToken := b64.RawStdEncoding.EncodeToString([]byte(binding.Mail))
 
-	exists, err = models.Bindings(qm.Where("login_type = ? and identify_token = ?", MAILLOGIN, identifyToken)).Exists(tx)
+	exists, err := models.Bindings(qm.Where("login_type = ? and identify_token = ?", MAILLOGIN, identifyToken)).Exists(tx)
 	if err != nil {
 		return perror.ServerError.Wrapper(err)
 	}
@@ -1099,6 +1128,8 @@ func (m *Manager) BindMail(binding *request.Binding, accessPayload *jwt.AccessPa
 	if perr != nil {
 		return perr
 	}
+
+	tx.Commit()
 
 	return nil
 }
@@ -1129,7 +1160,7 @@ func (m *Manager) BindGoogle(binding *request.Binding, accessPayload *jwt.Access
 		return perror.BindAlreadyExists
 	}
 
-	identifyToken := b64.RawStdEncoding.EncodeToString([]byte(info.Sub))
+	identifyToken := info.Sub
 
 	exists, err = models.Bindings(qm.Where("login_type = ? and identify_token = ?", GOOGLELOGIN, identifyToken)).Exists(tx)
 	if err != nil {

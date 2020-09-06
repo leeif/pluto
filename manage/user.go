@@ -1197,7 +1197,7 @@ func (m *Manager) BindApple(binding *request.Binding, accessPayload *jwt.AccessP
 		tx.Rollback()
 	}()
 
-	exists, err := models.Bindings(qm.Where("id = ? and login_type = ?", accessPayload.UserID, APPLELOGIN)).Exists(tx)
+	exists, err := models.Bindings(qm.Where("user_id = ? and login_type = ?", accessPayload.UserID, APPLELOGIN)).Exists(tx)
 	if err != nil {
 		return perror.ServerError.Wrapper(err)
 	}
@@ -1206,9 +1206,9 @@ func (m *Manager) BindApple(binding *request.Binding, accessPayload *jwt.AccessP
 		return perror.BindAlreadyExists
 	}
 
-	identifyToken := b64.RawStdEncoding.EncodeToString([]byte(info.Sub))
+	identifyToken := info.Sub
 
-	exists, err = models.Bindings(qm.Where("login_type = ? and identify_token = ?", MAILLOGIN, identifyToken)).Exists(tx)
+	exists, err = models.Bindings(qm.Where("login_type = ? and identify_token = ?", APPLELOGIN, identifyToken)).Exists(tx)
 	if err != nil {
 		return perror.ServerError.Wrapper(err)
 	}
@@ -1217,7 +1217,7 @@ func (m *Manager) BindApple(binding *request.Binding, accessPayload *jwt.AccessP
 		return perror.BindAlreadyExists
 	}
 
-	_, perr = m.newBinding(tx, accessPayload.UserID, info.Email, MAILLOGIN, identifyToken, false)
+	_, perr = m.newBinding(tx, accessPayload.UserID, info.Email, APPLELOGIN, identifyToken, true)
 	if perr != nil {
 		return perr
 	}
@@ -1250,7 +1250,7 @@ func (m *Manager) BindWechat(binding *request.Binding, accessPayload *jwt.Access
 		tx.Rollback()
 	}()
 
-	exists, err := models.Bindings(qm.Where("id = ? and login_type = ?", accessPayload.UserID, APPLELOGIN)).Exists(tx)
+	exists, err := models.Bindings(qm.Where("user_id = ? and login_type = ?", accessPayload.UserID, WECHATLOGIN)).Exists(tx)
 	if err != nil {
 		return perror.ServerError.Wrapper(err)
 	}
@@ -1270,7 +1270,7 @@ func (m *Manager) BindWechat(binding *request.Binding, accessPayload *jwt.Access
 		return perror.BindAlreadyExists
 	}
 
-	_, perr = m.newBinding(tx, accessPayload.UserID, "", MAILLOGIN, identifyToken, false)
+	_, perr = m.newBinding(tx, accessPayload.UserID, "", WECHATLOGIN, identifyToken, true)
 	if perr != nil {
 		return perr
 	}

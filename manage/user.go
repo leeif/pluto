@@ -96,6 +96,9 @@ func (m *Manager) MailPasswordLogin(login request.PasswordLogin) (*GrantResult, 
 	user, err := models.Users(qm.Where("id = ?", mailBinding.UserID)).One(tx)
 
 	if err != nil {
+		if err == sql.ErrNoRows {
+			return nil, perror.PasswordNotSet
+		}
 		return nil, perror.ServerError.Wrapper(err)
 	}
 
@@ -1151,7 +1154,7 @@ func (m *Manager) BindGoogle(binding *request.Binding, accessPayload *jwt.Access
 		return perror.BindAlreadyExists
 	}
 
-	identifyToken := b64.RawStdEncoding.EncodeToString([]byte(info.Sub))
+	identifyToken := info.Sub
 
 	exists, err = models.Bindings(qm.Where("login_type = ? and identify_token = ?", GOOGLELOGIN, identifyToken)).Exists(tx)
 	if err != nil {

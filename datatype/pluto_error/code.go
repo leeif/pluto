@@ -19,6 +19,7 @@ var (
 	BindAlreadyExists     = NewPlutoError(http.StatusForbidden, 2007, "Bind already exists", nil)
 	BindNotExist          = NewPlutoError(http.StatusForbidden, 2008, "Bind does not exist", nil)
 	PasswordNotSet        = NewPlutoError(http.StatusBadRequest, 2009, "Password has not been set for this account", nil)
+	UnbindNowAllow        = NewPlutoError(http.StatusForbidden, 2010, "Cannot unbind the last account.", nil)
 
 	InvalidPassword      = NewPlutoError(http.StatusForbidden, 3001, "Invalid Password", nil)
 	InvalidRefreshToken  = NewPlutoError(http.StatusForbidden, 3002, "Invalid Refresh Token", nil)

@@ -845,10 +845,16 @@ func (m *Manager) UserInfo(userID uint, accessPayload *jwt.AccessPayload) (*mode
 		return nil, perror.ServerError.Wrapper(err)
 	}
 
+	isSaltExsits, err := models.Salts(qm.Where("user_id = ?", user.ID)).Exists(m.db)
+	if err != nil {
+		return nil, perror.ServerError.Wrapper(err)
+	}
+
 	userExt := &modelexts.User{
-		User:     user,
-		Bindings: bindings,
-		AppID:    accessPayload.AppID,
+		User:			user,
+		Bindings:		bindings,
+		AppID:			accessPayload.AppID,
+		PasswordSet: 	isSaltExsits,
 	}
 
 	if role != nil {

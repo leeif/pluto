@@ -1,12 +1,16 @@
 package modelexts
 
-import "github.com/MuShare/pluto/models"
+import (
+	"github.com/MuShare/pluto/models"
+	"strconv"
+)
 
 type User struct {
-	User     *models.User
-	Bindings []*models.Binding
-	Role     string `json:"role"`
-	AppID    string `json:"app_id"`
+	User		*models.User
+	Bindings	[]*models.Binding
+	Role		string `json:"role"`
+	AppID		string `json:"app_id"`
+	PasswordSet bool
 }
 
 func (u User) Format() map[string]interface{} {
@@ -19,6 +23,7 @@ func (u User) Format() map[string]interface{} {
 	res["verified"] = u.User.Verified
 	res["created_at"] = u.User.CreatedAt.Time.Unix()
 	res["updated_at"] = u.User.UpdatedAt.Time.Unix()
+	res["is_password_set"] = strconv.FormatBool(u.PasswordSet)
 	bindings := make([]interface{}, 0)
 	for _, binding := range u.Bindings {
 		b := make(map[string]interface{})

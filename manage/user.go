@@ -1076,10 +1076,10 @@ func (m *Manager) BindMail(binding *request.Binding, accessPayload *jwt.AccessPa
 	}()
 
 	existBinding, err := models.Bindings(qm.Where("user_id = ? and login_type = ?", accessPayload.UserID, MAILLOGIN)).One(tx)
-	if err != nil {
+
+	if err != nil && err != sql.ErrNoRows {
 		return perror.ServerError.Wrapper(err)
 	}
-
 	// If the existing binding is found and the mail is verified,
 	// this mail is not allow to bind again
 	if existBinding != nil {

@@ -851,10 +851,10 @@ func (m *Manager) UserInfo(userID uint, accessPayload *jwt.AccessPayload) (*mode
 	}
 
 	userExt := &modelexts.User{
-		User:			user,
-		Bindings:		bindings,
-		AppID:			accessPayload.AppID,
-		PasswordSet: 	isSaltExsits,
+		User:        user,
+		Bindings:    bindings,
+		AppID:       accessPayload.AppID,
+		PasswordSet: isSaltExsits,
 	}
 
 	if role != nil {
@@ -1290,6 +1290,14 @@ func (m *Manager) Unbind(ub *request.UnBinding, accessPayload *jwt.AccessPayload
 	defer func() {
 		tx.Rollback()
 	}()
+
+	bindingCount, err := models.Bindings(qm.Where("user_id = ?", accessPayload.UserID)).Count(tx)
+	if err != nil {
+		return perror.ServerError.Wrapper(err)
+	}
+	if bindingCount == 1 {
+		return perror.UnbindNowAllow
+	}
 
 	binding, err := models.Bindings(qm.Where("user_id = ? and login_type = ?", accessPayload.UserID, ub.Type)).One(tx)
 	if err != nil && err != sql.ErrNoRows {

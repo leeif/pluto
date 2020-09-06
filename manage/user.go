@@ -785,17 +785,26 @@ func (m *Manager) ResetPassword(token string, rp request.ResetPasswordWeb) *perr
 	}
 
 	salt, err := models.Salts(qm.Where("user_id = ?", user.ID)).One(tx)
-	if err != nil {
+	if err != nil && err != sql.ErrNoRows {
 		return perror.ServerError.Wrapper(err)
 	}
 
-	salt.Salt = saltUtil.RandomSalt(prp.Mail)
-
-	if _, err := salt.Update(tx, boil.Whitelist("salt")); err != nil {
-		return perror.ServerError.Wrapper(err)
+	saltString := saltUtil.RandomSalt(prp.Mail)
+	if salt == nil {
+		salt := models.Salt{}
+		salt.Salt = saltString
+		salt.UserID = user.ID
+		if err := salt.Insert(tx, boil.Infer()); err != nil {
+			return perror.ServerError.Wrapper(err)
+		}
+	} else {
+		salt.Salt = saltString
+		if _, err := salt.Update(tx, boil.Whitelist("salt")); err != nil {
+			return perror.ServerError.Wrapper(err)
+		}
 	}
 
-	encodedPassword, perr := saltUtil.EncodePassword(rp.Password, salt.Salt)
+	encodedPassword, perr := saltUtil.EncodePassword(rp.Password, saltString)
 	if perr != nil {
 		return perror.ServerError.Wrapper(errors.New("Salt encoding is failed"))
 	}

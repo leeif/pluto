@@ -190,20 +190,20 @@ func ResponseHTMLError(file string, data interface{}, r *http.Request, w http.Re
 	return nil
 }
 
-func setFooter(data interface{}, config *config.Config) (d interface{}, err error) {
-	footer := "<div class=\"footer col-12 text-center fixed-bottom\"><div class=\"link\" style=\"margin: 1em 0\">" + config.Server.HTMLFooter + "</div></div>"
+func setFooter(data interface{}, config *config.Config) (d map[string]interface{}, err error) {
+	var dataMap map[string]interface{}
 	if data == nil {
-		type Data struct {
-			Footer string
-		}
-		return &Data{Footer: footer}, nil
+		dataMap = make(map[string]interface{})
 	} else {
-		err := setField(&data, "Footer", footer)
+		inrec, err := json.Marshal(data)
 		if err != nil {
 			return nil, err
 		}
-		return data, nil
+		json.Unmarshal(inrec, &dataMap)
 	}
+	footer := "<div class=\"footer col-12 text-center fixed-bottom\"><div class=\"link\" style=\"margin: 1em 0\">" + config.Server.HTMLFooter + "</div></div>"
+	dataMap["Footer"] = footer
+	return dataMap, err
 }
 
 // Redirects to a new path while keeping current request's query string

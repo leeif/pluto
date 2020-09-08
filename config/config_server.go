@@ -6,7 +6,7 @@ type ServerConfig struct {
 	Port                   *Port  `kiper_value:"name:port;help:server listen port;default:8010"`
 	CookieSecure           bool   `kiper_value:"name:cookie_secure;cookie secure;default:true"`
 	ServerName             string `kiper_value:"name:server_name;help:server name;default:pluto"`
-	HTMLFooter			   string `kiper_value:"name:html_footer;default:Pluto"`
+	HTMLFooter             string `kiper_value:"name:html_footer;default:Pluto"`
 }
 
 type Port struct {

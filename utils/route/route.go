@@ -7,6 +7,7 @@ import (
 	"io/ioutil"
 	"net/http"
 	"net/url"
+	"reflect"
 	"strconv"
 	"strings"
 
@@ -160,7 +161,6 @@ func ResponseHTMLOK(file string, data interface{}, r *http.Request, w http.Respo
 }
 
 func ResponseHTMLError(file string, data interface{}, r *http.Request, w http.ResponseWriter, status int) *perror.PlutoError {
-
 	w.Header().Set("Content-type", "text/html")
 	w.WriteHeader(status)
 	vw, err := view.GetView()
@@ -174,7 +174,20 @@ func ResponseHTMLError(file string, data interface{}, r *http.Request, w http.Re
 	if err != nil {
 		return perror.HTTPResponseError.Wrapper(err)
 	}
-	err = t.Execute(w, data)
+	footer := "<div class=\"footer col-12 text-center fixed-bottom\"><div class=\"link\" style=\"margin: 1em 0\">Test</div></div>"
+	if data == nil {
+		type Data struct {
+			Footer string
+		}
+		data = &Data{Footer: footer}
+		err = t.Execute(w, data)
+	} else {
+		err = setField(&data, "Footer", footer)
+		if err != nil {
+			return perror.HTTPResponseError.Wrapper(err)
+		}
+		err = t.Execute(w, data)
+	}
 	if err != nil {
 		return perror.HTTPResponseError.Wrapper(err)
 	}
@@ -233,4 +246,35 @@ func PlutoLog(logger *log.PlutoLog, pe *perror.PlutoError, r *http.Request) {
 	if pe.HTTPError != nil {
 		logger.Debug(fmt.Sprintf("[(%s)%s]:%s", r.Method, url, pe.HTTPError.Error()))
 	}
+}
+
+func setField(v interface{}, name string, value string) error {
+	// v must be a pointer to a struct
+	rv := reflect.ValueOf(v)
+	if rv.Kind() != reflect.Ptr || rv.Elem().Kind() != reflect.Struct {
+		return errors.New("v must be pointer to struct")
+	}
+
+	// Dereference pointer
+	rv = rv.Elem()
+
+	// Lookup field by name
+	fv := rv.FieldByName(name)
+	if !fv.IsValid() {
+		return fmt.Errorf("not a field name: %s", name)
+	}
+
+	// Field must be exported
+	if !fv.CanSet() {
+		return fmt.Errorf("cannot set field %s", name)
+	}
+
+	// We expect a string field
+	if fv.Kind() != reflect.String {
+		return fmt.Errorf("%s is not a string field", name)
+	}
+
+	// Set the value
+	fv.SetString(value)
+	return nil
 }

@@ -30,6 +30,10 @@ Here are some helpful documents for reading.
 * [Replace Views](https://github.com/MuShare/pluto/blob/master/docs/view.md) is a guide for replacing the default html pages with your own custom files
 * [JWT Token](https://github.com/MuShare/pluto/blob/master/docs/jwt.md) gives an introduction of the JWT design in Pluto.
 
+## Docker image
+
+https://hub.docker.com/repository/docker/mushare/pluto
+
 ## Contribute
 
 Feel free to fire an issue or send a pull request.

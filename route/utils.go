@@ -61,7 +61,7 @@ func (router *Router) plutoWebHandlerWrapper(handler func(http.ResponseWriter, *
 				data := &Data{
 					Error: perr,
 				}
-				routeUtils.ResponseHTMLError("error.html", data, r, w, http.StatusInternalServerError)
+				routeUtils.ResponseHTMLError("error.html", data, r, w, http.StatusInternalServerError, router.config)
 				routeUtils.PlutoLog(router.logger, perr, r)
 			}
 		}()
@@ -80,7 +80,7 @@ func (router *Router) plutoWebHandlerWrapper(handler func(http.ResponseWriter, *
 				data := &Data{
 					Error: err,
 				}
-				routeUtils.ResponseHTMLError("error.html", data, r, w, http.StatusInternalServerError)
+				routeUtils.ResponseHTMLError("error.html", data, r, w, http.StatusInternalServerError, router.config)
 			}
 			routeUtils.PlutoLog(router.logger, err, r)
 			return

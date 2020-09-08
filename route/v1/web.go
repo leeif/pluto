@@ -30,11 +30,11 @@ func (router *Router) RegistrationVerifyPage(w http.ResponseWriter, r *http.Requ
 responseHTML:
 
 	if data.Error != nil {
-		if err := routeUtils.ResponseHTMLError("register_verify_result.html", data, r, w, data.Error.HTTPCode); err != nil {
+		if err := routeUtils.ResponseHTMLError("register_verify_result.html", data, r, w, data.Error.HTTPCode, router.config); err != nil {
 			return err
 		}
 	} else {
-		if err := routeUtils.ResponseHTMLOK("register_verify_result.html", data, r, w); err != nil {
+		if err := routeUtils.ResponseHTMLOK("register_verify_result.html", data, r, w, router.config); err != nil {
 			return err
 		}
 	}
@@ -67,11 +67,11 @@ func (router *Router) ResetPasswordPage(w http.ResponseWriter, r *http.Request) 
 
 responseHTML:
 	if data.Error != nil {
-		if err := routeUtils.ResponseHTMLError("password_reset.html", data, r, w, data.Error.HTTPCode); err != nil {
+		if err := routeUtils.ResponseHTMLError("password_reset.html", data, r, w, data.Error.HTTPCode, router.config); err != nil {
 			return err
 		}
 	} else if data.Error == nil {
-		if err := routeUtils.ResponseHTMLOK("password_reset.html", data, r, w); err != nil {
+		if err := routeUtils.ResponseHTMLOK("password_reset.html", data, r, w, router.config); err != nil {
 			return err
 		}
 	}
@@ -108,11 +108,11 @@ func (router *Router) ResetPassword(w http.ResponseWriter, r *http.Request) *per
 
 responseHTML:
 	if data.Error != nil {
-		if err := routeUtils.ResponseHTMLError("password_reset_result.html", data, r, w, data.Error.HTTPCode); err != nil {
+		if err := routeUtils.ResponseHTMLError("password_reset_result.html", data, r, w, data.Error.HTTPCode, router.config); err != nil {
 			return err
 		}
 	} else {
-		if err := routeUtils.ResponseHTMLOK("password_reset_result.html", data, r, w); err != nil {
+		if err := routeUtils.ResponseHTMLOK("password_reset_result.html", data, r, w, router.config); err != nil {
 			return err
 		}
 	}
@@ -140,7 +140,7 @@ func (router *Router) LoginPage(w http.ResponseWriter, r *http.Request) *perror.
 		Application: query.Get("app_id"),
 	}
 
-	if err := routeUtils.ResponseHTMLOK("login.html", data, r, w); err != nil {
+	if err := routeUtils.ResponseHTMLOK("login.html", data, r, w, router.config); err != nil {
 		return err
 	}
 
@@ -187,7 +187,7 @@ func (router *Router) AuthorizePage(w http.ResponseWriter, r *http.Request) *per
 
 	data.ClientID = clientID
 
-	routeUtils.ResponseHTMLOK("authorize.html", data, r, w)
+	routeUtils.ResponseHTMLOK("authorize.html", data, r, w, router.config)
 
 	return nil
 }

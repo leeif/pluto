@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"github.com/MuShare/pluto/config"
 	"io/ioutil"
 	"net/http"
 	"net/url"
@@ -141,7 +142,7 @@ func ResponseError(plutoError *perror.PlutoError, w http.ResponseWriter) *perror
 	return nil
 }
 
-func ResponseHTMLOK(file string, data interface{}, r *http.Request, w http.ResponseWriter) *perror.PlutoError {
+func ResponseHTMLOK(file string, data interface{}, r *http.Request, w http.ResponseWriter, config *config.Config) *perror.PlutoError {
 
 	w.Header().Set("Content-type", "text/html")
 	w.WriteHeader(http.StatusOK)
@@ -153,6 +154,10 @@ func ResponseHTMLOK(file string, data interface{}, r *http.Request, w http.Respo
 	if err != nil {
 		return perror.HTTPResponseError.Wrapper(err)
 	}
+	data, err = setFooter(data, config)
+	if err != nil {
+		return perror.HTTPResponseError.Wrapper(err)
+	}
 	err = t.Execute(w, data)
 	if err != nil {
 		return perror.HTTPResponseError.Wrapper(err)
@@ -160,7 +165,7 @@ func ResponseHTMLOK(file string, data interface{}, r *http.Request, w http.Respo
 	return nil
 }
 
-func ResponseHTMLError(file string, data interface{}, r *http.Request, w http.ResponseWriter, status int) *perror.PlutoError {
+func ResponseHTMLError(file string, data interface{}, r *http.Request, w http.ResponseWriter, status int, config *config.Config) *perror.PlutoError {
 	w.Header().Set("Content-type", "text/html")
 	w.WriteHeader(status)
 	vw, err := view.GetView()
@@ -174,24 +179,31 @@ func ResponseHTMLError(file string, data interface{}, r *http.Request, w http.Re
 	if err != nil {
 		return perror.HTTPResponseError.Wrapper(err)
 	}
-	footer := "<div class=\"footer col-12 text-center fixed-bottom\"><div class=\"link\" style=\"margin: 1em 0\">Test</div></div>"
-	if data == nil {
-		type Data struct {
-			Footer string
-		}
-		data = &Data{Footer: footer}
-		err = t.Execute(w, data)
-	} else {
-		err = setField(&data, "Footer", footer)
-		if err != nil {
-			return perror.HTTPResponseError.Wrapper(err)
-		}
-		err = t.Execute(w, data)
+	data, err = setFooter(data, config)
+	if err != nil {
+		return perror.HTTPResponseError.Wrapper(err)
 	}
+	err = t.Execute(w, data)
 	if err != nil {
 		return perror.HTTPResponseError.Wrapper(err)
 	}
 	return nil
+}
+
+func setFooter(data interface{}, config *config.Config) (d interface{}, err error) {
+	footer := "<div class=\"footer col-12 text-center fixed-bottom\"><div class=\"link\" style=\"margin: 1em 0\">" + config.Server.HTMLFooter + "</div></div>"
+	if data == nil {
+		type Data struct {
+			Footer string
+		}
+		return &Data{Footer: footer}, nil
+	} else {
+		err := setField(&data, "Footer", footer)
+		if err != nil {
+			return nil, err
+		}
+		return data, nil
+	}
 }
 
 // Redirects to a new path while keeping current request's query string

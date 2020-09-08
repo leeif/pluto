@@ -60,7 +60,7 @@ func (router *Router) Register() {
 
 func (router *Router) notFoundHandler(w http.ResponseWriter, r *http.Request) {
 	if strings.Contains(r.Header.Get("Accept"), "text/html") {
-		routeUtils.ResponseHTMLError("404.html", nil, r, w, http.StatusNotFound)
+		routeUtils.ResponseHTMLError("404.html", nil, r, w, http.StatusNotFound, router.config)
 		return
 	}
 	routeUtils.ResponseError(perror.NotFound, w)

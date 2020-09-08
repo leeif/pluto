@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"github.com/MuShare/pluto/config"
 	"io/ioutil"
 	"net/http"
 	"net/url"
@@ -140,7 +141,7 @@ func ResponseError(plutoError *perror.PlutoError, w http.ResponseWriter) *perror
 	return nil
 }
 
-func ResponseHTMLOK(file string, data interface{}, r *http.Request, w http.ResponseWriter) *perror.PlutoError {
+func ResponseHTMLOK(file string, data interface{}, r *http.Request, w http.ResponseWriter, config *config.Config) *perror.PlutoError {
 
 	w.Header().Set("Content-type", "text/html")
 	w.WriteHeader(http.StatusOK)
@@ -152,6 +153,10 @@ func ResponseHTMLOK(file string, data interface{}, r *http.Request, w http.Respo
 	if err != nil {
 		return perror.HTTPResponseError.Wrapper(err)
 	}
+	data, err = setFooter(data, config)
+	if err != nil {
+		return perror.HTTPResponseError.Wrapper(err)
+	}
 	err = t.Execute(w, data)
 	if err != nil {
 		return perror.HTTPResponseError.Wrapper(err)
@@ -159,8 +164,7 @@ func ResponseHTMLOK(file string, data interface{}, r *http.Request, w http.Respo
 	return nil
 }
 
-func ResponseHTMLError(file string, data interface{}, r *http.Request, w http.ResponseWriter, status int) *perror.PlutoError {
-
+func ResponseHTMLError(file string, data interface{}, r *http.Request, w http.ResponseWriter, status int, config *config.Config) *perror.PlutoError {
 	w.Header().Set("Content-type", "text/html")
 	w.WriteHeader(status)
 	vw, err := view.GetView()
@@ -174,11 +178,31 @@ func ResponseHTMLError(file string, data interface{}, r *http.Request, w http.Re
 	if err != nil {
 		return perror.HTTPResponseError.Wrapper(err)
 	}
+	data, err = setFooter(data, config)
+	if err != nil {
+		return perror.HTTPResponseError.Wrapper(err)
+	}
 	err = t.Execute(w, data)
 	if err != nil {
 		return perror.HTTPResponseError.Wrapper(err)
 	}
 	return nil
+}
+
+func setFooter(data interface{}, config *config.Config) (d map[string]interface{}, err error) {
+	var dataMap map[string]interface{}
+	if data == nil {
+		dataMap = make(map[string]interface{})
+	} else {
+		inrec, err := json.Marshal(data)
+		if err != nil {
+			return nil, err
+		}
+		json.Unmarshal(inrec, &dataMap)
+	}
+	footer := "<div class=\"footer col-12 text-center fixed-bottom\"><div class=\"link\" style=\"margin: 1em 0\">" + config.Server.HTMLFooter + "</div></div>"
+	dataMap["Footer"] = footer
+	return dataMap, err
 }
 
 // Redirects to a new path while keeping current request's query string

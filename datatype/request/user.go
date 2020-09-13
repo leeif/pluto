@@ -8,7 +8,7 @@ type MailRegister struct {
 	Mail     string `json:"mail"`
 	Name     string `json:"name"`
 	Password string `json:"password"`
-	AppName  string `json:"app_name"`
+	AppName  string `json:"app_id"`
 }
 
 func (mr *MailRegister) Validation() bool {
@@ -113,7 +113,7 @@ func (aml *AppleMobileLogin) Validation() bool {
 
 type RegisterVerifyMail struct {
 	Mail   string `json:"mail"`
-	AppName string `json:"application_name"`
+	AppName string `json:"app_id"`
 }
 
 func (rvm *RegisterVerifyMail) Validation() bool {
@@ -126,7 +126,7 @@ func (rvm *RegisterVerifyMail) Validation() bool {
 
 type ResetPasswordMail struct {
 	Mail    string `json:"mail"`
-	AppName string `json:"application_name"`
+	AppName string `json:"app_id"`
 }
 
 func (rpm *ResetPasswordMail) Validation() bool {

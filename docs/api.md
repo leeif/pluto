@@ -45,7 +45,7 @@ Register user with email
 * request:
 
 ```
-{"mail":<string>, "name": <string>, "password":<string>}
+{"mail":<string>, "name": <string>, "password":<string>, "app_id":<string>}
 ```
 
 * response example:
@@ -71,7 +71,7 @@ Send registration verification mail
 ```
 {
     "mail": string,
-    "application_name": string
+    "app_id": string
 }
 ```
 
@@ -203,7 +203,7 @@ Send password reset mail
 ```
 {
     "mail": <string>,
-    "application_name": <string>
+    "app_id": <string>
 }
 ```
 

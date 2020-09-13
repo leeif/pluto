@@ -73,6 +73,35 @@ func (router *Router) CreateApplication(w http.ResponseWriter, r *http.Request) 
 	return nil
 }
 
+func (router *Router) UpdateI18nName(w http.ResponseWriter, r *http.Request) *perror.PlutoError {
+	uai := request.UpdateApplicationI18Name{}
+	if perr := routeUtils.GetRequestData(r, &uai); perr != nil {
+		return perr
+	}
+	if perr := router.manager.UpdateApplicationI18nNames(uai); perr != nil {
+		return perr
+	}
+	if err := routeUtils.ResponseOK(nil, w); err != nil {
+		return err
+	}
+	return nil
+}
+
+func (router *Router) ApplicationI18nName(w http.ResponseWriter, r *http.Request) *perror.PlutoError {
+	ai := request.ApplicationI18Name{}
+	if perr := routeUtils.GetRequestData(r, &ai); perr != nil {
+		return perr
+	}
+	names, err := router.manager.ApplicationI18nNameList(ai.AppID)
+	if err != nil {
+		return err
+	}
+	if err := routeUtils.ResponseOK(names.Format(), w); err != nil {
+		return err
+	}
+	return nil
+}
+
 func (router *Router) ApplicationDefaultRole(w http.ResponseWriter, r *http.Request) *perror.PlutoError {
 	ar := request.ApplicationRole{}
 	if perr := routeUtils.GetRequestData(r, &ar); perr != nil {

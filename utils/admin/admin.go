@@ -3,6 +3,7 @@ package admin
 import (
 	"database/sql"
 	"fmt"
+	"github.com/nicksnyder/go-i18n/v2/i18n"
 	"log"
 
 	"github.com/MuShare/pluto/utils/general"
@@ -18,7 +19,7 @@ import (
 	plog "github.com/MuShare/pluto/log"
 )
 
-func Init(db *sql.DB, config *config.Config) *perror.PlutoError {
+func Init(db *sql.DB, config *config.Config, bundle *i18n.Bundle) *perror.PlutoError {
 
 	if config.Admin.Mail == "" {
 		return nil
@@ -119,7 +120,7 @@ func Init(db *sql.DB, config *config.Config) *perror.PlutoError {
 		log.Println(mailBody)
 
 		go func() {
-			ml, err := mail.NewMail(config)
+			ml, err := mail.NewMail(config, bundle)
 			if err != nil {
 				logger.Error("smtp server is not set, can't send the mail")
 			}

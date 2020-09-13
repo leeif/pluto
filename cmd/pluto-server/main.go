@@ -3,6 +3,8 @@ package main
 import (
 	"context"
 	"database/sql"
+	"github.com/MuShare/pluto/localization"
+	"github.com/nicksnyder/go-i18n/v2/i18n"
 	"log"
 	"os"
 	"os/signal"
@@ -21,16 +23,16 @@ import (
 
 	"github.com/MuShare/pluto/database"
 
-	_ "github.com/go-sql-driver/mysql"
 	perror "github.com/MuShare/pluto/datatype/pluto_error"
 	"github.com/MuShare/pluto/utils/rsa"
 	"github.com/MuShare/pluto/utils/view"
+	_ "github.com/go-sql-driver/mysql"
 )
 
 // VERSION is the pluto build version
 var VERSION = ""
 
-func register(router *route.Router, db *sql.DB, config *config.Config) error {
+func register(router *route.Router, db *sql.DB, config *config.Config, bundle *i18n.Bundle) error {
 
 	if err := rsa.Init(config); err != nil {
 		log.Fatalln(err.Error())
@@ -42,7 +44,7 @@ func register(router *route.Router, db *sql.DB, config *config.Config) error {
 		return err
 	}
 
-	if err := admin.Init(db, config); err != nil {
+	if err := admin.Init(db, config, bundle); err != nil {
 		if err.PlutoCode == perror.ServerError.PlutoCode {
 			log.Fatalln(err.LogError.Error())
 			return err.LogError
@@ -70,6 +72,7 @@ func main() {
 			plog.NewLogger,
 			server.NewMux,
 			route.NewRouter,
+			localization.NewBundle,
 			manage.NewManager,
 		),
 		fx.Invoke(register),

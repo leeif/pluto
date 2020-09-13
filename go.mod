@@ -4,6 +4,7 @@ go 1.12
 
 require (
 	github.com/BillSJC/appleLogin v0.0.0-20190916123152-090c3039745d
+	github.com/BurntSushi/toml v0.3.1
 	github.com/DATA-DOG/go-sqlmock v1.3.3 // indirect
 	github.com/RichardKnop/uuid v0.0.0-20160216163710-c55201b03606
 	github.com/alecthomas/template v0.0.0-20190718012654-fb15b899a751
@@ -19,6 +20,8 @@ require (
 	github.com/micro/go-micro v1.18.0
 	github.com/micro/go-plugins/registry/consul v0.0.0-20200119172437-4fe21aa238fd
 	github.com/micro/go-plugins/server/http v0.0.0-20200119172437-4fe21aa238fd
+	github.com/nicksnyder/go-i18n/v2 v2.0.3
+	github.com/pelletier/go-toml v1.2.0
 	github.com/rs/cors v1.7.0
 	github.com/stretchr/testify v1.4.0
 	github.com/urfave/negroni v1.0.0
@@ -30,6 +33,7 @@ require (
 	go.uber.org/fx v1.9.0
 	go.uber.org/goleak v0.10.0 // indirect
 	golang.org/x/crypto v0.0.0-20191108234033-bd318be0434a
-	golang.org/x/text v0.3.2
+	golang.org/x/text v0.3.3
 	google.golang.org/api v0.8.0
+	gopkg.in/yaml.v2 v2.3.0 // indirect
 )

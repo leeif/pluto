@@ -1,6 +1,7 @@
 package route
 
 import (
+	"github.com/nicksnyder/go-i18n/v2/i18n"
 	"net/http"
 	"strings"
 
@@ -66,9 +67,9 @@ func (router *Router) notFoundHandler(w http.ResponseWriter, r *http.Request) {
 	routeUtils.ResponseError(perror.NotFound, w)
 }
 
-func NewRouter(mux *mux.Router, manager *manage.Manager, config *config.Config, logger *log.PlutoLog) *Router {
+func NewRouter(mux *mux.Router, manager *manage.Manager, config *config.Config, logger *log.PlutoLog, bundle *i18n.Bundle) *Router {
 
-	v1Router := v1.NewRouter(manager, config, logger)
+	v1Router := v1.NewRouter(manager, config, logger, bundle)
 
 	return &Router{
 		logger: logger,

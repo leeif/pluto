@@ -25,4 +25,6 @@ COPY --from=build /go/src/github.com/MuShare/pluto/pluto-migrate /usr/bin/
 
 COPY --from=build /go/src/github.com/MuShare/pluto/views views/
 
+COPY --from=build /go/src/github.com/MuShare/pluto/localization/*.toml localization/
+
 ENTRYPOINT ["/usr/bin/pluto-server"]

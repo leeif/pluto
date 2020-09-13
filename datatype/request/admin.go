@@ -46,6 +46,34 @@ func (ca *CreateApplication) Validation() bool {
 	return true
 }
 
+type UpdateApplicationI18Name struct {
+	AppID    uint `json:"app_id"`
+	I18Names []struct {
+		Tag      string `json:"tag"`
+		I18nName string `json:"i18n_name"`
+	} `json:"i18n_names"`
+}
+
+func (uai *UpdateApplicationI18Name) Validation() bool {
+	for _, i18nName := range uai.I18Names {
+		if i18nName.I18nName == "" || i18nName.Tag == "" {
+			return false
+		}
+	}
+	return true
+}
+
+type ApplicationI18Name struct {
+	AppID uint `json:"app_id" schema:"app_id"`
+}
+
+func (ai *ApplicationI18Name) Validation() bool {
+	if ai.AppID == 0 {
+		return false
+	}
+	return true
+}
+
 type RoleScope struct {
 	RoleID  uint `json:"role_id"`
 	ScopeID uint `json:"scope_id"`

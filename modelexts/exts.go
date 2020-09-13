@@ -6,10 +6,10 @@ import (
 )
 
 type User struct {
-	User		*models.User
-	Bindings	[]*models.Binding
-	Role		string `json:"role"`
-	AppID		string `json:"app_id"`
+	User        *models.User
+	Bindings    []*models.Binding
+	Role        string `json:"role"`
+	AppID       string `json:"app_id"`
 	PasswordSet bool
 }
 
@@ -169,5 +169,24 @@ func (oc *OauthClient) Format() map[string]interface{} {
 	res["status"] = oc.Client.Status
 	res["redirect_uri"] = oc.Client.RedirectURI
 	res["origin_secret"] = oc.OriginSecret
+	return res
+}
+
+type ApplicationI18nName struct {
+	Language string `json:"tag"`
+	Name     string `json:"i18n_name"`
+}
+
+type ApplicationI18nNameInfo struct {
+	AppName   string
+	AppId     uint
+	I18nNames *[]ApplicationI18nName
+}
+
+func (aii *ApplicationI18nNameInfo) Format() map[string]interface{} {
+	res := make(map[string]interface{})
+	res["app_id"] = aii.AppId
+	res["app_name"] = aii.AppName
+	res["i18n_names"] = aii.I18nNames
 	return res
 }

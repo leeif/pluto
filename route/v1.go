@@ -216,6 +216,20 @@ func (r *Router) registerRBACV1Routes(prefix string) {
 			handler:     r.v1.CreateApplication,
 		},
 		{
+			path:        "/application/update-i18n-name",
+			description: "Update application i18n name",
+			method:      "POST",
+			middle:      middleware.PlutoAdminAuthMiddleware,
+			handler:     r.v1.UpdateI18nName,
+		},
+		{
+			path:        "/application/i18n-name",
+			description: "get application i18n name",
+			method:      "GET",
+			middle:      middleware.PlutoAdminAuthMiddleware,
+			handler:     r.v1.ApplicationI18nName,
+		},
+		{
 			path:        "/application/role/default",
 			description: "Set the default role of the application",
 			method:      "POST",

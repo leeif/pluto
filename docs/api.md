@@ -22,6 +22,8 @@ Pluto provides a set of HTTP resetful APIs.
 * [`/v1/rbac/application/create`](#v1rbacapplicationcreate)
 * [`/v1/rbac/application/role/default`](#v1rbacapplicationroledefault)
 * [`/v1/rbac/application/list`](#v1rbacapplicationlist)
+* [`/v1/rbac/application/update-i18n-name`](#v1updateI18nName)
+* [`/v1/rbac/application/i18n-name`](#v1getI18nName)
 * [`/v1/rbac/role/list`](#v1rbacrolelist)
 * [`/v1/rbac/scope/list`](#v1rbacscopelist)
 * [`/v1/rbac/user/application/role`](#v1rbacuserapplicationrole)
@@ -67,7 +69,10 @@ Send registration verification mail
 * request:
 
 ```
-  "mail":<string>}
+{
+    "mail": string,
+    "application_name": string
+}
 ```
 
 * response example:
@@ -196,7 +201,10 @@ Send password reset mail
 * request:
 
 ```
-{"mail":<string>}
+{
+    "mail": <string>,
+    "application_name": <string>
+}
 ```
 
 * response example:
@@ -422,7 +430,33 @@ List all the applications
 ```
 
 * response example:
+### /v1/rbac/application/update-i18n-name
+update application i18n name
 
+* method: POST
+
+* request:
+
+```
+{
+    "app_id": int,
+    "i18n_names":[
+        {
+            "tag": string,
+            "i18n_name": string
+        }
+    ]
+}
+```
+### /v1/rbac/application/i18n-name
+get application i18n names
+
+* method: GET
+
+* request query parameters:
+```
+"app_id": int
+```
 ### /v1/rbac/role/list
 
 List all the roles in the application

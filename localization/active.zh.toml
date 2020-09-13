@@ -1,0 +1,9 @@
+[ResetPasswordMailSubject]
+description = "The subject of reset password mail"
+hash = "sha1-9df8681185105f46bc568c8a1f3f15baa9c8f984"
+other = "[{{.AppName}}] 重置密码"
+
+[VerifyMailSubject]
+description = "The subject of verify mail"
+hash = "sha1-0f13ecbc038c948d72c7606d935f61384a55e5ee"
+other = "[{{.AppName}}] 邮箱认证"

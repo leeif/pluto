@@ -1,0 +1,7 @@
+[ResetPasswordMailSubject]
+description = "The subject of reset password mail"
+other = "[{{.AppName}}] Reset Password"
+
+[VerifyMailSubject]
+description = "The subject of verify mail"
+other = "[{{.AppName}}] Mail Verification"

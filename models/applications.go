@@ -23,34 +23,37 @@ import (
 
 // Application is an object representing the database table.
 type Application struct {
-	ID          uint      `boil:"id" json:"id" toml:"id" yaml:"id"`
-	CreatedAt   null.Time `boil:"created_at" json:"created_at,omitempty" toml:"created_at" yaml:"created_at,omitempty"`
-	UpdatedAt   null.Time `boil:"updated_at" json:"updated_at,omitempty" toml:"updated_at" yaml:"updated_at,omitempty"`
-	DeletedAt   null.Time `boil:"deleted_at" json:"deleted_at,omitempty" toml:"deleted_at" yaml:"deleted_at,omitempty"`
-	Name        string    `boil:"name" json:"name" toml:"name" yaml:"name"`
-	Webhook     string    `boil:"webhook" json:"webhook" toml:"webhook" yaml:"webhook"`
-	DefaultRole null.Uint `boil:"default_role" json:"default_role,omitempty" toml:"default_role" yaml:"default_role,omitempty"`
+	ID                  uint      `boil:"id" json:"id" toml:"id" yaml:"id"`
+	CreatedAt           null.Time `boil:"created_at" json:"created_at,omitempty" toml:"created_at" yaml:"created_at,omitempty"`
+	UpdatedAt           null.Time `boil:"updated_at" json:"updated_at,omitempty" toml:"updated_at" yaml:"updated_at,omitempty"`
+	DeletedAt           null.Time `boil:"deleted_at" json:"deleted_at,omitempty" toml:"deleted_at" yaml:"deleted_at,omitempty"`
+	Name                string    `boil:"name" json:"name" toml:"name" yaml:"name"`
+	Webhook             string    `boil:"webhook" json:"webhook" toml:"webhook" yaml:"webhook"`
+	DefaultRole         null.Uint `boil:"default_role" json:"default_role,omitempty" toml:"default_role" yaml:"default_role,omitempty"`
+	I18nApplicationName null.JSON `boil:"i18n_application_name" json:"i18n_application_name,omitempty" toml:"i18n_application_name" yaml:"i18n_application_name,omitempty"`
 
 	R *applicationR `boil:"-" json:"-" toml:"-" yaml:"-"`
 	L applicationL  `boil:"-" json:"-" toml:"-" yaml:"-"`
 }
 
 var ApplicationColumns = struct {
-	ID          string
-	CreatedAt   string
-	UpdatedAt   string
-	DeletedAt   string
-	Name        string
-	Webhook     string
-	DefaultRole string
+	ID                  string
+	CreatedAt           string
+	UpdatedAt           string
+	DeletedAt           string
+	Name                string
+	Webhook             string
+	DefaultRole         string
+	I18nApplicationName string
 }{
-	ID:          "id",
-	CreatedAt:   "created_at",
-	UpdatedAt:   "updated_at",
-	DeletedAt:   "deleted_at",
-	Name:        "name",
-	Webhook:     "webhook",
-	DefaultRole: "default_role",
+	ID:                  "id",
+	CreatedAt:           "created_at",
+	UpdatedAt:           "updated_at",
+	DeletedAt:           "deleted_at",
+	Name:                "name",
+	Webhook:             "webhook",
+	DefaultRole:         "default_role",
+	I18nApplicationName: "i18n_application_name",
 }
 
 // Generated where
@@ -126,22 +129,47 @@ func (w whereHelpernull_Uint) GTE(x null.Uint) qm.QueryMod {
 	return qmhelper.Where(w.field, qmhelper.GTE, x)
 }
 
+type whereHelpernull_JSON struct{ field string }
+
+func (w whereHelpernull_JSON) EQ(x null.JSON) qm.QueryMod {
+	return qmhelper.WhereNullEQ(w.field, false, x)
+}
+func (w whereHelpernull_JSON) NEQ(x null.JSON) qm.QueryMod {
+	return qmhelper.WhereNullEQ(w.field, true, x)
+}
+func (w whereHelpernull_JSON) IsNull() qm.QueryMod    { return qmhelper.WhereIsNull(w.field) }
+func (w whereHelpernull_JSON) IsNotNull() qm.QueryMod { return qmhelper.WhereIsNotNull(w.field) }
+func (w whereHelpernull_JSON) LT(x null.JSON) qm.QueryMod {
+	return qmhelper.Where(w.field, qmhelper.LT, x)
+}
+func (w whereHelpernull_JSON) LTE(x null.JSON) qm.QueryMod {
+	return qmhelper.Where(w.field, qmhelper.LTE, x)
+}
+func (w whereHelpernull_JSON) GT(x null.JSON) qm.QueryMod {
+	return qmhelper.Where(w.field, qmhelper.GT, x)
+}
+func (w whereHelpernull_JSON) GTE(x null.JSON) qm.QueryMod {
+	return qmhelper.Where(w.field, qmhelper.GTE, x)
+}
+
 var ApplicationWhere = struct {
-	ID          whereHelperuint
-	CreatedAt   whereHelpernull_Time
-	UpdatedAt   whereHelpernull_Time
-	DeletedAt   whereHelpernull_Time
-	Name        whereHelperstring
-	Webhook     whereHelperstring
-	DefaultRole whereHelpernull_Uint
+	ID                  whereHelperuint
+	CreatedAt           whereHelpernull_Time
+	UpdatedAt           whereHelpernull_Time
+	DeletedAt           whereHelpernull_Time
+	Name                whereHelperstring
+	Webhook             whereHelperstring
+	DefaultRole         whereHelpernull_Uint
+	I18nApplicationName whereHelpernull_JSON
 }{
-	ID:          whereHelperuint{field: "`applications`.`id`"},
-	CreatedAt:   whereHelpernull_Time{field: "`applications`.`created_at`"},
-	UpdatedAt:   whereHelpernull_Time{field: "`applications`.`updated_at`"},
-	DeletedAt:   whereHelpernull_Time{field: "`applications`.`deleted_at`"},
-	Name:        whereHelperstring{field: "`applications`.`name`"},
-	Webhook:     whereHelperstring{field: "`applications`.`webhook`"},
-	DefaultRole: whereHelpernull_Uint{field: "`applications`.`default_role`"},
+	ID:                  whereHelperuint{field: "`applications`.`id`"},
+	CreatedAt:           whereHelpernull_Time{field: "`applications`.`created_at`"},
+	UpdatedAt:           whereHelpernull_Time{field: "`applications`.`updated_at`"},
+	DeletedAt:           whereHelpernull_Time{field: "`applications`.`deleted_at`"},
+	Name:                whereHelperstring{field: "`applications`.`name`"},
+	Webhook:             whereHelperstring{field: "`applications`.`webhook`"},
+	DefaultRole:         whereHelpernull_Uint{field: "`applications`.`default_role`"},
+	I18nApplicationName: whereHelpernull_JSON{field: "`applications`.`i18n_application_name`"},
 }
 
 // ApplicationRels is where relationship names are stored.
@@ -161,8 +189,8 @@ func (*applicationR) NewStruct() *applicationR {
 type applicationL struct{}
 
 var (
-	applicationAllColumns            = []string{"id", "created_at", "updated_at", "deleted_at", "name", "webhook", "default_role"}
-	applicationColumnsWithoutDefault = []string{"created_at", "updated_at", "deleted_at", "name", "webhook", "default_role"}
+	applicationAllColumns            = []string{"id", "created_at", "updated_at", "deleted_at", "name", "webhook", "default_role", "i18n_application_name"}
+	applicationColumnsWithoutDefault = []string{"created_at", "updated_at", "deleted_at", "name", "webhook", "default_role", "i18n_application_name"}
 	applicationColumnsWithDefault    = []string{"id"}
 	applicationPrimaryKeyColumns     = []string{"id"}
 )

@@ -2,6 +2,9 @@ package manage
 
 import (
 	"database/sql"
+	"encoding/json"
+	"fmt"
+	"github.com/volatiletech/null"
 
 	"github.com/MuShare/pluto/modelexts"
 
@@ -107,6 +110,95 @@ func (m *Manager) CreateApplication(ca request.CreateApplication) (*models.Appli
 
 	tx.Commit()
 	return app, nil
+}
+
+func (m *Manager) UpdateApplicationI18nNames(uai request.UpdateApplicationI18Name) (*perror.PlutoError) {
+	tx, err := m.db.Begin()
+	if err != nil {
+		return perror.ServerError.Wrapper(err)
+	}
+
+	defer func() {
+		tx.Rollback()
+	}()
+
+	app, err := models.Applications(qm.Where("id = ?", uai.AppID)).One(tx)
+	if err != nil {
+		if err == sql.ErrNoRows {
+			return perror.ApplicationNotExist
+		} else {
+			return perror.ServerError.Wrapper(err)
+		}
+	} else {
+		i18nNames, err := json.Marshal(uai.I18Names)
+		if err != nil {
+			return perror.ServerError.Wrapper(err)
+		}
+		app.I18nApplicationName = null.JSONFrom(i18nNames)
+		if _, err := app.Update(tx, boil.Infer()); err != nil {
+			return perror.ServerError.Wrapper(err)
+		}
+		tx.Commit()
+		return nil
+	}
+}
+
+func (m *Manager) ApplicationI18nName(appName string, language string) (string, *perror.PlutoError) {
+	tx, err := m.db.Begin()
+	if err != nil {
+		return "", perror.ServerError.Wrapper(err)
+	}
+	defer func() {
+		tx.Rollback()
+	}()
+	app, err := models.Applications(qm.Where("name = ?", appName)).One(tx)
+	if app == nil {
+		m.logger.Warn(fmt.Sprintf("No i18n name for %s, fallback to pluto", appName))
+		return "Pluto", nil
+	} else {
+		var i18nNames []modelexts.ApplicationI18nName
+		err := app.I18nApplicationName.Unmarshal(&i18nNames)
+		if err != nil {
+			m.logger.Warn(fmt.Sprintf("Failed to unmarshal i18nNames: %s", appName))
+			return "pluto", nil
+		}
+
+		for _, i18nName := range i18nNames {
+			if i18nName.Language == language {
+				return i18nName.Name, nil
+			}
+		}
+		return "pluto", nil
+	}
+}
+
+func (m *Manager) ApplicationI18nNameList(appId uint) (*modelexts.ApplicationI18nNameInfo, *perror.PlutoError) {
+	tx, err := m.db.Begin()
+	if err != nil {
+		return nil, perror.ServerError.Wrapper(err)
+	}
+
+	defer func() {
+		tx.Rollback()
+	}()
+
+	app, err := models.Applications(qm.Where("id = ?", appId)).One(tx)
+	if err != nil && err != sql.ErrNoRows {
+		return nil, perror.ServerError.Wrapper(err)
+	} else if err != nil && err == sql.ErrNoRows {
+		return nil, perror.ApplicationNotExist
+	}
+	var names []modelexts.ApplicationI18nName
+	if err := app.I18nApplicationName.Unmarshal(&names); err != nil {
+		m.logger.Error(fmt.Sprintf("Failed to unmarshal i18nName, app id: %d", appId))
+		return nil, perror.ServerError.Wrapper(err)
+	}
+	res := modelexts.ApplicationI18nNameInfo{
+		AppId:     app.ID,
+		AppName:   app.Name,
+		I18nNames: &names,
+	}
+	return &res, nil
 }
 
 func (m *Manager) RoleScopeUpdate(rsu request.RoleScopeUpdate) *perror.PlutoError {

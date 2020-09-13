@@ -5,6 +5,7 @@ import (
 	"crypto/tls"
 	"errors"
 	"fmt"
+	"github.com/nicksnyder/go-i18n/v2/i18n"
 	"net"
 	"net/mail"
 	"net/smtp"
@@ -19,6 +20,7 @@ import (
 
 type Mail struct {
 	config *config.Config
+	bundle *i18n.Bundle
 }
 
 func (m *Mail) Send(recv, subj, contentType, body string) error {
@@ -112,7 +114,7 @@ func (m *Mail) SendPlainText(address, subject, text string) *perror.PlutoError {
 	return nil
 }
 
-func (m *Mail) SendRegisterVerify(userID uint, address string, baseURL string, language string) *perror.PlutoError {
+func (m *Mail) SendRegisterVerify(userID uint, address string, baseURL string, language string, appName string) *perror.PlutoError {
 	rvp := jwt.NewRegisterVerifyPayload(userID, m.config.Token.RegisterVerifyTokenExpire)
 	token, perr := jwt.GenerateRSA256JWT(rvp)
 	if perr != nil {
@@ -134,14 +136,24 @@ func (m *Mail) SendRegisterVerify(userID uint, address string, baseURL string, l
 		Token   string
 	}
 	t.Execute(&buffer, Data{Token: token.B64String(), BaseURL: baseURL})
-	if err := m.Send(address, "[Pluto]Mail Verification", "text/html", buffer.String()); err != nil {
+	localizer := i18n.NewLocalizer(m.bundle, language)
+	subject, err := localizer.Localize(&i18n.LocalizeConfig{
+		MessageID: "VerifyMailSubject",
+		TemplateData: map[string]interface{}{
+			"AppName": appName,
+		},
+	})
+	if err != nil {
+		subject = "[Pluto] Mail Confirmation"
+	}
+	if err := m.Send(address, subject, "text/html", buffer.String()); err != nil {
 		return perror.ServerError.Wrapper(errors.New("Mail sending failed: " + err.Error()))
 	}
 
 	return nil
 }
 
-func (m *Mail) SendResetPassword(address string, baseURL string, language string) *perror.PlutoError {
+func (m *Mail) SendResetPassword(address string, baseURL string, userLanguage string, appName string) *perror.PlutoError {
 	prp := jwt.NewPasswordResetPayload(address, m.config.Token.ResetPasswordTokenExpire)
 	token, perr := jwt.GenerateRSA256JWT(prp)
 	if perr != nil {
@@ -153,7 +165,7 @@ func (m *Mail) SendResetPassword(address string, baseURL string, language string
 		return perror.ServerError.Wrapper(err)
 	}
 
-	t, err := vw.Parse(language, "password_reset_mail.html")
+	t, err := vw.Parse(userLanguage, "password_reset_mail.html")
 	if err != nil {
 		return perror.ServerError.Wrapper(err)
 	}
@@ -164,19 +176,30 @@ func (m *Mail) SendResetPassword(address string, baseURL string, language string
 		Token   string
 	}
 	t.Execute(&buffer, Data{Token: token.B64String(), BaseURL: baseURL})
-	if err := m.Send(address, "[Pluto]Password Reset", "text/html", buffer.String()); err != nil {
+	localizer := i18n.NewLocalizer(m.bundle, userLanguage)
+	subject, err := localizer.Localize(&i18n.LocalizeConfig{
+		MessageID: "ResetPasswordMailSubject",
+		TemplateData: map[string]interface{}{
+			"AppName": appName,
+		},
+	})
+	if err != nil {
+		subject = "[Pluto]Password Reset"
+	}
+	if err := m.Send(address, subject, "text/html", buffer.String()); err != nil {
 		return perror.ServerError.Wrapper(errors.New("Mail sending failed: " + err.Error()))
 	}
 	return nil
 }
 
-func NewMail(config *config.Config) (*Mail, *perror.PlutoError) {
+func NewMail(config *config.Config, bundle *i18n.Bundle) (*Mail, *perror.PlutoError) {
 	c := config.Mail
 	if c.SMTP.String() == "" {
 		return nil, perror.ServerError.Wrapper(errors.New("smtp server is not set"))
 	}
 	mail := &Mail{
 		config: config,
+		bundle: bundle,
 	}
 	return mail, nil
 }

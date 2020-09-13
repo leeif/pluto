@@ -59,6 +59,10 @@ var migrations = []Migrations{
 		name:     "create_oauth_authorization_codes_table",
 		function: createOauthAuthorizationCodesTable,
 	},
+	{
+		name:     "add_i18n_application_name_column_to_application_table",
+		function: addI18nApplicationNameColumnToApplicationTable,
+	},
 }
 
 func createUsersTable(db *sql.DB, name string) error {
@@ -324,6 +328,16 @@ func createOauthAuthorizationCodesTable(db *sql.DB, name string) error {
 		"`scopes` varchar(200) NOT NULL," +
 		"PRIMARY KEY (`id`)" +
 		")"
+	_, err := db.Exec(sql)
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
+func addI18nApplicationNameColumnToApplicationTable(db *sql.DB, name string) error {
+	sql := "ALTER TABLE applications ADD i18n_application_name json"
+
 	_, err := db.Exec(sql)
 	if err != nil {
 		return err

@@ -114,11 +114,16 @@ func (router *Router) Binding(w http.ResponseWriter, r *http.Request) *perror.Pl
 					router.logger.Info("skip sending register mail")
 					return
 				}
-				ml, err := mail.NewMail(router.config)
+				ml, err := mail.NewMail(router.config, router.bundle)
 				if err != nil {
 					router.logger.Error("send mail failed: " + err.LogError.Error())
 				}
-				if err := ml.SendRegisterVerify(payload.UserID, binding.Mail, routeUtils.GetBaseURL(r), r.Header.Get("Accept-Language")); err != nil {
+				language := r.Header.Get("Accept-Language")
+				appI18nName, err := router.manager.ApplicationI18nName(payload.AppID, language)
+				if err != nil {
+					router.logger.Error(err.LogError.Error())
+				}
+				if err := ml.SendRegisterVerify(payload.UserID, binding.Mail, routeUtils.GetBaseURL(r), language, appI18nName); err != nil {
 					router.logger.Error("send mail failed: " + err.LogError.Error())
 				}
 			}()
@@ -192,12 +197,16 @@ func (router *Router) PasswordResetMail(w http.ResponseWriter, r *http.Request) 
 	}
 
 	go func() {
-		ml, err := mail.NewMail(router.config)
+		ml, err := mail.NewMail(router.config, router.bundle)
 		if err != nil {
 			router.logger.Error(err.LogError.Error())
 		}
-
-		if err := ml.SendResetPassword(rpm.Mail, routeUtils.GetBaseURL(r), r.Header.Get("Accept-Language")); err != nil {
+		language := r.Header.Get("Accept-Language")
+		appI18nName, err := router.manager.ApplicationI18nName(rpm.AppName, language)
+		if err != nil {
+			router.logger.Error(err.LogError.Error())
+		}
+		if err := ml.SendResetPassword(rpm.Mail, routeUtils.GetBaseURL(r), language, appI18nName); err != nil {
 			router.logger.Error(err.LogError.Error())
 		}
 	}()
@@ -264,11 +273,13 @@ func (router *Router) Register(w http.ResponseWriter, r *http.Request) *perror.P
 			router.logger.Info("skip sending register mail")
 			return
 		}
-		ml, err := mail.NewMail(router.config)
+		ml, err := mail.NewMail(router.config, router.bundle)
 		if err != nil {
 			router.logger.Error("send mail failed: " + err.LogError.Error())
 		}
-		if err := ml.SendRegisterVerify(user.ID, register.Mail, routeUtils.GetBaseURL(r), r.Header.Get("Accept-Language")); err != nil {
+		language := r.Header.Get("Accept-Language")
+		appI18nName, err := router.manager.ApplicationI18nName(register.AppName, language)
+		if err := ml.SendRegisterVerify(user.ID, register.Mail, routeUtils.GetBaseURL(r), language, appI18nName); err != nil {
 			router.logger.Error("send mail failed: " + err.LogError.Error())
 		}
 	}()
@@ -292,11 +303,13 @@ func (router *Router) VerifyMail(w http.ResponseWriter, r *http.Request) *perror
 	}
 
 	go func() {
-		ml, err := mail.NewMail(router.config)
+		ml, err := mail.NewMail(router.config, router.bundle)
 		if err != nil {
 			router.logger.Error(err.LogError.Error())
 		}
-		if err := ml.SendRegisterVerify(user.ID, rvm.Mail, routeUtils.GetBaseURL(r), r.Header.Get("Accept-Language")); err != nil {
+		language := r.Header.Get("Accept-Language")
+		appI18nName, err := router.manager.ApplicationI18nName(rvm.AppName, language)
+		if err := ml.SendRegisterVerify(user.ID, rvm.Mail, routeUtils.GetBaseURL(r), language, appI18nName); err != nil {
 			router.logger.Error(err.LogError.Error())
 		}
 	}()

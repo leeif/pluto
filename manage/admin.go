@@ -4,10 +4,9 @@ import (
 	"database/sql"
 	"encoding/json"
 	"fmt"
-	"github.com/volatiletech/null"
-	"strings"
-
 	"github.com/MuShare/pluto/modelexts"
+	"github.com/volatiletech/null"
+	"golang.org/x/text/language"
 
 	perror "github.com/MuShare/pluto/datatype/pluto_error"
 	"github.com/MuShare/pluto/datatype/request"
@@ -144,7 +143,7 @@ func (m *Manager) UpdateApplicationI18nNames(uai request.UpdateApplicationI18Nam
 	}
 }
 
-func (m *Manager) ApplicationI18nName(appName string, language string) (string, *perror.PlutoError) {
+func (m *Manager) ApplicationI18nName(appName string, userLanguage string) (string, *perror.PlutoError) {
 	tx, err := m.db.Begin()
 	if err != nil {
 		return "", perror.ServerError.Wrapper(err)
@@ -163,19 +162,30 @@ func (m *Manager) ApplicationI18nName(appName string, language string) (string, 
 			m.logger.Warn(fmt.Sprintf("Failed to unmarshal i18nNames: %s", appName))
 			return "pluto", nil
 		}
-		var appNameEn string
+
+		nameMap := make(map[string]string)
+		supportLanguages := make([]language.Tag, 0, len(nameMap))
+		supportLanguages = append(supportLanguages, language.Make("en"))
 
 		for _, i18nName := range i18nNames {
-			if i18nName.Language == language {
-				return i18nName.Name, nil
-			}
-			if strings.EqualFold(i18nName.Language, "en") {
-				m.logger.Info(fmt.Sprintf("No i18n name for app %s, language %s, fallback to en", appName, language))
-				appNameEn = i18nName.Name
-			}
+			nameMap[i18nName.Language] = i18nName.Name
+			supportLanguages = append(supportLanguages, language.Make(i18nName.Language))
 		}
-		if appNameEn != "" {
-			return appNameEn, nil
+
+		tags, _, err := language.ParseAcceptLanguage(userLanguage)
+		if err != nil {
+			return "", perror.ServerError.Wrapper(err)
+		}
+
+		languageMatcher := language.NewMatcher(supportLanguages)
+
+		tag, _, _ := languageMatcher.Match(tags...)
+		base, _ := tag.Base()
+		if name, exists := nameMap[base.String()]; exists {
+			return name, nil
+		} else if name, exists := nameMap["en"]; exists {
+			m.logger.Info(fmt.Sprintf("No i18n name for app %s, language %s, fallback to en", appName, userLanguage))
+			return name, nil
 		} else {
 			m.logger.Warn(fmt.Sprintf("No i18n name for %s, fallback to pluto", appName))
 			return "pluto", nil

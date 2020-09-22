@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"github.com/volatiletech/null"
+	"strings"
 
 	"github.com/MuShare/pluto/modelexts"
 
@@ -162,13 +163,23 @@ func (m *Manager) ApplicationI18nName(appName string, language string) (string, 
 			m.logger.Warn(fmt.Sprintf("Failed to unmarshal i18nNames: %s", appName))
 			return "pluto", nil
 		}
+		var appNameEn string
 
 		for _, i18nName := range i18nNames {
 			if i18nName.Language == language {
 				return i18nName.Name, nil
 			}
+			if strings.EqualFold(i18nName.Language, "en") {
+				m.logger.Info(fmt.Sprintf("No i18n name for app %s, language %s, fallback to en", appName, language))
+				appNameEn = i18nName.Name
+			}
 		}
-		return "pluto", nil
+		if appNameEn != "" {
+			return appNameEn, nil
+		} else {
+			m.logger.Warn(fmt.Sprintf("No i18n name for %s, fallback to pluto", appName))
+			return "pluto", nil
+		}
 	}
 }
 

@@ -1013,7 +1013,7 @@ func (m *Manager) RegisterVerifyMail(rvm request.RegisterVerifyMail) (*models.Us
 		return nil, perror.MailAlreadyVerified
 	}
 
-	user, err := models.Users(qm.Where("id = ?", binding.ID)).One(m.db)
+	user, err := models.Users(qm.Where("id = ?", binding.UserID)).One(m.db)
 
 	if err != nil {
 		return nil, perror.ServerError.Wrapper(err)

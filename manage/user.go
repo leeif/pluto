@@ -40,7 +40,7 @@ const (
 
 func (m *Manager) randomUserName(exec boil.Executor, prefix string) (string, *perror.PlutoError) {
 	randomTokenLen := 5
-	name := fmt.Sprintf("%s_%s", prefix, saltUtil.RandomToken(randomTokenLen))
+	name := prefix
 
 	for {
 		exists, err := models.Users(qm.Where("name = ?", name)).Exists(exec)
@@ -371,7 +371,7 @@ func (m *Manager) WechatLoginMobile(login request.WechatMobileLogin) (*GrantResu
 		tx.Rollback()
 	}()
 
-	identifyToken := b64.RawStdEncoding.EncodeToString([]byte(info.Unionid))
+	identifyToken := info.Unionid
 	wechatBinding, err := models.Bindings(qm.Where("login_type = ? and identify_token = ?", WECHATLOGIN, identifyToken)).One(tx)
 	if err != nil && err != sql.ErrNoRows {
 		return nil, perror.ServerError.Wrapper(err)
@@ -443,7 +443,9 @@ func getWechatAccessToken(code string, cfg *config.WechatLoginConfig) (accessTok
 				err = errors.New("Unknown panic")
 			}
 		}
-		pe = perror.ServerError.Wrapper(err)
+		if err != nil {
+			pe = perror.ServerError.Wrapper(err)
+		}
 	}()
 	// get access token
 	url := fmt.Sprintf("https://api.weixin.qq.com/sns/oauth2/access_token?appid=%s&secret=%s&code=%s&grant_type=authorization_code",
@@ -485,7 +487,7 @@ func getWechatAccessToken(code string, cfg *config.WechatLoginConfig) (accessTok
 type wechatUserInfo struct {
 	OpenID     string `json:"openid"`
 	Nickname   string `json:"nickname"`
-	Sex        string `json:"sex"`
+	Sex        int    `json:"sex"`
 	Province   string `json:"province"`
 	City       string `json:"city"`
 	Country    string `json:"country"`
@@ -509,7 +511,9 @@ func getWechatUserInfo(accessToken string, openID string) (info *wechatUserInfo,
 				err = errors.New("Unknown panic")
 			}
 		}
-		pe = perror.ServerError.Wrapper(err)
+		if err != nil {
+			pe = perror.ServerError.Wrapper(err)
+		}
 	}()
 	// get access token
 	url := fmt.Sprintf("https://api.weixin.qq.com/sns/userinfo?access_token=%s&openid=%s",
@@ -578,7 +582,7 @@ func (m *Manager) AppleLoginMobile(login request.AppleMobileLogin) (*GrantResult
 		avatarURL = remoteURL
 	}
 
-	identifyToken := b64.RawStdEncoding.EncodeToString([]byte(info.Sub))
+	identifyToken := info.Sub
 	appleBinding, err := models.Bindings(qm.Where("login_type = ? and identify_token = ?", APPLELOGIN, info.Sub)).One(tx)
 	if err != nil && err != sql.ErrNoRows {
 		return nil, perror.ServerError.Wrapper(err)
@@ -1259,7 +1263,7 @@ func (m *Manager) BindWechat(binding *request.Binding, accessPayload *jwt.Access
 		return perror.BindAlreadyExists
 	}
 
-	identifyToken := b64.RawStdEncoding.EncodeToString([]byte(info.Unionid))
+	identifyToken := info.Unionid
 
 	exists, err = models.Bindings(qm.Where("login_type = ? and identify_token = ?", WECHATLOGIN, identifyToken)).Exists(tx)
 	if err != nil {

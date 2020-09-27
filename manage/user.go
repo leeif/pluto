@@ -405,7 +405,7 @@ func (m *Manager) WechatLoginMobile(login request.WechatMobileLogin) (*GrantResu
 		if perr != nil {
 			return nil, perr
 		}
-		wechatBinding, perr = m.newBinding(tx, user.ID, "", WECHATLOGIN, info.Unionid, true)
+		wechatBinding, perr = m.newBinding(tx, user.ID, info.Nickname, WECHATLOGIN, info.Unionid, true)
 		if perr != nil {
 			return nil, perr
 		}
@@ -1274,7 +1274,7 @@ func (m *Manager) BindWechat(binding *request.Binding, accessPayload *jwt.Access
 		return perror.BindAlreadyExists
 	}
 
-	_, perr = m.newBinding(tx, accessPayload.UserID, "", WECHATLOGIN, identifyToken, true)
+	_, perr = m.newBinding(tx, accessPayload.UserID, info.Nickname, WECHATLOGIN, identifyToken, true)
 	if perr != nil {
 		return perr
 	}

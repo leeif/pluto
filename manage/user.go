@@ -410,6 +410,10 @@ func (m *Manager) WechatLoginMobile(login request.WechatMobileLogin) (*GrantResu
 			return nil, perr
 		}
 	} else {
+		wechatBinding.Mail = info.Nickname
+		if _, err := wechatBinding.Update(tx, boil.Whitelist("mail")); err != nil {
+			return nil, perror.ServerError.Wrapper(err)
+		}
 		user, err = models.Users(qm.Where("id = ?", wechatBinding.UserID)).One(tx)
 		if err != nil {
 			return nil, perror.ServerError.Wrapper(err)

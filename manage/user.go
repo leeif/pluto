@@ -405,11 +405,15 @@ func (m *Manager) WechatLoginMobile(login request.WechatMobileLogin) (*GrantResu
 		if perr != nil {
 			return nil, perr
 		}
-		wechatBinding, perr = m.newBinding(tx, user.ID, "", WECHATLOGIN, info.Unionid, true)
+		wechatBinding, perr = m.newBinding(tx, user.ID, info.Nickname, WECHATLOGIN, info.Unionid, true)
 		if perr != nil {
 			return nil, perr
 		}
 	} else {
+		wechatBinding.Mail = info.Nickname
+		if _, err := wechatBinding.Update(tx, boil.Whitelist("mail")); err != nil {
+			return nil, perror.ServerError.Wrapper(err)
+		}
 		user, err = models.Users(qm.Where("id = ?", wechatBinding.UserID)).One(tx)
 		if err != nil {
 			return nil, perror.ServerError.Wrapper(err)
@@ -1274,7 +1278,7 @@ func (m *Manager) BindWechat(binding *request.Binding, accessPayload *jwt.Access
 		return perror.BindAlreadyExists
 	}
 
-	_, perr = m.newBinding(tx, accessPayload.UserID, "", WECHATLOGIN, identifyToken, true)
+	_, perr = m.newBinding(tx, accessPayload.UserID, info.Nickname, WECHATLOGIN, identifyToken, true)
 	if perr != nil {
 		return perr
 	}

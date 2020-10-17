@@ -241,7 +241,7 @@ func (router *Router) UpdateUserInfo(w http.ResponseWriter, r *http.Request) *pe
 
 	uui := request.UpdateUserInfo{}
 	if err := routeUtils.GetRequestData(r, &uui); err != nil {
-		return perr
+		return err
 	}
 
 	if perr := router.manager.UpdateUserInfo(payload, uui); perr != nil {

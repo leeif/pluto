@@ -63,6 +63,18 @@ var migrations = []Migrations{
 		name:     "add_i18n_application_name_column_to_application_table",
 		function: addI18nApplicationNameColumnToApplicationTable,
 	},
+	{
+		name:     "add_user_id_to_user_table",
+		function: addUserIdToUserTable,
+	},
+	{
+		name:     "init_user_id_to_user_table",
+		function: initUserIdToUserTable,
+	},
+	{
+		name:     "unique_user_id_to_user_table",
+		function: addUserIdUniqueToUserTable,
+	},
 }
 
 func createUsersTable(db *sql.DB, name string) error {
@@ -338,6 +350,36 @@ func createOauthAuthorizationCodesTable(db *sql.DB, name string) error {
 func addI18nApplicationNameColumnToApplicationTable(db *sql.DB, name string) error {
 	sql := "ALTER TABLE applications ADD i18n_application_name json"
 
+	_, err := db.Exec(sql)
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
+func addUserIdToUserTable(db *sql.DB, name string) error {
+	sql := "ALTER TABLE `users`" +
+		"ADD `user_id` varchar(255) NOT NULL," +
+		"ADD `user_id_updated` tinyint(1) NOT NULL DEFAULT 0;"
+	_, err := db.Exec(sql)
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
+func initUserIdToUserTable(db *sql.DB, name string) error {
+	sql := "UPDATE `users` SET `user_id`=uuid();"
+	_, err := db.Exec(sql)
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
+func addUserIdUniqueToUserTable(db *sql.DB, name string) error {
+	sql := "ALTER TABLE `users` ADD UNIQUE INDEX `user_id_UNIQUE` (`user_id`)," +
+		"DROP INDEX `name_key`, ADD INDEX `user_name_index` (`name`);"
 	_, err := db.Exec(sql)
 	if err != nil {
 		return err

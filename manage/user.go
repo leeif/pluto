@@ -6,6 +6,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"github.com/google/uuid"
 	"io/ioutil"
 	"net/http"
 	"net/url"
@@ -192,19 +193,34 @@ func (m *Manager) NamePasswordLogin(login request.PasswordLogin) (*GrantResult, 
 	return grantResult, nil
 }
 
-func (m *Manager) newUser(exec boil.Executor, name, avatar, password string, verified bool) (*models.User, *perror.PlutoError) {
-	exists, err := models.Users(qm.Where("name = ?", name)).Exists(exec)
-	if err != nil {
-		return nil, perror.ServerError.Wrapper(err)
-	}
-	if exists {
-		return nil, perror.UsernameExists
-	}
+func (m *Manager) newUser(exec boil.Executor, name, avatar, password string, userID *string, verified bool) (*models.User, *perror.PlutoError) {
 	user := &models.User{}
 	user.Avatar.SetValid(avatar)
 	user.Password.SetValid(password)
 	user.Name = name
 	user.Verified.SetValid(verified)
+	if userID != nil {
+		userIDExists, err := models.Users(qm.Where("user_id = ?", *userID)).Exists(exec)
+		if err != nil {
+			return nil, perror.ServerError.Wrapper(err)
+		}
+		if userIDExists {
+			return nil, perror.UserIdExists
+		}
+		user.UserID = *userID
+		user.UserIDUpdated = true
+	} else {
+		newUuid, uuidErr := uuid.NewRandom()
+		if uuidErr != nil {
+			return nil, perror.ServerError.Wrapper(uuidErr)
+		}
+		if uuidString := newUuid.String(); uuidString != "" {
+			user.UserID = uuidString
+			user.UserIDUpdated = false
+		} else {
+			return nil, perror.ServerError.Wrapper(errors.New("invalid uuid"))
+		}
+	}
 	if err := user.Insert(exec, boil.Infer()); err != nil {
 		return nil, perror.ServerError.Wrapper(err)
 	}
@@ -270,7 +286,7 @@ func (m *Manager) GoogleLoginMobile(login request.GoogleMobileLogin) (*GrantResu
 
 	var user *models.User
 	if googleBinding == nil {
-		user, perr = m.newUser(tx, name, info.Picture, encodedPassword, true)
+		user, perr = m.newUser(tx, name, info.Picture, encodedPassword, nil, true)
 		if perr != nil {
 			return nil, perr
 		}
@@ -401,7 +417,7 @@ func (m *Manager) WechatLoginMobile(login request.WechatMobileLogin) (*GrantResu
 
 	var user *models.User
 	if wechatBinding == nil {
-		user, perr = m.newUser(tx, name, info.HeadimgURL, encodedPassword, true)
+		user, perr = m.newUser(tx, name, info.HeadimgURL, encodedPassword, nil, true)
 		if perr != nil {
 			return nil, perr
 		}
@@ -608,7 +624,7 @@ func (m *Manager) AppleLoginMobile(login request.AppleMobileLogin) (*GrantResult
 
 	var user *models.User
 	if appleBinding == nil {
-		user, perr = m.newUser(tx, name, avatarURL, encodedPassword, true)
+		user, perr = m.newUser(tx, name, avatarURL, encodedPassword, nil, true)
 		if perr != nil {
 			return nil, perr
 		}
@@ -908,14 +924,19 @@ func (m *Manager) UpdateUserInfo(accessPayload *jwt.AccessPayload, uui request.U
 	}
 
 	if uui.Name != "" {
-		exists, err := models.Users(qm.Where("name = ?", uui.Name)).Exists(tx)
+		user.Name = uui.Name
+	}
+
+	if uui.UserID != "" {
+		exists, err := models.Users(qm.Where("user_id = ? and id != ?", uui.UserID, user.ID)).Exists(tx)
 		if err != nil {
 			return perror.ServerError.Wrapper(err)
 		}
 		if exists {
-			return perror.UsernameExists
+			return perror.UserIdExists
 		}
-		user.Name = uui.Name
+		user.UserID = uui.UserID
+		user.UserIDUpdated = true
 	}
 
 	if _, err := user.Update(tx, boil.Infer()); err != nil {
@@ -984,7 +1005,12 @@ func (m *Manager) RegisterWithEmail(register request.MailRegister, admin bool) (
 		verified = true
 	}
 
-	user, perr := m.newUser(tx, register.Name, avatarURL, encodedPassword, verified)
+	var userID *string = nil
+	if register.UserID != "" {
+		userID = &register.UserID
+	}
+
+	user, perr := m.newUser(tx, register.Name, avatarURL, encodedPassword, userID, verified)
 	if perr != nil {
 		return nil, perr
 	}

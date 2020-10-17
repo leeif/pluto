@@ -23,59 +23,78 @@ import (
 
 // User is an object representing the database table.
 type User struct {
-	ID        uint        `boil:"id" json:"id" toml:"id" yaml:"id"`
-	CreatedAt null.Time   `boil:"created_at" json:"created_at,omitempty" toml:"created_at" yaml:"created_at,omitempty"`
-	UpdatedAt null.Time   `boil:"updated_at" json:"updated_at,omitempty" toml:"updated_at" yaml:"updated_at,omitempty"`
-	DeletedAt null.Time   `boil:"deleted_at" json:"deleted_at,omitempty" toml:"deleted_at" yaml:"deleted_at,omitempty"`
-	Name      string      `boil:"name" json:"name" toml:"name" yaml:"name"`
-	Password  null.String `boil:"password" json:"password,omitempty" toml:"password" yaml:"password,omitempty"`
-	Verified  null.Bool   `boil:"verified" json:"verified,omitempty" toml:"verified" yaml:"verified,omitempty"`
-	Avatar    null.String `boil:"avatar" json:"avatar,omitempty" toml:"avatar" yaml:"avatar,omitempty"`
+	ID            uint        `boil:"id" json:"id" toml:"id" yaml:"id"`
+	CreatedAt     null.Time   `boil:"created_at" json:"created_at,omitempty" toml:"created_at" yaml:"created_at,omitempty"`
+	UpdatedAt     null.Time   `boil:"updated_at" json:"updated_at,omitempty" toml:"updated_at" yaml:"updated_at,omitempty"`
+	DeletedAt     null.Time   `boil:"deleted_at" json:"deleted_at,omitempty" toml:"deleted_at" yaml:"deleted_at,omitempty"`
+	Name          string      `boil:"name" json:"name" toml:"name" yaml:"name"`
+	Password      null.String `boil:"password" json:"password,omitempty" toml:"password" yaml:"password,omitempty"`
+	Verified      null.Bool   `boil:"verified" json:"verified,omitempty" toml:"verified" yaml:"verified,omitempty"`
+	Avatar        null.String `boil:"avatar" json:"avatar,omitempty" toml:"avatar" yaml:"avatar,omitempty"`
+	UserID        string      `boil:"user_id" json:"user_id" toml:"user_id" yaml:"user_id"`
+	UserIDUpdated bool        `boil:"user_id_updated" json:"user_id_updated" toml:"user_id_updated" yaml:"user_id_updated"`
 
 	R *userR `boil:"-" json:"-" toml:"-" yaml:"-"`
 	L userL  `boil:"-" json:"-" toml:"-" yaml:"-"`
 }
 
 var UserColumns = struct {
-	ID        string
-	CreatedAt string
-	UpdatedAt string
-	DeletedAt string
-	Name      string
-	Password  string
-	Verified  string
-	Avatar    string
+	ID            string
+	CreatedAt     string
+	UpdatedAt     string
+	DeletedAt     string
+	Name          string
+	Password      string
+	Verified      string
+	Avatar        string
+	UserID        string
+	UserIDUpdated string
 }{
-	ID:        "id",
-	CreatedAt: "created_at",
-	UpdatedAt: "updated_at",
-	DeletedAt: "deleted_at",
-	Name:      "name",
-	Password:  "password",
-	Verified:  "verified",
-	Avatar:    "avatar",
+	ID:            "id",
+	CreatedAt:     "created_at",
+	UpdatedAt:     "updated_at",
+	DeletedAt:     "deleted_at",
+	Name:          "name",
+	Password:      "password",
+	Verified:      "verified",
+	Avatar:        "avatar",
+	UserID:        "user_id",
+	UserIDUpdated: "user_id_updated",
 }
 
 // Generated where
 
+type whereHelperbool struct{ field string }
+
+func (w whereHelperbool) EQ(x bool) qm.QueryMod  { return qmhelper.Where(w.field, qmhelper.EQ, x) }
+func (w whereHelperbool) NEQ(x bool) qm.QueryMod { return qmhelper.Where(w.field, qmhelper.NEQ, x) }
+func (w whereHelperbool) LT(x bool) qm.QueryMod  { return qmhelper.Where(w.field, qmhelper.LT, x) }
+func (w whereHelperbool) LTE(x bool) qm.QueryMod { return qmhelper.Where(w.field, qmhelper.LTE, x) }
+func (w whereHelperbool) GT(x bool) qm.QueryMod  { return qmhelper.Where(w.field, qmhelper.GT, x) }
+func (w whereHelperbool) GTE(x bool) qm.QueryMod { return qmhelper.Where(w.field, qmhelper.GTE, x) }
+
 var UserWhere = struct {
-	ID        whereHelperuint
-	CreatedAt whereHelpernull_Time
-	UpdatedAt whereHelpernull_Time
-	DeletedAt whereHelpernull_Time
-	Name      whereHelperstring
-	Password  whereHelpernull_String
-	Verified  whereHelpernull_Bool
-	Avatar    whereHelpernull_String
+	ID            whereHelperuint
+	CreatedAt     whereHelpernull_Time
+	UpdatedAt     whereHelpernull_Time
+	DeletedAt     whereHelpernull_Time
+	Name          whereHelperstring
+	Password      whereHelpernull_String
+	Verified      whereHelpernull_Bool
+	Avatar        whereHelpernull_String
+	UserID        whereHelperstring
+	UserIDUpdated whereHelperbool
 }{
-	ID:        whereHelperuint{field: "`users`.`id`"},
-	CreatedAt: whereHelpernull_Time{field: "`users`.`created_at`"},
-	UpdatedAt: whereHelpernull_Time{field: "`users`.`updated_at`"},
-	DeletedAt: whereHelpernull_Time{field: "`users`.`deleted_at`"},
-	Name:      whereHelperstring{field: "`users`.`name`"},
-	Password:  whereHelpernull_String{field: "`users`.`password`"},
-	Verified:  whereHelpernull_Bool{field: "`users`.`verified`"},
-	Avatar:    whereHelpernull_String{field: "`users`.`avatar`"},
+	ID:            whereHelperuint{field: "`users`.`id`"},
+	CreatedAt:     whereHelpernull_Time{field: "`users`.`created_at`"},
+	UpdatedAt:     whereHelpernull_Time{field: "`users`.`updated_at`"},
+	DeletedAt:     whereHelpernull_Time{field: "`users`.`deleted_at`"},
+	Name:          whereHelperstring{field: "`users`.`name`"},
+	Password:      whereHelpernull_String{field: "`users`.`password`"},
+	Verified:      whereHelpernull_Bool{field: "`users`.`verified`"},
+	Avatar:        whereHelpernull_String{field: "`users`.`avatar`"},
+	UserID:        whereHelperstring{field: "`users`.`user_id`"},
+	UserIDUpdated: whereHelperbool{field: "`users`.`user_id_updated`"},
 }
 
 // UserRels is where relationship names are stored.
@@ -95,9 +114,9 @@ func (*userR) NewStruct() *userR {
 type userL struct{}
 
 var (
-	userAllColumns            = []string{"id", "created_at", "updated_at", "deleted_at", "name", "password", "verified", "avatar"}
-	userColumnsWithoutDefault = []string{"created_at", "updated_at", "deleted_at", "name", "password", "verified", "avatar"}
-	userColumnsWithDefault    = []string{"id"}
+	userAllColumns            = []string{"id", "created_at", "updated_at", "deleted_at", "name", "password", "verified", "avatar", "user_id", "user_id_updated"}
+	userColumnsWithoutDefault = []string{"created_at", "updated_at", "deleted_at", "name", "password", "verified", "avatar", "user_id"}
+	userColumnsWithDefault    = []string{"id", "user_id_updated"}
 	userPrimaryKeyColumns     = []string{"id"}
 )
 
@@ -616,7 +635,7 @@ func (o UserSlice) UpdateAll(exec boil.Executor, cols M) (int64, error) {
 
 var mySQLUserUniqueColumns = []string{
 	"id",
-	"name",
+	"user_id",
 }
 
 // Upsert attempts an insert using an executor, and does an update or ignore on conflict.

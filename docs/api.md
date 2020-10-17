@@ -45,7 +45,7 @@ Register user with email
 * request:
 
 ```
-{"mail":<string>, "name": <string>, "password":<string>, "app_id":<string>}
+{"mail":<string>, "name": <string>, "password":<string>, "app_id":<string>, "user_id":<string>}
 ```
 
 * response example:
@@ -282,7 +282,9 @@ Get user info
     "roles": "admin",
     "sub": 1,
     "updated_at": 1586925495,
-    "verified": true
+    "verified": true,
+    "user_id": xxasdfw,
+    "user_id_updated": false
   }
 }
 ```
@@ -298,7 +300,7 @@ Update user info
 * request:
 
 ```
-{"name":<string>, "gender":<string>, "avatar":<string>}
+{"name":<string>, "gender":<string>, "avatar":<string>, "user_id":<string>}
 ```
 
 * response example:

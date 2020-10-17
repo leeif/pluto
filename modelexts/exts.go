@@ -24,6 +24,8 @@ func (u User) Format() map[string]interface{} {
 	res["created_at"] = u.User.CreatedAt.Time.Unix()
 	res["updated_at"] = u.User.UpdatedAt.Time.Unix()
 	res["is_password_set"] = strconv.FormatBool(u.PasswordSet)
+	res["user_id"] = u.User.UserID
+	res["user_id_updated"] = u.User.UserIDUpdated
 	bindings := make([]interface{}, 0)
 	for _, binding := range u.Bindings {
 		b := make(map[string]interface{})

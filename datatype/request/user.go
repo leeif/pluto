@@ -1,21 +1,27 @@
 package request
 
+import (
+	"strings"
+	"unicode"
+)
+
 const (
 	defaultDeviceID = "UnKnown Device"
 )
 
 type MailRegister struct {
 	Mail     string `json:"mail"`
+	UserID   string `json:"user_id"`
 	Name     string `json:"name"`
 	Password string `json:"password"`
 	AppName  string `json:"app_id"`
 }
 
 func (mr *MailRegister) Validation() bool {
-	if mr.Mail == "" || mr.Password == "" || mr.Name == "" {
+	if strings.TrimSpace(mr.Mail) == "" || strings.TrimSpace(mr.Password) == "" || strings.TrimSpace(mr.Name) == "" {
 		return false
 	}
-	return true
+	return validateUserID(mr.UserID)
 }
 
 type PasswordLogin struct {
@@ -112,7 +118,7 @@ func (aml *AppleMobileLogin) Validation() bool {
 }
 
 type RegisterVerifyMail struct {
-	Mail   string `json:"mail"`
+	Mail    string `json:"mail"`
 	AppName string `json:"app_id"`
 }
 
@@ -152,13 +158,26 @@ func (rp *ResetPasswordWeb) Validation() bool {
 type UpdateUserInfo struct {
 	Name   string `json:"name"`
 	Avatar string `json:"avatar"`
+	UserID string `json:"user_id"`
 }
 
 func (uui *UpdateUserInfo) Validation() bool {
-	if uui.Name == "" && uui.Avatar == "" {
+	if strings.TrimSpace(uui.Name) == "" && uui.Avatar == "" {
 		return false
 	}
+	return validateUserID(uui.UserID)
+}
 
+func validateUserID(userID string) bool {
+	if len(userID) != 0 && strings.TrimSpace(userID) == "" || len(userID) > 100 {
+		return false
+	}
+	//can only be consisted by digit, letter, '-' or '_'
+	for _, r := range userID {
+		if !unicode.IsDigit(r) && !unicode.IsLetter(r) {
+			return false
+		}
+	}
 	return true
 }
 

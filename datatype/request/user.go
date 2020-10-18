@@ -162,7 +162,7 @@ type UpdateUserInfo struct {
 }
 
 func (uui *UpdateUserInfo) Validation() bool {
-	if strings.TrimSpace(uui.Name) == "" && uui.Avatar == "" {
+	if strings.TrimSpace(uui.Name) == "" && uui.Avatar == "" && uui.UserID == "" {
 		return false
 	}
 	return validateUserID(uui.UserID)
@@ -174,6 +174,9 @@ func validateUserID(userID string) bool {
 	}
 	//can only be consisted by digit, letter, '-' or '_'
 	for _, r := range userID {
+		if r == '_' || r == '-' {
+			return true
+		}
 		if !unicode.IsDigit(r) && !unicode.IsLetter(r) {
 			return false
 		}

@@ -174,6 +174,9 @@ func validateUserID(userID string) bool {
 	}
 	//can only be consisted by digit, letter, '-' or '_'
 	for _, r := range userID {
+		if r == '_' || r == '-' {
+			return true
+		}
 		if !unicode.IsDigit(r) && !unicode.IsLetter(r) {
 			return false
 		}

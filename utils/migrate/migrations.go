@@ -369,7 +369,7 @@ func addUserIdToUserTable(db *sql.DB, name string) error {
 }
 
 func initUserIdToUserTable(db *sql.DB, name string) error {
-	sql := "UPDATE `users` SET `user_id`=uuid();"
+	sql := "UPDATE `users` SET `user_id`=`name`;"
 	_, err := db.Exec(sql)
 	if err != nil {
 		return err

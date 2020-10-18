@@ -14,7 +14,7 @@ var (
 	MailNotExist          = NewPlutoError(http.StatusForbidden, 2002, "Mail does not exist", nil)
 	MailIsNotVerified     = NewPlutoError(http.StatusForbidden, 2003, "Mail is not verified", nil)
 	MailAlreadyVerified   = NewPlutoError(http.StatusBadRequest, 2004, "Mail is already verified", nil)
-	UsernameNotExist      = NewPlutoError(http.StatusForbidden, 2005, "User name does not exist", nil)
+	UserIdNotExist      = NewPlutoError(http.StatusForbidden, 2005, "User id does not exist", nil)
 	UsernameExists        = NewPlutoError(http.StatusForbidden, 2006, "User name already exists", nil)
 	BindAlreadyExists     = NewPlutoError(http.StatusForbidden, 2007, "Bind already exists", nil)
 	BindNotExist          = NewPlutoError(http.StatusForbidden, 2008, "Bind does not exist", nil)

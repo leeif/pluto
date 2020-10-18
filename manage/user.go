@@ -148,10 +148,10 @@ func (m *Manager) NamePasswordLogin(login request.PasswordLogin) (*GrantResult, 
 		tx.Rollback()
 	}()
 
-	user, err := models.Users(qm.Where("name = ?", login.Account)).One(tx)
+	user, err := models.Users(qm.Where("user_id = ?", login.Account)).One(tx)
 
 	if err != nil && err == sql.ErrNoRows {
-		return nil, perror.UsernameNotExist
+		return nil, perror.UserIdNotExist
 	} else if err != nil {
 		return nil, perror.ServerError.Wrapper(err)
 	}
@@ -193,6 +193,7 @@ func (m *Manager) NamePasswordLogin(login request.PasswordLogin) (*GrantResult, 
 	return grantResult, nil
 }
 
+//check userID unique before this method!!
 func (m *Manager) newUser(exec boil.Executor, name, avatar, password string, userID *string, verified bool) (*models.User, *perror.PlutoError) {
 	user := &models.User{}
 	user.Avatar.SetValid(avatar)
@@ -976,6 +977,18 @@ func (m *Manager) RegisterWithEmail(register request.MailRegister, admin bool) (
 		return user, perror.MailIsAlreadyRegister
 	}
 
+	var userID *string = nil
+	if register.UserID != "" {
+		userIDExists, err := models.Users(qm.Where("user_id = ?", register.UserID)).Exists(tx)
+		if err != nil {
+			return nil, perror.ServerError.Wrapper(err)
+		}
+		if userIDExists {
+			return nil, perror.UserIdExists
+		}
+		userID = &register.UserID
+	}
+
 	salt := saltUtil.RandomSalt(identifyToken)
 
 	encodedPassword, perr := saltUtil.EncodePassword(register.Password, salt)
@@ -1003,11 +1016,6 @@ func (m *Manager) RegisterWithEmail(register request.MailRegister, admin bool) (
 	verified := false
 	if m.config.Server.SkipRegisterVerifyMail || admin {
 		verified = true
-	}
-
-	var userID *string = nil
-	if register.UserID != "" {
-		userID = &register.UserID
 	}
 
 	user, perr := m.newUser(tx, register.Name, avatarURL, encodedPassword, userID, verified)

@@ -1,6 +1,7 @@
 package request
 
 import (
+	"regexp"
 	"strings"
 	"unicode"
 )
@@ -8,6 +9,8 @@ import (
 const (
 	defaultDeviceID = "UnKnown Device"
 )
+
+var emailRegex = regexp.MustCompile(`^[0-9a-z][_.0-9a-z-]{0,31}@([0-9a-z][0-9a-z-]{0,30}[0-9a-z]\.){1,4}[a-z]{2,4}$`)
 
 type MailRegister struct {
 	Mail     string `json:"mail"`
@@ -18,10 +21,17 @@ type MailRegister struct {
 }
 
 func (mr *MailRegister) Validation() bool {
-	if strings.TrimSpace(mr.Mail) == "" || strings.TrimSpace(mr.Password) == "" || strings.TrimSpace(mr.Name) == "" {
+	if !isEmailValid(mr.Mail) || strings.TrimSpace(mr.Password) == "" || strings.TrimSpace(mr.Name) == "" {
 		return false
 	}
 	return validateUserID(mr.UserID)
+}
+
+func isEmailValid(e string) bool {
+	if len(e) < 3 || len(e) > 254 {
+		return false
+	}
+	return emailRegex.MatchString(e)
 }
 
 type PasswordLogin struct {

@@ -162,7 +162,7 @@ type UpdateUserInfo struct {
 }
 
 func (uui *UpdateUserInfo) Validation() bool {
-	if strings.TrimSpace(uui.Name) == "" && uui.Avatar == "" {
+	if strings.TrimSpace(uui.Name) == "" && uui.Avatar == "" && uui.UserID == "" {
 		return false
 	}
 	return validateUserID(uui.UserID)

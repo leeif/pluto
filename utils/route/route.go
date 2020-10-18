@@ -39,7 +39,7 @@ func GetBaseURL(r *http.Request) string {
 	return baseURL
 }
 
-func GetRequestData(r *http.Request, reciver interface{}) *perror.PlutoError {
+func GetRequestData(r *http.Request, receiver interface{}) *perror.PlutoError {
 
 	decoder := schema.NewDecoder()
 	decoder.IgnoreUnknownKeys(true)
@@ -50,7 +50,7 @@ func GetRequestData(r *http.Request, reciver interface{}) *perror.PlutoError {
 		if err != nil {
 			return perror.ServerError.Wrapper(errors.New("Read body failed: " + err.Error()))
 		}
-		err = json.Unmarshal(body, &reciver)
+		err = json.Unmarshal(body, &receiver)
 		if err != nil {
 			return perror.BadRequest.Wrapper(err)
 		}
@@ -59,18 +59,18 @@ func GetRequestData(r *http.Request, reciver interface{}) *perror.PlutoError {
 		if err != nil {
 			return perror.BadRequest
 		}
-		err = decoder.Decode(reciver, r.PostForm)
+		err = decoder.Decode(receiver, r.PostForm)
 		if err != nil {
 			return perror.BadRequest.Wrapper(err)
 		}
 	}
 
 	// parse url parameter
-	if err := decoder.Decode(reciver, r.URL.Query()); err != nil {
+	if err := decoder.Decode(receiver, r.URL.Query()); err != nil {
 		return perror.BadRequest.Wrapper(err)
 	}
 
-	pr, ok := reciver.(request.PlutoRequest)
+	pr, ok := receiver.(request.PlutoRequest)
 	// check request body validation
 	if ok && !pr.Validation() {
 		return perror.BadRequest

@@ -15,11 +15,11 @@ var (
 	MailIsNotVerified     = NewPlutoError(http.StatusForbidden, 2003, "Mail is not verified", nil)
 	MailAlreadyVerified   = NewPlutoError(http.StatusBadRequest, 2004, "Mail is already verified", nil)
 	UserIdNotExist      = NewPlutoError(http.StatusForbidden, 2005, "User id does not exist", nil)
+	UserIdExists          = NewPlutoError(http.StatusForbidden, 2006, "User id already exists", nil)
 	BindAlreadyExists     = NewPlutoError(http.StatusForbidden, 2007, "Bind already exists", nil)
 	BindNotExist          = NewPlutoError(http.StatusForbidden, 2008, "Bind does not exist", nil)
 	PasswordNotSet        = NewPlutoError(http.StatusBadRequest, 2009, "Password has not been set for this account", nil)
 	UnbindNowAllow        = NewPlutoError(http.StatusForbidden, 2010, "Cannot unbind the last account.", nil)
-	UserIdExists          = NewPlutoError(http.StatusForbidden, 2011, "User id already exists", nil)
 
 	InvalidPassword      = NewPlutoError(http.StatusForbidden, 3001, "Invalid Password", nil)
 	InvalidRefreshToken  = NewPlutoError(http.StatusForbidden, 3002, "Invalid Refresh Token", nil)

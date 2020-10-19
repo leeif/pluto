@@ -296,7 +296,7 @@ func (router *Router) VerifyMail(w http.ResponseWriter, r *http.Request) *perror
 		return perr
 	}
 
-	user, perr := router.manager.RegisterVerifyMail(rvm)
+	binding, perr := router.manager.RegisterVerifyMail(rvm)
 
 	if perr != nil {
 		return perr
@@ -309,7 +309,7 @@ func (router *Router) VerifyMail(w http.ResponseWriter, r *http.Request) *perror
 		}
 		language := r.Header.Get("Accept-Language")
 		appI18nName, err := router.manager.ApplicationI18nName(rvm.AppName, language)
-		if err := ml.SendRegisterVerify(user.ID, rvm.Mail, routeUtils.GetBaseURL(r), language, appI18nName); err != nil {
+		if err := ml.SendRegisterVerify(binding.UserID, binding.Mail, routeUtils.GetBaseURL(r), language, appI18nName); err != nil {
 			router.logger.Error(err.LogError.Error())
 		}
 	}()

@@ -1,7 +1,7 @@
 package request
 
 import (
-	"regexp"
+	"github.com/MuShare/pluto/utils/general"
 	"strings"
 	"unicode"
 )
@@ -9,8 +9,6 @@ import (
 const (
 	defaultDeviceID = "UnKnown Device"
 )
-
-var emailRegex = regexp.MustCompile(`^[0-9a-z][_.0-9a-z-]{0,31}@([0-9a-z][0-9a-z-]{0,30}[0-9a-z]\.){1,4}[a-z]{2,4}$`)
 
 type MailRegister struct {
 	Mail     string `json:"mail"`
@@ -21,17 +19,10 @@ type MailRegister struct {
 }
 
 func (mr *MailRegister) Validation() bool {
-	if !isEmailValid(mr.Mail) || strings.TrimSpace(mr.Password) == "" || strings.TrimSpace(mr.Name) == "" {
+	if !general.ValidMail(mr.Mail) || strings.TrimSpace(mr.Password) == "" || strings.TrimSpace(mr.Name) == "" {
 		return false
 	}
 	return validateUserID(mr.UserID)
-}
-
-func isEmailValid(e string) bool {
-	if len(e) < 3 || len(e) > 254 {
-		return false
-	}
-	return emailRegex.MatchString(e)
 }
 
 type PasswordLogin struct {
@@ -130,10 +121,11 @@ func (aml *AppleMobileLogin) Validation() bool {
 type RegisterVerifyMail struct {
 	Mail    string `json:"mail"`
 	AppName string `json:"app_id"`
+	UserID  string `json:"user_id"`
 }
 
 func (rvm *RegisterVerifyMail) Validation() bool {
-	if rvm.Mail == "" {
+	if rvm.Mail == "" && rvm.UserID == "" {
 		return false
 	}
 

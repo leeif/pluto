@@ -1041,27 +1041,40 @@ func (m *Manager) RegisterWithEmail(register request.MailRegister, admin bool) (
 	return user, nil
 }
 
-func (m *Manager) RegisterVerifyMail(rvm request.RegisterVerifyMail) (*models.User, *perror.PlutoError) {
+func (m *Manager) RegisterVerifyMail(rvm request.RegisterVerifyMail) (*models.Binding, *perror.PlutoError) {
 
-	identifyToken := b64.RawStdEncoding.EncodeToString([]byte(rvm.Mail))
-	binding, err := models.Bindings(qm.Where("login_type = ? and identify_token = ?", MAILLOGIN, identifyToken)).One(m.db)
-	if err != nil && err == sql.ErrNoRows {
-		return nil, perror.MailNotExist
-	} else if err != nil {
-		return nil, perror.ServerError.Wrapper(err)
+	var userMail string
+	var binding *models.Binding
+	var queryErr error
+	if rvm.Mail != "" {
+		userMail = rvm.Mail
+		identifyToken := b64.RawStdEncoding.EncodeToString([]byte(userMail))
+		binding, queryErr = models.Bindings(qm.Where("login_type = ? and identify_token = ?", MAILLOGIN, identifyToken)).One(m.db)
+		if queryErr != nil && queryErr == sql.ErrNoRows {
+			return nil, perror.MailNotExist
+		} else if queryErr != nil {
+			return nil, perror.ServerError.Wrapper(queryErr)
+		}
+	} else {
+		user, userErr := models.Users(qm.Where("user_id = ?", rvm.UserID)).One(m.db)
+		if userErr != nil && userErr == sql.ErrNoRows {
+			return nil, perror.UserIdNotExist
+		} else if userErr != nil {
+			return nil, perror.ServerError.Wrapper(userErr)
+		}
+		binding, queryErr = models.Bindings(qm.Where("login_type = ? and user_id = ?", MAILLOGIN, user.ID)).One(m.db)
+		if queryErr != nil && queryErr == sql.ErrNoRows {
+			return nil, perror.MailNotExist
+		} else if queryErr != nil {
+			return nil, perror.ServerError.Wrapper(queryErr)
+		}
 	}
 
 	if binding.Verified.Bool == true {
 		return nil, perror.MailAlreadyVerified
 	}
 
-	user, err := models.Users(qm.Where("id = ?", binding.UserID)).One(m.db)
-
-	if err != nil {
-		return nil, perror.ServerError.Wrapper(err)
-	}
-
-	return user, nil
+	return binding, nil
 }
 
 func (m *Manager) RegisterVerify(token string) *perror.PlutoError {

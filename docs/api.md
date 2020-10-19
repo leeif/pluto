@@ -71,7 +71,8 @@ Send registration verification mail
 ```
 {
     "mail": string,
-    "app_id": string
+    "app_id": string,
+    "user_id": string
 }
 ```
 

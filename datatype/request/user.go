@@ -3,7 +3,6 @@ package request
 import (
 	"github.com/MuShare/pluto/utils/general"
 	"strings"
-	"unicode"
 )
 
 const (
@@ -176,10 +175,7 @@ func validateUserID(userID string) bool {
 	}
 	//can only be consisted by digit, letter, '-' or '_'
 	for _, r := range userID {
-		if r == '_' || r == '-' {
-			return true
-		}
-		if !unicode.IsDigit(r) && !unicode.IsLetter(r) {
+		if (r < '0' || r > '9') && (r < 'a' || r > 'z') && (r < 'A' || r > 'Z') && r != '_' && r != '-' {
 			return false
 		}
 	}

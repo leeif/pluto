@@ -1,9 +1,7 @@
 package config
 
 type MailConfig struct {
-	SMTP             *SMTP   `kiper_value:"name:smtp"`
-	User             *string `kiper_value:"name:user"`
-	Password         *string `kiper_value:"name:password"`
+	MailSenderPoolBaseUrl *string `kiper_value:"name:mail-sender-pool-base-url;help:mail sender pool host"`
 }
 
 type SMTP struct {
@@ -20,7 +18,5 @@ func (smtp *SMTP) String() string {
 }
 
 func newMailConfig() *MailConfig {
-	return &MailConfig{
-		SMTP: &SMTP{},
-	}
+	return &MailConfig{}
 }

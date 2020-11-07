@@ -119,17 +119,18 @@ func Init(db *sql.DB, config *config.Config, bundle *i18n.Bundle) *perror.PlutoE
 
 		log.Println(mailBody)
 
-		go func() {
-			ml, err := mail.NewMail(config, bundle)
-			if err != nil {
-				logger.Error("smtp server is not set, can't send the mail")
-			}
-			if err := ml.SendPlainText(mr.Mail, "[Pluto]Admin Password", mailBody); err != nil {
-				logger.Error("send mail failed: " + err.LogError.Error())
-			} else {
-				logger.Info("Mail with your admin login info has been sent")
-			}
-		}()
+		ml, err := mail.NewMail(config, bundle)
+		if err != nil {
+			logger.Error("smtp server is not set, can't send the mail")
+			return err
+		}
+		if err := ml.SendPlainText(mr.Mail, "[Pluto]Admin Password", mailBody); err != nil {
+			logger.Error("send mail failed: " + err.LogError.Error())
+			return err
+		} else {
+			logger.Info("Mail with your admin login info has been sent")
+		}
+
 	}
 
 	rsu := request.RoleScopeUpdate{}

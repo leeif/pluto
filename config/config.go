@@ -84,4 +84,5 @@ func printConfig(config *Config) {
 	log.Println(fmt.Sprintf("RegisterVerifyTokenExpire: %d", config.Token.RegisterVerifyTokenExpire))
 	log.Println(fmt.Sprintf("ResetPasswordTokenExpire: %d", config.Token.ResetPasswordTokenExpire))
 	log.Println(fmt.Sprintf("RefeshTokenExpire: %d", config.Token.RefreshTokenExpire))
+	log.Println(fmt.Sprintf("MailSenderPool: %s", *config.Mail.MailSenderPoolBaseUrl))
 }

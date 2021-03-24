@@ -9,22 +9,20 @@ require (
 	github.com/RichardKnop/uuid v0.0.0-20160216163710-c55201b03606
 	github.com/alecthomas/template v0.0.0-20190718012654-fb15b899a751
 	github.com/aliyun/aliyun-oss-go-sdk v2.0.2+incompatible
+	github.com/asim/go-micro/plugins/server/http/v3 v3.0.0-20210317093720-0a41e6d80f39
+	github.com/asim/go-micro/v3 v3.5.0
 	github.com/dgrijalva/jwt-go v3.2.0+incompatible
 	github.com/friendsofgo/errors v0.9.2
 	github.com/go-kit/kit v0.9.0
 	github.com/go-sql-driver/mysql v1.4.1
-	github.com/google/uuid v1.1.1
+	github.com/google/uuid v1.1.5
 	github.com/gorilla/context v1.1.1
 	github.com/gorilla/mux v1.7.3
 	github.com/gorilla/schema v1.1.0
 	github.com/leeif/kiper v0.3.0
-	github.com/micro/go-micro v1.18.0
-	github.com/micro/go-plugins/registry/consul v0.0.0-20200119172437-4fe21aa238fd
-	github.com/micro/go-plugins/server/http v0.0.0-20200119172437-4fe21aa238fd
 	github.com/nicksnyder/go-i18n/v2 v2.0.3
-	github.com/pelletier/go-toml v1.2.0
 	github.com/rs/cors v1.7.0
-	github.com/stretchr/testify v1.4.0
+	github.com/stretchr/testify v1.6.1
 	github.com/urfave/negroni v1.0.0
 	github.com/volatiletech/inflect v0.0.0-20170731032912-e7201282ae8d // indirect
 	github.com/volatiletech/null v8.0.0+incompatible
@@ -33,8 +31,8 @@ require (
 	go.uber.org/dig v1.7.0 // indirect
 	go.uber.org/fx v1.9.0
 	go.uber.org/goleak v0.10.0 // indirect
-	golang.org/x/crypto v0.0.0-20191108234033-bd318be0434a
-	golang.org/x/text v0.3.3
-	google.golang.org/api v0.8.0
-	gopkg.in/yaml.v2 v2.3.0 // indirect
+	golang.org/x/crypto v0.0.0-20200622213623-75b288015ac9
+	golang.org/x/sys v0.0.0-20210320140829-1e4c9ba3b0c4 // indirect
+	golang.org/x/text v0.3.5
+	google.golang.org/api v0.42.0
 )

@@ -3,12 +3,13 @@ package main
 import (
 	"context"
 	"database/sql"
-	"github.com/MuShare/pluto/localization"
-	"github.com/nicksnyder/go-i18n/v2/i18n"
 	"log"
 	"os"
 	"os/signal"
 	"time"
+
+	"github.com/MuShare/pluto/localization"
+	"github.com/nicksnyder/go-i18n/v2/i18n"
 
 	"github.com/MuShare/pluto/manage"
 	"github.com/MuShare/pluto/utils/admin"

@@ -75,6 +75,10 @@ var migrations = []Migrations{
 		name:     "unique_user_id_to_user_table",
 		function: addUserIdUniqueToUserTable,
 	},
+	{
+		name:     "add_login_config_to_application",
+		function: addLoginConfigToApplication,
+	},
 }
 
 func createUsersTable(db *sql.DB, name string) error {
@@ -380,6 +384,22 @@ func initUserIdToUserTable(db *sql.DB, name string) error {
 func addUserIdUniqueToUserTable(db *sql.DB, name string) error {
 	sql := "ALTER TABLE `users` ADD UNIQUE INDEX `user_id_UNIQUE` (`user_id`)," +
 		"DROP INDEX `name_key`, ADD INDEX `user_name_index` (`name`);"
+	_, err := db.Exec(sql)
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
+func addLoginConfigToApplication(db *sql.DB, name string) error {
+	sql := `
+	ALTER TABLE applications ADD(
+		google_login json,
+		wechat_login json,
+		apple_login json
+	)
+	`
+
 	_, err := db.Exec(sql)
 	if err != nil {
 		return err

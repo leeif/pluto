@@ -6,7 +6,6 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-	"github.com/google/uuid"
 	"io/ioutil"
 	"net/http"
 	"net/url"
@@ -14,12 +13,13 @@ import (
 	"strings"
 	"time"
 
+	"github.com/google/uuid"
+
 	"github.com/BillSJC/appleLogin"
 	"github.com/volatiletech/sqlboiler/boil"
 
 	"github.com/volatiletech/sqlboiler/queries/qm"
 
-	"github.com/MuShare/pluto/config"
 	"github.com/MuShare/pluto/modelexts"
 
 	perror "github.com/MuShare/pluto/datatype/pluto_error"
@@ -368,7 +368,13 @@ func verifyGoogleIdToken(idToken string) (*googleIDTokenInfo, *perror.PlutoError
 }
 
 func (m *Manager) WechatLoginMobile(login request.WechatMobileLogin) (*GrantResult, *perror.PlutoError) {
-	accessToken, openID, perr := getWechatAccessToken(login.Code, m.config.WechatLogin)
+	wechatLogin, perr := getAppWechatLogin(m, login.AppID)
+
+	if perr != nil {
+		return nil, perr
+	}
+
+	accessToken, openID, perr := getWechatAccessToken(login.Code, wechatLogin)
 
 	if perr != nil {
 		return nil, perr
@@ -451,7 +457,7 @@ func (m *Manager) WechatLoginMobile(login request.WechatMobileLogin) (*GrantResu
 	return grantResult, nil
 }
 
-func getWechatAccessToken(code string, cfg *config.WechatLoginConfig) (accessToken string, openID string, pe *perror.PlutoError) {
+func getWechatAccessToken(code string, cfg *modelexts.WechatLogin) (accessToken string, openID string, pe *perror.PlutoError) {
 	defer func() {
 		var err error
 		if r := recover(); r != nil {
@@ -470,7 +476,7 @@ func getWechatAccessToken(code string, cfg *config.WechatLoginConfig) (accessTok
 	}()
 	// get access token
 	url := fmt.Sprintf("https://api.weixin.qq.com/sns/oauth2/access_token?appid=%s&secret=%s&code=%s&grant_type=authorization_code",
-		*cfg.AppID, *cfg.Secret, code)
+		cfg.AppID, cfg.AppSecret, code)
 
 	resp, err := http.Get(url)
 	if err != nil {
@@ -572,7 +578,13 @@ func getWechatUserInfo(accessToken string, openID string) (info *wechatUserInfo,
 }
 
 func (m *Manager) AppleLoginMobile(login request.AppleMobileLogin) (*GrantResult, *perror.PlutoError) {
-	info, perr := getAppleToken(m.config, login.Code)
+	appleLogin, perr := getAppAppleLogin(m, login.AppID)
+
+	if perr != nil {
+		return nil, perr
+	}
+
+	info, perr := getAppleToken(appleLogin, login.Code)
 
 	if perr != nil {
 		return nil, perr
@@ -666,15 +678,15 @@ type appleIdTokenInfo struct {
 	gjwt.StandardClaims
 }
 
-func getAppleToken(cfg *config.Config, code string) (*appleIdTokenInfo, *perror.PlutoError) {
+func getAppleToken(cfg *modelexts.AppleLogin, code string) (*appleIdTokenInfo, *perror.PlutoError) {
 	a := appleLogin.InitAppleConfig(
-		cfg.AppleLogin.TeamID,
-		cfg.AppleLogin.BundleID,
-		cfg.AppleLogin.RedirectURL,
-		cfg.AppleLogin.KeyID,
+		cfg.TeamID,
+		cfg.BundleID,
+		cfg.RedirectURL,
+		cfg.KeyID,
 	)
 
-	err := a.LoadP8CertByFile(cfg.AppleLogin.P8CertFile)
+	err := a.LoadP8CertByFile(cfg.P8CertFile)
 	if err != nil {
 		return nil, perror.ServerError.Wrapper(err)
 	}
@@ -689,7 +701,7 @@ func getAppleToken(cfg *config.Config, code string) (*appleIdTokenInfo, *perror.
 		return nil, perr
 	}
 
-	if info.Aud != cfg.AppleLogin.BundleID {
+	if info.Aud != cfg.BundleID {
 		return nil, perror.InvalidAppleIDToken
 	}
 	return info, nil
@@ -854,7 +866,7 @@ func (m *Manager) UserInfo(userID uint, accessPayload *jwt.AccessPayload) (*mode
 
 	user, err := models.Users(qm.Where("id = ?", userID)).One(m.db)
 	if err != nil && err == sql.ErrNoRows {
-		return nil, perror.ServerError.Wrapper(errors.New("user not found id: " + string(accessPayload.UserID)))
+		return nil, perror.ServerError.Wrapper(fmt.Errorf("user not found id: %d", accessPayload.UserID))
 	} else if err != nil {
 		return nil, perror.ServerError.Wrapper(err)
 	}
@@ -903,7 +915,7 @@ func (m *Manager) UpdateUserInfo(accessPayload *jwt.AccessPayload, uui request.U
 
 	user, err := models.Users(qm.Where("id = ?", accessPayload.UserID)).One(tx)
 	if err != nil && err == sql.ErrNoRows {
-		return perror.ServerError.Wrapper(errors.New("user not found id: " + string(accessPayload.UserID)))
+		return perror.ServerError.Wrapper(fmt.Errorf("user not found id: %d", accessPayload.UserID))
 	} else if err != nil {
 		return perror.ServerError.Wrapper(err)
 	}
@@ -1237,7 +1249,13 @@ func (m *Manager) BindGoogle(binding *request.Binding, accessPayload *jwt.Access
 }
 
 func (m *Manager) BindApple(binding *request.Binding, accessPayload *jwt.AccessPayload) *perror.PlutoError {
-	info, perr := getAppleToken(m.config, binding.Code)
+	appleLogin, perr := getAppAppleLogin(m, accessPayload.AppID)
+
+	if perr != nil {
+		return perr
+	}
+
+	info, perr := getAppleToken(appleLogin, binding.Code)
 	if perr != nil {
 		return perr
 	}
@@ -1283,8 +1301,12 @@ func (m *Manager) BindApple(binding *request.Binding, accessPayload *jwt.AccessP
 }
 
 func (m *Manager) BindWechat(binding *request.Binding, accessPayload *jwt.AccessPayload) *perror.PlutoError {
+	wechatLogin, perr := getAppWechatLogin(m, accessPayload.AppID)
+	if perr != nil {
+		return perr
+	}
 
-	accessToken, openID, perr := getWechatAccessToken(binding.Code, m.config.WechatLogin)
+	accessToken, openID, perr := getWechatAccessToken(binding.Code, wechatLogin)
 
 	if perr != nil {
 		return perr

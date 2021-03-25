@@ -3,28 +3,25 @@ package server
 import (
 	"context"
 	"net/http"
-	"time"
 
 	"log"
 
+	"github.com/asim/go-micro/v3"
+	"github.com/asim/go-micro/v3/registry"
+	"github.com/asim/go-micro/v3/server"
 	"github.com/gorilla/mux"
-	"github.com/micro/go-micro"
-	"github.com/micro/go-micro/registry"
-	"github.com/micro/go-micro/registry/mdns"
-	"github.com/micro/go-micro/server"
-	"github.com/micro/go-plugins/registry/consul"
 	"github.com/rs/cors"
 	"go.uber.org/fx"
 
 	"github.com/MuShare/pluto/config"
-	httpServer "github.com/micro/go-plugins/server/http"
+	httpServer "github.com/asim/go-micro/plugins/server/http/v3"
 )
 
 type Server struct {
 }
 
 func NewMux(lc fx.Lifecycle, config *config.Config) *mux.Router {
-	address := ":" + config.Server.Port.String()
+	address := "127.0.0.1:" + config.Server.Port.String()
 	router := mux.NewRouter()
 	c := cors.New(cors.Options{
 		AllowedMethods: []string{
@@ -41,13 +38,8 @@ func NewMux(lc fx.Lifecycle, config *config.Config) *mux.Router {
 
 	// microservices
 	var rgy registry.Registry
-	if config.Registry.Consul {
-		rgy = consul.NewRegistry(
-			registry.Addrs(config.Registry.ConsulAddress + ":" + config.Registry.ConsulPort.String()),
-		)
-	} else {
-		rgy = mdns.NewRegistry()
-	}
+	// TODO(cj): consul
+	rgy = registry.NewRegistry()
 
 	srv := httpServer.NewServer(
 		server.Name(config.Server.ServerName),
@@ -57,11 +49,11 @@ func NewMux(lc fx.Lifecycle, config *config.Config) *mux.Router {
 	handler := c.Handler(router)
 	hd := srv.NewHandler(handler)
 	srv.Handle(hd)
-	ctx, cancel := context.WithCancel(context.Background())
+	// ctx, cancel := context.WithCancel(context.Background())
 	service := micro.NewService(
 		micro.Server(srv),
 		micro.Name(config.Registry.ServiceName),
-		micro.Context(ctx),
+		// micro.Context(ctx),
 		micro.Registry(rgy),
 	)
 
@@ -77,13 +69,13 @@ func NewMux(lc fx.Lifecycle, config *config.Config) *mux.Router {
 			go service.Run()
 			return nil
 		},
-		OnStop: func(ctx context.Context) error {
-			log.Println("Stopping Pluto server")
-			cancel()
-			// wait for consul deregister
-			time.Sleep(5 * time.Second)
-			return nil
-		},
+		// OnStop: func(ctx context.Context) error {
+		// 	log.Println("Stopping Pluto server")
+		// 	cancel()
+		// 	// wait for consul deregister
+		// 	time.Sleep(5 * time.Second)
+		// 	return nil
+		// },
 	})
 	return router
 }

@@ -6,6 +6,23 @@
 
 Pluto is a JWT based authorization/authentication service. Besides providing a basic user registration and login feature, Pluto also provides a RBAC management to control the user's permission. Pluto implements the OAuth2 specified APIs for authorization.
 
+## Setup
+
+```bash
+# install sqlboiler
+$ GO111MODULE=on go get -u -t github.com/volatiletech/sqlboiler@v3.6.0
+$ GO111MODULE=on go get -u -t github.com/volatiletech/sqlboiler/drivers/sqlboiler-mysql@v3.6.0
+$ git clone ...
+# start mysql and create `pluto` database
+$ make migrate-binary-build
+# run migrations
+$ ./bin/pluto-migrate
+# build server
+$ make server-binary-install
+# start server
+$ pluto-server
+```
+
 ## Main Features
 
 * User registration / login

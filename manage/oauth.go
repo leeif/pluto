@@ -7,8 +7,6 @@ import (
 	"net/url"
 	"time"
 
-	"github.com/RichardKnop/uuid"
-	"github.com/MuShare/pluto/datatype/pluto_error"
 	perror "github.com/MuShare/pluto/datatype/pluto_error"
 	"github.com/MuShare/pluto/datatype/request"
 	"github.com/MuShare/pluto/modelexts"
@@ -17,6 +15,7 @@ import (
 	"github.com/MuShare/pluto/utils/jwt"
 	"github.com/MuShare/pluto/utils/refresh"
 	saltUtil "github.com/MuShare/pluto/utils/salt"
+	"github.com/RichardKnop/uuid"
 	"github.com/volatiletech/sqlboiler/boil"
 	"github.com/volatiletech/sqlboiler/queries/qm"
 	"github.com/wxnacy/wgo/arrays"
@@ -379,6 +378,9 @@ func (m *Manager) loginWithAppID(exec boil.Executor, userID uint, deviceID strin
 }
 
 func (m *Manager) newRefreshToken(exec boil.Executor, userID uint, deviceApp *models.DeviceApp, scopes string) (*models.RefreshToken, *perror.PlutoError) {
+	// NOTE(cj): string(userID) 应该是一个实现错误，这个地方应该是希望将数字转换为字符串
+	// 但是为了 token 的兼容
+	// 这里保持之前的实现不变
 	refreshToken := refresh.GenerateRefreshToken(string(userID) + string(deviceApp.ID))
 
 	rt := &models.RefreshToken{}
@@ -395,6 +397,7 @@ func (m *Manager) newRefreshToken(exec boil.Executor, userID uint, deviceApp *mo
 }
 
 func (m *Manager) updateRefreshToken(exec boil.Executor, rt *models.RefreshToken, scopes string) *perror.PlutoError {
+	// NOTE(cj): 这里同 newRefreshToken
 	newToken := refresh.GenerateRefreshToken(string(rt.UserID) + string(rt.DeviceAppID))
 	rt.RefreshToken = newToken
 	rt.ExpireAt = time.Now().Add(time.Duration(m.config.Token.RefreshTokenExpire) * time.Second)
@@ -446,7 +449,7 @@ func (m *Manager) grantToken(userID uint, rt *models.RefreshToken, scopes, appID
 	return grantResult, nil
 }
 
-func (m *Manager) GrantAuthorizationCode(oa *request.OAuthAuthorize, accessPayload *jwt.AccessPayload) (*AuthorizeResult, *url.URL, *pluto_error.PlutoError) {
+func (m *Manager) GrantAuthorizationCode(oa *request.OAuthAuthorize, accessPayload *jwt.AccessPayload) (*AuthorizeResult, *url.URL, *perror.PlutoError) {
 	tx, err := m.db.Begin()
 	if err != nil {
 		return nil, nil, perror.ServerError.Wrapper(err)
@@ -511,7 +514,7 @@ func (m *Manager) GrantAuthorizationCode(oa *request.OAuthAuthorize, accessPaylo
 	}, redirectURI, nil
 }
 
-func (m *Manager) GrantAccessToken(oa *request.OAuthAuthorize, accessPayload *jwt.AccessPayload) (*AuthorizeResult, *url.URL, *pluto_error.PlutoError) {
+func (m *Manager) GrantAccessToken(oa *request.OAuthAuthorize, accessPayload *jwt.AccessPayload) (*AuthorizeResult, *url.URL, *perror.PlutoError) {
 
 	client, perr := m.getClientByKey(m.db, oa.ClientID)
 	if perr != nil {

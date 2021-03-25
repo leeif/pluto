@@ -9,14 +9,17 @@ Pluto is a JWT based authorization/authentication service. Besides providing a b
 ## Setup
 
 ```bash
+# install sqlboiler
+$ GO111MODULE=on go get -u -t github.com/volatiletech/sqlboiler@v3.6.0
+$ GO111MODULE=on go get -u -t github.com/volatiletech/sqlboiler/drivers/sqlboiler-mysql@v3.6.0
 $ git clone ...
-$ # start mysql and create `pluto` database
+# start mysql and create `pluto` database
 $ make migrate-binary-build
-$ # run migrations
+# run migrations
 $ ./bin/pluto-migrate
-$ # build server
+# build server
 $ make server-binary-install
-$ # start server
+# start server
 $ pluto-server
 ```
 

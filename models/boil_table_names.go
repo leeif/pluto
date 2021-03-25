@@ -7,6 +7,7 @@ var TableNames = struct {
 	Applications             string
 	Bindings                 string
 	DeviceApps               string
+	Migrations               string
 	OauthAuthorizationCodes  string
 	OauthClients             string
 	RbacRoleScopes           string
@@ -20,6 +21,7 @@ var TableNames = struct {
 	Applications:             "applications",
 	Bindings:                 "bindings",
 	DeviceApps:               "device_apps",
+	Migrations:               "migrations",
 	OauthAuthorizationCodes:  "oauth_authorization_codes",
 	OauthClients:             "oauth_clients",
 	RbacRoleScopes:           "rbac_role_scopes",

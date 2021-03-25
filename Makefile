@@ -23,6 +23,9 @@ docker-clean-staging:
 	docker rm -v $(shell docker ps --filter status=exited -q 2>/dev/null) 2>/dev/null || true
 	docker rmi $(shell docker images --filter dangling=true -q 2>/dev/null) 2>/dev/null || true
 
+run: install
+	pluto-server
+
 install:
 	cd cmd/pluto-server && \
 	GO111MODULE=on go install -ldflags="-X 'main.VERSION=$(VERSION)'"

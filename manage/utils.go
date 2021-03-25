@@ -2,6 +2,7 @@ package manage
 
 import (
 	"database/sql"
+	"fmt"
 	"strings"
 
 	"github.com/volatiletech/sqlboiler/boil"
@@ -9,8 +10,8 @@ import (
 
 	"github.com/MuShare/pluto/config"
 	perror "github.com/MuShare/pluto/datatype/pluto_error"
-	"github.com/MuShare/pluto/log"
 	plog "github.com/MuShare/pluto/log"
+	"github.com/MuShare/pluto/modelexts"
 	"github.com/MuShare/pluto/models"
 	"github.com/volatiletech/sqlboiler/queries/qm"
 )
@@ -156,7 +157,7 @@ func getValidScopes(exec boil.Executor, requestScopes string, userID uint, appID
 }
 
 type Manager struct {
-	logger *log.PlutoLog
+	logger *plog.PlutoLog
 	config *config.Config
 	db     *sql.DB
 }
@@ -178,4 +179,46 @@ func NewManager(db *sql.DB, config *config.Config, logger *plog.PlutoLog) (*Mana
 	manager.logger = logger
 
 	return manager, nil
+}
+
+func getAppAppleLogin(m *Manager, appID string) (*modelexts.AppleLogin, *perror.PlutoError) {
+	app, err := models.Applications(qm.Where("id = ?", appID)).One(m.db)
+
+	if err != nil && err != sql.ErrNoRows {
+		return nil, perror.ServerError.Wrapper(err)
+	}
+
+	if err == sql.ErrNoRows {
+		return nil, perror.ApplicationNotExist
+	}
+
+	result := &modelexts.AppleLogin{}
+	err = app.AppleLogin.Unmarshal(result)
+
+	if err != nil {
+		return nil, perror.ServerError.Wrapper(fmt.Errorf("failed to unmarshal appleLogin: %s", appID))
+	}
+
+	return result, nil
+}
+
+func getAppWechatLogin(m *Manager, appID string) (*modelexts.WechatLogin, *perror.PlutoError) {
+	app, err := models.Applications(qm.Where("id = ?", appID)).One(m.db)
+
+	if err != nil && err != sql.ErrNoRows {
+		return nil, perror.ServerError.Wrapper(err)
+	}
+
+	if err == sql.ErrNoRows {
+		return nil, perror.ApplicationNotExist
+	}
+
+	result := &modelexts.WechatLogin{}
+	err = app.WechatLogin.Unmarshal(result)
+
+	if err != nil {
+		return nil, perror.ServerError.Wrapper(fmt.Errorf("failed to unmarshal wechatLogin: %s", appID))
+	}
+
+	return result, nil
 }

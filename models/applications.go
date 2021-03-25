@@ -31,6 +31,9 @@ type Application struct {
 	Webhook             string    `boil:"webhook" json:"webhook" toml:"webhook" yaml:"webhook"`
 	DefaultRole         null.Uint `boil:"default_role" json:"default_role,omitempty" toml:"default_role" yaml:"default_role,omitempty"`
 	I18nApplicationName null.JSON `boil:"i18n_application_name" json:"i18n_application_name,omitempty" toml:"i18n_application_name" yaml:"i18n_application_name,omitempty"`
+	GoogleLogin         null.JSON `boil:"google_login" json:"google_login,omitempty" toml:"google_login" yaml:"google_login,omitempty"`
+	WechatLogin         null.JSON `boil:"wechat_login" json:"wechat_login,omitempty" toml:"wechat_login" yaml:"wechat_login,omitempty"`
+	AppleLogin          null.JSON `boil:"apple_login" json:"apple_login,omitempty" toml:"apple_login" yaml:"apple_login,omitempty"`
 
 	R *applicationR `boil:"-" json:"-" toml:"-" yaml:"-"`
 	L applicationL  `boil:"-" json:"-" toml:"-" yaml:"-"`
@@ -45,6 +48,9 @@ var ApplicationColumns = struct {
 	Webhook             string
 	DefaultRole         string
 	I18nApplicationName string
+	GoogleLogin         string
+	WechatLogin         string
+	AppleLogin          string
 }{
 	ID:                  "id",
 	CreatedAt:           "created_at",
@@ -54,6 +60,9 @@ var ApplicationColumns = struct {
 	Webhook:             "webhook",
 	DefaultRole:         "default_role",
 	I18nApplicationName: "i18n_application_name",
+	GoogleLogin:         "google_login",
+	WechatLogin:         "wechat_login",
+	AppleLogin:          "apple_login",
 }
 
 // Generated where
@@ -161,6 +170,9 @@ var ApplicationWhere = struct {
 	Webhook             whereHelperstring
 	DefaultRole         whereHelpernull_Uint
 	I18nApplicationName whereHelpernull_JSON
+	GoogleLogin         whereHelpernull_JSON
+	WechatLogin         whereHelpernull_JSON
+	AppleLogin          whereHelpernull_JSON
 }{
 	ID:                  whereHelperuint{field: "`applications`.`id`"},
 	CreatedAt:           whereHelpernull_Time{field: "`applications`.`created_at`"},
@@ -170,6 +182,9 @@ var ApplicationWhere = struct {
 	Webhook:             whereHelperstring{field: "`applications`.`webhook`"},
 	DefaultRole:         whereHelpernull_Uint{field: "`applications`.`default_role`"},
 	I18nApplicationName: whereHelpernull_JSON{field: "`applications`.`i18n_application_name`"},
+	GoogleLogin:         whereHelpernull_JSON{field: "`applications`.`google_login`"},
+	WechatLogin:         whereHelpernull_JSON{field: "`applications`.`wechat_login`"},
+	AppleLogin:          whereHelpernull_JSON{field: "`applications`.`apple_login`"},
 }
 
 // ApplicationRels is where relationship names are stored.
@@ -189,8 +204,8 @@ func (*applicationR) NewStruct() *applicationR {
 type applicationL struct{}
 
 var (
-	applicationAllColumns            = []string{"id", "created_at", "updated_at", "deleted_at", "name", "webhook", "default_role", "i18n_application_name"}
-	applicationColumnsWithoutDefault = []string{"created_at", "updated_at", "deleted_at", "name", "webhook", "default_role", "i18n_application_name"}
+	applicationAllColumns            = []string{"id", "created_at", "updated_at", "deleted_at", "name", "webhook", "default_role", "i18n_application_name", "google_login", "wechat_login", "apple_login"}
+	applicationColumnsWithoutDefault = []string{"created_at", "updated_at", "deleted_at", "name", "webhook", "default_role", "i18n_application_name", "google_login", "wechat_login", "apple_login"}
 	applicationColumnsWithDefault    = []string{"id"}
 	applicationPrimaryKeyColumns     = []string{"id"}
 )

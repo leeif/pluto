@@ -4,6 +4,7 @@ import (
 	"database/sql"
 	"encoding/json"
 	"fmt"
+
 	"github.com/MuShare/pluto/modelexts"
 	"github.com/volatiletech/null"
 	"golang.org/x/text/language"
@@ -112,7 +113,7 @@ func (m *Manager) CreateApplication(ca request.CreateApplication) (*models.Appli
 	return app, nil
 }
 
-func (m *Manager) UpdateApplicationI18nNames(uai request.UpdateApplicationI18Name) (*perror.PlutoError) {
+func (m *Manager) UpdateApplicationI18nNames(uai request.UpdateApplicationI18Name) *perror.PlutoError {
 	tx, err := m.db.Begin()
 	if err != nil {
 		return perror.ServerError.Wrapper(err)
@@ -152,7 +153,7 @@ func (m *Manager) ApplicationI18nName(appName string, userLanguage string) (stri
 		tx.Rollback()
 	}()
 	app, err := models.Applications(qm.Where("name = ?", appName)).One(tx)
-	if app == nil {
+	if app == nil || err != nil {
 		m.logger.Warn(fmt.Sprintf("No i18n name for %s, fallback to pluto", appName))
 		return "Pluto", nil
 	} else {

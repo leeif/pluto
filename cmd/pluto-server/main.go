@@ -59,7 +59,6 @@ func register(router *route.Router, db *sql.DB, config *config.Config, bundle *i
 }
 
 func main() {
-
 	app := fx.New(
 		fx.Provide(
 			func() []string {

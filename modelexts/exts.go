@@ -1,8 +1,9 @@
 package modelexts
 
 import (
-	"github.com/MuShare/pluto/models"
 	"strconv"
+
+	"github.com/MuShare/pluto/models"
 )
 
 type User struct {
@@ -191,4 +192,27 @@ func (aii *ApplicationI18nNameInfo) Format() map[string]interface{} {
 	res["app_name"] = aii.AppName
 	res["i18n_names"] = aii.I18nNames
 	return res
+}
+
+type GoogleLogin struct {
+	Aud string `json:"aud"`
+}
+
+type WechatLogin struct {
+	// 移动端应用
+	AppID     string `json:"app_id"`
+	AppSecret string `json:"app_secret"`
+
+	// 网站应用
+	WebID     string `json:"web_id"`
+	WebSecret string `json:"web_secret"`
+}
+
+type AppleLogin struct {
+	TeamID      string `json:"team_id"`
+	BundleID    string `json:"bundle_id"`
+	ClientID    string `json:"client_id"`
+	KeyID       string `json:"key_id"`
+	P8CertFile  string `json:"p8_cert_file"`
+	RedirectURL string `json:"redirect_url"`
 }

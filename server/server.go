@@ -21,7 +21,12 @@ type Server struct {
 }
 
 func NewMux(lc fx.Lifecycle, config *config.Config) *mux.Router {
-	address := "127.0.0.1:" + config.Server.Port.String()
+	address := ":" + config.Server.Port.String()
+
+	if config.Misc.Env == "dev" {
+		address = "127.0.0.1:" + config.Server.Port.String()
+	}
+
 	router := mux.NewRouter()
 	c := cors.New(cors.Options{
 		AllowedMethods: []string{

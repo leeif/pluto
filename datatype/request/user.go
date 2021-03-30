@@ -1,8 +1,9 @@
 package request
 
 import (
-	"github.com/MuShare/pluto/utils/general"
 	"strings"
+
+	"github.com/MuShare/pluto/utils/general"
 )
 
 const (
@@ -74,7 +75,9 @@ func (gml *GoogleMobileLogin) Validation() bool {
 type WechatMobileLogin struct {
 	Code     string `json:"code"`
 	DeviceID string `json:"device_id"`
-	AppID    string `json:"app_id"`
+
+	// NOTE(cj): 这里的 id 其实是目前的 app.name
+	AppID string `json:"app_id"`
 }
 
 func (wml *WechatMobileLogin) Validation() bool {
@@ -97,7 +100,9 @@ func (wml *WechatMobileLogin) Validation() bool {
 type AppleMobileLogin struct {
 	Code     string `json:"code"`
 	DeviceID string `json:"device_id"`
-	AppID    string `json:"app_id"`
+
+	// NOTE(cj): 这里的 id 其实是目前的 app.name
+	AppID string `json:"app_id"`
 }
 
 func (aml *AppleMobileLogin) Validation() bool {

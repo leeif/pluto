@@ -182,7 +182,7 @@ func NewManager(db *sql.DB, config *config.Config, logger *plog.PlutoLog) (*Mana
 }
 
 func getAppAppleLogin(m *Manager, appID string) (*modelexts.AppleLogin, *perror.PlutoError) {
-	app, err := models.Applications(qm.Where("id = ?", appID)).One(m.db)
+	app, err := models.Applications(qm.Where("name = ?", appID)).One(m.db)
 
 	if err != nil && err != sql.ErrNoRows {
 		return nil, perror.ServerError.Wrapper(err)
@@ -203,7 +203,7 @@ func getAppAppleLogin(m *Manager, appID string) (*modelexts.AppleLogin, *perror.
 }
 
 func getAppWechatLogin(m *Manager, appID string) (*modelexts.WechatLogin, *perror.PlutoError) {
-	app, err := models.Applications(qm.Where("id = ?", appID)).One(m.db)
+	app, err := models.Applications(qm.Where("name = ?", appID)).One(m.db)
 
 	if err != nil && err != sql.ErrNoRows {
 		return nil, perror.ServerError.Wrapper(err)

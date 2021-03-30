@@ -381,7 +381,7 @@ func (m *Manager) newRefreshToken(exec boil.Executor, userID uint, deviceApp *mo
 	// NOTE(cj): string(userID) 应该是一个实现错误，这个地方应该是希望将数字转换为字符串
 	// 但是为了 token 的兼容
 	// 这里保持之前的实现不变
-	refreshToken := refresh.GenerateRefreshToken(string(userID) + string(deviceApp.ID))
+	refreshToken := refresh.GenerateRefreshToken(string(rune(userID)) + string(rune(deviceApp.ID)))
 
 	rt := &models.RefreshToken{}
 	rt.DeviceAppID = deviceApp.ID
@@ -398,7 +398,7 @@ func (m *Manager) newRefreshToken(exec boil.Executor, userID uint, deviceApp *mo
 
 func (m *Manager) updateRefreshToken(exec boil.Executor, rt *models.RefreshToken, scopes string) *perror.PlutoError {
 	// NOTE(cj): 这里同 newRefreshToken
-	newToken := refresh.GenerateRefreshToken(string(rt.UserID) + string(rt.DeviceAppID))
+	newToken := refresh.GenerateRefreshToken(string(rune(rt.UserID)) + string(rune(rt.DeviceAppID)))
 	rt.RefreshToken = newToken
 	rt.ExpireAt = time.Now().Add(time.Duration(m.config.Token.RefreshTokenExpire) * time.Second)
 	rt.Scopes.SetValid(scopes)

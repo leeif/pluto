@@ -686,7 +686,7 @@ func getAppleToken(cfg *modelexts.AppleLogin, code string) (*appleIdTokenInfo, *
 		cfg.KeyID,
 	)
 
-	err := a.LoadP8CertByFile(cfg.P8CertFile)
+	err := a.LoadP8CertByByte([]byte(cfg.P8CertContent))
 	if err != nil {
 		return nil, perror.ServerError.Wrapper(err)
 	}

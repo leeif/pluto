@@ -9,6 +9,7 @@ import (
 	"time"
 
 	"github.com/MuShare/pluto/localization"
+	"github.com/k0kubun/pp"
 	"github.com/nicksnyder/go-i18n/v2/i18n"
 
 	"github.com/MuShare/pluto/manage"
@@ -59,6 +60,8 @@ func register(router *route.Router, db *sql.DB, config *config.Config, bundle *i
 }
 
 func main() {
+	_ = pp.Println // prevent warning
+
 	app := fx.New(
 		fx.Provide(
 			func() []string {

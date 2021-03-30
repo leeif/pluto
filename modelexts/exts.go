@@ -209,10 +209,10 @@ type WechatLogin struct {
 }
 
 type AppleLogin struct {
-	TeamID      string `json:"team_id"`
-	BundleID    string `json:"bundle_id"`
-	ClientID    string `json:"client_id"`
-	KeyID       string `json:"key_id"`
-	P8CertFile  string `json:"p8_cert_file"`
-	RedirectURL string `json:"redirect_url"`
+	TeamID        string `json:"team_id"`
+	BundleID      string `json:"bundle_id"`
+	ClientID      string `json:"client_id"`
+	KeyID         string `json:"key_id"`
+	P8CertContent string `json:"p8_cert_content"`
+	RedirectURL   string `json:"redirect_url"`
 }

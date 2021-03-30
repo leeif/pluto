@@ -24,7 +24,7 @@ docker-clean-staging:
 	docker rmi $(shell docker images --filter dangling=true -q 2>/dev/null) 2>/dev/null || true
 
 run: install
-	pluto-server
+	pluto-server --config.file config.yaml
 
 install:
 	cd cmd/pluto-server && \

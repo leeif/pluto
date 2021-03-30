@@ -1009,20 +1009,25 @@ func (m *Manager) RegisterWithEmail(register request.MailRegister, admin bool) (
 	}
 
 	avatarURL := ""
-	// get a random avatar
-	ag := avatar.AvatarGen{}
-	avatarReader, perr := ag.GenFromGravatar()
-	if perr != nil {
-		return nil, perr
-	}
 
-	as := avatar.NewAvatarSaver(m.config)
-	remoteURL, perr := as.SaveAvatarImageInOSS(avatarReader)
-	if perr != nil {
-		avatarURL = avatarReader.OriginURL
-		m.logger.Error(perr.LogError)
-	} else {
-		avatarURL = remoteURL
+	// skip this step in local dev
+	fmt.Println("misc.env", m.config.Misc.Env)
+	if m.config.Misc.Env != "dev" {
+		// get a random avatar
+		ag := avatar.AvatarGen{}
+		avatarReader, perr := ag.GenFromGravatar()
+		if perr != nil {
+			return nil, perr
+		}
+
+		as := avatar.NewAvatarSaver(m.config)
+		remoteURL, perr := as.SaveAvatarImageInOSS(avatarReader)
+		if perr != nil {
+			avatarURL = avatarReader.OriginURL
+			m.logger.Error(perr.LogError)
+		} else {
+			avatarURL = remoteURL
+		}
 	}
 
 	verified := false

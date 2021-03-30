@@ -19,8 +19,17 @@ type PlutoValue interface {
 	String() string
 }
 
+type MiscConfig struct {
+	Env string `kiper_value:"name:env;help:app env;default:prod"`
+}
+
+func newMiscConfig() *MiscConfig {
+	return &MiscConfig{}
+}
+
 type Config struct {
 	Version  string
+	Misc     *MiscConfig     `kiper_config:"name:misc"`
 	Server   *ServerConfig   `kiper_config:"name:server"`
 	Log      *LogConfig      `kiper_config:"name:log"`
 	RSA      *RSAConfig      `kiper_config:"name:rsa"`
@@ -37,6 +46,7 @@ type Config struct {
 
 func NewConfig(args []string, version string) (*Config, error) {
 	c := &Config{
+		Misc:     newMiscConfig(),
 		Log:      newLogConfig(),
 		Server:   newServerConfig(),
 		RSA:      newRSAConfig(),

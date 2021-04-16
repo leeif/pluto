@@ -80,6 +80,13 @@ type WechatMobileLogin struct {
 	AppID string `json:"app_id"`
 }
 
+type WechatWebLoginState struct {
+	// NOTE(cj): 这里的 id 其实是目前的 app.name
+	AppID string `json:"app"`
+
+	RedirectURL string `json:"redirect_url"`
+}
+
 func (wml *WechatMobileLogin) Validation() bool {
 	if wml.Code == "" {
 		return false

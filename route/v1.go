@@ -44,6 +44,13 @@ func (r *Router) registerUserV1Routes(prefix string) {
 			handler:     r.v1.AppleLoginMobile,
 		},
 		{
+			path:        "/login/wechat/web",
+			description: "Login with wechat account for web app",
+			method:      "GET",
+			middle:      middleware.NoAuthMiddleware,
+			handler:     r.v1.WechatLoginWeb,
+		},
+		{
 			path:        "/login/wechat/mobile",
 			description: "Login with wechat account for mobile app",
 			method:      "POST",

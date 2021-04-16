@@ -1,7 +1,11 @@
 package v1
 
 import (
+	"encoding/base64"
+	"encoding/json"
+	"fmt"
 	"net/http"
+	"net/url"
 
 	perror "github.com/MuShare/pluto/datatype/pluto_error"
 	"github.com/MuShare/pluto/datatype/request"
@@ -50,6 +54,36 @@ func (router *Router) GoogleLoginMobile(w http.ResponseWriter, r *http.Request) 
 	}
 
 	routeUtils.ResponseOK(res, w)
+
+	return nil
+}
+
+func (router *Router) WechatLoginWeb(w http.ResponseWriter, r *http.Request) *perror.PlutoError {
+	query := r.URL.Query()
+
+	code := query.Get("code")
+	stateStr := query.Get("state")
+
+	decoded, derr := base64.StdEncoding.DecodeString(stateStr)
+
+	if derr != nil {
+		return perror.BadRequest.Wrapper(fmt.Errorf("decode base64 stateStr error: %s", derr))
+	}
+
+	state := request.WechatWebLoginState{}
+	if err := json.Unmarshal(decoded, &state); err != nil {
+		return perror.BadRequest.Wrapper(fmt.Errorf("unmarshal state error:%s", err))
+	}
+
+	res, err := router.manager.WechatLoginWeb(state.AppID, code)
+
+	if err != nil {
+		return err
+	}
+
+	q := url.Values{}
+	q.Add("token", res.AccessToken)
+	http.Redirect(w, r, state.RedirectURL+"?"+q.Encode(), 302)
 
 	return nil
 }

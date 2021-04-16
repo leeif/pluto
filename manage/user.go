@@ -33,10 +33,11 @@ import (
 )
 
 const (
-	MAILLOGIN   = "mail"
-	GOOGLELOGIN = "google"
-	WECHATLOGIN = "wechat"
-	APPLELOGIN  = "apple"
+	MAILLOGIN       = "mail"
+	GOOGLELOGIN     = "google"
+	WECHATLOGIN     = "wechat"
+	WECHATLOGIN_WEB = "wechat_web"
+	APPLELOGIN      = "apple"
 )
 
 func (m *Manager) randomUserName(exec boil.Executor, prefix string) (string, *perror.PlutoError) {
@@ -367,6 +368,90 @@ func verifyGoogleIdToken(idToken string) (*googleIDTokenInfo, *perror.PlutoError
 	return nil, perror.InvalidGoogleIDToken
 }
 
+func (m *Manager) WechatLoginWeb(appID, code string) (*GrantResult, *perror.PlutoError) {
+	wechatLogin, perr := getAppWechatLogin(m, appID)
+
+	if perr != nil {
+		return nil, perr
+	}
+
+	openID, unionID, perr := getWechatWebLoginInfo(code, wechatLogin.WebID, wechatLogin.WebSecret)
+	_ = openID
+
+	if perr != nil {
+		return nil, perr
+	}
+
+	tx, err := m.db.Begin()
+	if err != nil {
+		return nil, perror.ServerError.Wrapper(err)
+	}
+
+	defer func() {
+		tx.Rollback()
+	}()
+
+	identifyToken := unionID
+	wechatBinding, err := models.Bindings(qm.Where("login_type = ? and identify_token = ?", WECHATLOGIN_WEB, identifyToken)).One(tx)
+	if err != nil && err != sql.ErrNoRows {
+		return nil, perror.ServerError.Wrapper(err)
+	}
+
+	salt := saltUtil.RandomSalt(identifyToken)
+
+	randomPassword := saltUtil.RandomToken(10)
+	encodedPassword, perr := saltUtil.EncodePassword(randomPassword, salt)
+	if perr != nil {
+		return nil, perr
+	}
+
+	namePrefix := "wechat_web_user"
+
+	name, perr := m.randomUserName(tx, namePrefix)
+
+	if perr != nil {
+		return nil, perr
+	}
+
+	avatarURL, perr := m.genAvatarFromGravatar()
+	if err != nil {
+		return nil, perr
+	}
+
+	var user *models.User
+	if wechatBinding == nil {
+		user, perr = m.newUser(tx, name, avatarURL, encodedPassword, nil, true)
+		if perr != nil {
+			return nil, perr
+		}
+		wechatBinding, perr = m.newBinding(tx, user.ID, "", WECHATLOGIN_WEB, unionID, true)
+		if perr != nil {
+			return nil, perr
+		}
+	} else {
+		if _, err := wechatBinding.Update(tx, boil.Whitelist("mail")); err != nil {
+			return nil, perror.ServerError.Wrapper(err)
+		}
+		user, err = models.Users(qm.Where("id = ?", wechatBinding.UserID)).One(tx)
+		if err != nil {
+			return nil, perror.ServerError.Wrapper(err)
+		}
+	}
+
+	scopes, perr := getUserDefaultScopes(tx, user.ID, appID)
+	if perr != nil {
+		return nil, perr
+	}
+
+	grantResult, perr := m.loginWithAppName(tx, user.ID, "web", appID, strings.Join(scopes, ","))
+	if perr != nil {
+		return nil, perr
+	}
+
+	tx.Commit()
+	return grantResult, nil
+}
+
 func (m *Manager) WechatLoginMobile(login request.WechatMobileLogin) (*GrantResult, *perror.PlutoError) {
 	wechatLogin, perr := getAppWechatLogin(m, login.AppID)
 
@@ -374,7 +459,7 @@ func (m *Manager) WechatLoginMobile(login request.WechatMobileLogin) (*GrantResu
 		return nil, perr
 	}
 
-	accessToken, openID, perr := getWechatAccessToken(login.Code, wechatLogin)
+	accessToken, openID, perr := getWechatAccessToken(login.Code, wechatLogin.AppID, wechatLogin.AppSecret)
 
 	if perr != nil {
 		return nil, perr
@@ -433,6 +518,7 @@ func (m *Manager) WechatLoginMobile(login request.WechatMobileLogin) (*GrantResu
 			return nil, perr
 		}
 	} else {
+		// TODO(cj): WTF???
 		wechatBinding.Mail = info.Nickname
 		if _, err := wechatBinding.Update(tx, boil.Whitelist("mail")); err != nil {
 			return nil, perror.ServerError.Wrapper(err)
@@ -457,7 +543,7 @@ func (m *Manager) WechatLoginMobile(login request.WechatMobileLogin) (*GrantResu
 	return grantResult, nil
 }
 
-func getWechatAccessToken(code string, cfg *modelexts.WechatLogin) (accessToken string, openID string, pe *perror.PlutoError) {
+func getWechatWebLoginInfo(code string, appID string, appSecret string) (openID string, unionID string, pe *perror.PlutoError) {
 	defer func() {
 		var err error
 		if r := recover(); r != nil {
@@ -476,7 +562,61 @@ func getWechatAccessToken(code string, cfg *modelexts.WechatLogin) (accessToken 
 	}()
 	// get access token
 	url := fmt.Sprintf("https://api.weixin.qq.com/sns/oauth2/access_token?appid=%s&secret=%s&code=%s&grant_type=authorization_code",
-		cfg.AppID, cfg.AppSecret, code)
+		appID, appSecret, code)
+
+	resp, err := http.Get(url)
+	if err != nil {
+		return "", "", perror.ServerError.Wrapper(err)
+	}
+
+	b, err := ioutil.ReadAll(resp.Body)
+	if err != nil {
+		return "", "", perror.ServerError.Wrapper(err)
+	}
+
+	body := make(map[string]interface{})
+	if err := json.Unmarshal(b, &body); err != nil {
+		return "", "", perror.ServerError.Wrapper(err)
+	}
+
+	if resp.StatusCode == http.StatusOK {
+		if !strings.Contains(body["scope"].(string), "snsapi_login") {
+			return "", "", perror.ServerError.Wrapper(errors.New("Not contain a snsapi_login scope"))
+		}
+		return body["openid"].(string), body["unionid"].(string), nil
+	}
+
+	if errcode, ok := body["errcode"]; ok {
+		// invalid code
+		if int(errcode.(float64)) == 40029 {
+			return "", "", perror.InvalidWechatCode
+		}
+		return "", "", perror.ServerError.Wrapper(errors.New(body["errmsg"].(string)))
+	}
+
+	return "", "", perror.ServerError.Wrapper(errors.New("Unknow server error"))
+}
+
+func getWechatAccessToken(code string, appID string, appSecret string) (accessToken string, openID string, pe *perror.PlutoError) {
+	defer func() {
+		var err error
+		if r := recover(); r != nil {
+			switch x := r.(type) {
+			case string:
+				err = errors.New(x)
+			case error:
+				err = x
+			default:
+				err = errors.New("Unknown panic")
+			}
+		}
+		if err != nil {
+			pe = perror.ServerError.Wrapper(err)
+		}
+	}()
+	// get access token
+	url := fmt.Sprintf("https://api.weixin.qq.com/sns/oauth2/access_token?appid=%s&secret=%s&code=%s&grant_type=authorization_code",
+		appID, appSecret, code)
 
 	resp, err := http.Get(url)
 	if err != nil {
@@ -966,6 +1106,31 @@ func (m *Manager) isValidURL(toTest string) bool {
 	return err == nil && u.Scheme != "" && u.Host != ""
 }
 
+func (m *Manager) genAvatarFromGravatar() (string, *perror.PlutoError) {
+	avatarURL := ""
+
+	// skip this step in local dev
+	if m.config.Misc.Env != "dev" {
+		// get a random avatar
+		ag := avatar.AvatarGen{}
+		avatarReader, perr := ag.GenFromGravatar()
+		if perr != nil {
+			return "", perr
+		}
+
+		as := avatar.NewAvatarSaver(m.config)
+		remoteURL, perr := as.SaveAvatarImageInOSS(avatarReader)
+		if perr != nil {
+			avatarURL = avatarReader.OriginURL
+			m.logger.Error(perr.LogError)
+		} else {
+			avatarURL = remoteURL
+		}
+	}
+
+	return avatarURL, nil
+}
+
 func (m *Manager) RegisterWithEmail(register request.MailRegister, admin bool) (*models.User, *perror.PlutoError) {
 
 	tx, err := m.db.Begin()
@@ -1008,26 +1173,9 @@ func (m *Manager) RegisterWithEmail(register request.MailRegister, admin bool) (
 		return nil, perr
 	}
 
-	avatarURL := ""
-
-	// skip this step in local dev
-	fmt.Println("misc.env", m.config.Misc.Env)
-	if m.config.Misc.Env != "dev" {
-		// get a random avatar
-		ag := avatar.AvatarGen{}
-		avatarReader, perr := ag.GenFromGravatar()
-		if perr != nil {
-			return nil, perr
-		}
-
-		as := avatar.NewAvatarSaver(m.config)
-		remoteURL, perr := as.SaveAvatarImageInOSS(avatarReader)
-		if perr != nil {
-			avatarURL = avatarReader.OriginURL
-			m.logger.Error(perr.LogError)
-		} else {
-			avatarURL = remoteURL
-		}
+	avatarURL, perr := m.genAvatarFromGravatar()
+	if perr != nil {
+		return nil, perr
 	}
 
 	verified := false
@@ -1311,7 +1459,7 @@ func (m *Manager) BindWechat(binding *request.Binding, accessPayload *jwt.Access
 		return perr
 	}
 
-	accessToken, openID, perr := getWechatAccessToken(binding.Code, wechatLogin)
+	accessToken, openID, perr := getWechatAccessToken(binding.Code, wechatLogin.AppID, wechatLogin.AppSecret)
 
 	if perr != nil {
 		return perr
@@ -1387,8 +1535,6 @@ func (m *Manager) Unbind(ub *request.UnBinding, accessPayload *jwt.AccessPayload
 	} else if err == sql.ErrNoRows {
 		return perror.BindNotExist
 	}
-
-	fmt.Println(binding)
 
 	if _, err := binding.Delete(tx); err != nil {
 		return perror.ServerError.Wrapper(err)

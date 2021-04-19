@@ -414,7 +414,7 @@ func (m *Manager) WechatLoginWeb(appID, code string) (*GrantResult, *perror.Plut
 	}
 
 	avatarURL, perr := m.genAvatarFromGravatar()
-	if err != nil {
+	if perr != nil {
 		return nil, perr
 	}
 

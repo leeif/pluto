@@ -33,11 +33,11 @@ import (
 )
 
 const (
-	MAILLOGIN       = "mail"
-	GOOGLELOGIN     = "google"
-	WECHATLOGIN     = "wechat"
-	WECHATLOGIN_WEB = "wechat_web"
-	APPLELOGIN      = "apple"
+	MAILLOGIN   = "mail"
+	GOOGLELOGIN = "google"
+	// 包含扫码登陆和 App 登陆
+	WECHATLOGIN = "wechat"
+	APPLELOGIN  = "apple"
 )
 
 func (m *Manager) randomUserName(exec boil.Executor, prefix string) (string, *perror.PlutoError) {
@@ -392,7 +392,7 @@ func (m *Manager) WechatLoginWeb(appID, code string) (*GrantResult, *perror.Plut
 	}()
 
 	identifyToken := unionID
-	wechatBinding, err := models.Bindings(qm.Where("login_type = ? and identify_token = ?", WECHATLOGIN_WEB, identifyToken)).One(tx)
+	wechatBinding, err := models.Bindings(qm.Where("login_type = ? and identify_token = ?", WECHATLOGIN, identifyToken)).One(tx)
 	if err != nil && err != sql.ErrNoRows {
 		return nil, perror.ServerError.Wrapper(err)
 	}
@@ -424,7 +424,7 @@ func (m *Manager) WechatLoginWeb(appID, code string) (*GrantResult, *perror.Plut
 		if perr != nil {
 			return nil, perr
 		}
-		wechatBinding, perr = m.newBinding(tx, user.ID, "", WECHATLOGIN_WEB, unionID, true)
+		wechatBinding, perr = m.newBinding(tx, user.ID, "", WECHATLOGIN, unionID, true)
 		if perr != nil {
 			return nil, perr
 		}

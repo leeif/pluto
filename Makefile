@@ -1,3 +1,7 @@
+install:
+	cd cmd/pluto-server && \
+	GO111MODULE=on go install -ldflags="-X 'main.VERSION=$(VERSION)'"
+
 docker-build:
 	docker build --build-arg VERSION=$(VERSION) -t mushare/pluto:latest .
 	docker tag mushare/pluto:latest mushare/pluto:$(VERSION)
@@ -25,10 +29,6 @@ docker-clean-staging:
 
 run: install
 	pluto-server --config.file config.yaml
-
-install:
-	cd cmd/pluto-server && \
-	GO111MODULE=on go install -ldflags="-X 'main.VERSION=$(VERSION)'"
 
 server-binary-build:
 	mkdir -p bin

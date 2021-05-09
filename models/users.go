@@ -33,6 +33,7 @@ type User struct {
 	Avatar        null.String `boil:"avatar" json:"avatar,omitempty" toml:"avatar" yaml:"avatar,omitempty"`
 	UserID        string      `boil:"user_id" json:"user_id" toml:"user_id" yaml:"user_id"`
 	UserIDUpdated bool        `boil:"user_id_updated" json:"user_id_updated" toml:"user_id_updated" yaml:"user_id_updated"`
+	AppID         uint        `boil:"app_id" json:"app_id" toml:"app_id" yaml:"app_id"`
 
 	R *userR `boil:"-" json:"-" toml:"-" yaml:"-"`
 	L userL  `boil:"-" json:"-" toml:"-" yaml:"-"`

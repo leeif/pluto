@@ -20,7 +20,7 @@ require (
 	github.com/gorilla/context v1.1.1
 	github.com/gorilla/mux v1.7.3
 	github.com/gorilla/schema v1.1.0
-	github.com/k0kubun/pp v3.0.1+incompatible // indirect
+	github.com/k0kubun/pp v3.0.1+incompatible
 	github.com/leeif/kiper v0.3.0
 	github.com/nicksnyder/go-i18n/v2 v2.0.3
 	github.com/rs/cors v1.7.0

@@ -195,12 +195,13 @@ func (m *Manager) NamePasswordLogin(login request.PasswordLogin) (*GrantResult, 
 }
 
 //check userID unique before this method!!
-func (m *Manager) newUser(exec boil.Executor, name, avatar, password string, userID *string, verified bool) (*models.User, *perror.PlutoError) {
+func (m *Manager) newUser(exec boil.Executor, name, avatar, password string, userID *string, verified bool, appID uint) (*models.User, *perror.PlutoError) {
 	user := &models.User{}
 	user.Avatar.SetValid(avatar)
 	user.Password.SetValid(password)
 	user.Name = name
 	user.Verified.SetValid(verified)
+	user.AppID = appID
 	if userID != nil {
 		userIDExists, err := models.Users(qm.Where("user_id = ?", *userID)).Exists(exec)
 		if err != nil {
@@ -259,6 +260,11 @@ func (m *Manager) GoogleLoginMobile(login request.GoogleMobileLogin) (*GrantResu
 		tx.Rollback()
 	}()
 
+	app, perr := m.GetApplication(login.AppID)
+	if perr != nil {
+		return nil, perr
+	}
+
 	googleBinding, err := models.Bindings(qm.Where("login_type = ? and identify_token = ?", GOOGLELOGIN, info.Sub)).One(tx)
 	if err != nil && err != sql.ErrNoRows {
 		return nil, perror.ServerError.Wrapper(err)
@@ -288,7 +294,7 @@ func (m *Manager) GoogleLoginMobile(login request.GoogleMobileLogin) (*GrantResu
 
 	var user *models.User
 	if googleBinding == nil {
-		user, perr = m.newUser(tx, name, info.Picture, encodedPassword, nil, true)
+		user, perr = m.newUser(tx, name, info.Picture, encodedPassword, nil, true, app.ID)
 		if perr != nil {
 			return nil, perr
 		}
@@ -391,6 +397,11 @@ func (m *Manager) WechatLoginWeb(appID, code string) (*GrantResult, *perror.Plut
 		tx.Rollback()
 	}()
 
+	app, perr := m.GetApplication(appID)
+	if perr != nil {
+		return nil, perr
+	}
+
 	identifyToken := unionID
 	wechatBinding, err := models.Bindings(qm.Where("login_type = ? and identify_token = ?", WECHATLOGIN, identifyToken)).One(tx)
 	if err != nil && err != sql.ErrNoRows {
@@ -420,7 +431,7 @@ func (m *Manager) WechatLoginWeb(appID, code string) (*GrantResult, *perror.Plut
 
 	var user *models.User
 	if wechatBinding == nil {
-		user, perr = m.newUser(tx, name, avatarURL, encodedPassword, nil, true)
+		user, perr = m.newUser(tx, name, avatarURL, encodedPassword, nil, true, app.ID)
 		if perr != nil {
 			return nil, perr
 		}
@@ -479,6 +490,11 @@ func (m *Manager) WechatLoginMobile(login request.WechatMobileLogin) (*GrantResu
 		tx.Rollback()
 	}()
 
+	app, perr := m.GetApplication(login.AppID)
+	if perr != nil {
+		return nil, perr
+	}
+
 	identifyToken := info.Unionid
 	wechatBinding, err := models.Bindings(qm.Where("login_type = ? and identify_token = ?", WECHATLOGIN, identifyToken)).One(tx)
 	if err != nil && err != sql.ErrNoRows {
@@ -509,7 +525,7 @@ func (m *Manager) WechatLoginMobile(login request.WechatMobileLogin) (*GrantResu
 
 	var user *models.User
 	if wechatBinding == nil {
-		user, perr = m.newUser(tx, name, info.HeadimgURL, encodedPassword, nil, true)
+		user, perr = m.newUser(tx, name, info.HeadimgURL, encodedPassword, nil, true, app.ID)
 		if perr != nil {
 			return nil, perr
 		}
@@ -739,6 +755,11 @@ func (m *Manager) AppleLoginMobile(login request.AppleMobileLogin) (*GrantResult
 		tx.Rollback()
 	}()
 
+	app, perr := m.GetApplication(login.AppID)
+	if perr != nil {
+		return nil, perr
+	}
+
 	ag := avatar.AvatarGen{}
 	avatarReader, perr := ag.GenFromGravatar()
 	if perr != nil {
@@ -777,7 +798,7 @@ func (m *Manager) AppleLoginMobile(login request.AppleMobileLogin) (*GrantResult
 
 	var user *models.User
 	if appleBinding == nil {
-		user, perr = m.newUser(tx, name, avatarURL, encodedPassword, nil, true)
+		user, perr = m.newUser(tx, name, avatarURL, encodedPassword, nil, true, app.ID)
 		if perr != nil {
 			return nil, perr
 		}
@@ -1141,6 +1162,11 @@ func (m *Manager) RegisterWithEmail(register request.MailRegister, admin bool) (
 		tx.Rollback()
 	}()
 
+	app, perr := m.GetApplication(register.AppName)
+	if perr != nil {
+		return nil, perr
+	}
+
 	identifyToken := b64.RawStdEncoding.EncodeToString([]byte(register.Mail))
 	mailBinding, err := models.Bindings(qm.Where("login_type = ? and identify_token = ?", MAILLOGIN, identifyToken)).One(tx)
 	if err != nil && err != sql.ErrNoRows {
@@ -1183,7 +1209,7 @@ func (m *Manager) RegisterWithEmail(register request.MailRegister, admin bool) (
 		verified = true
 	}
 
-	user, perr := m.newUser(tx, register.Name, avatarURL, encodedPassword, userID, verified)
+	user, perr := m.newUser(tx, register.Name, avatarURL, encodedPassword, userID, verified, app.ID)
 	if perr != nil {
 		return nil, perr
 	}

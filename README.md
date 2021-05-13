@@ -19,10 +19,12 @@ https://developers.weixin.qq.com/doc/oplatform/Website_App/WeChat_Login/Wechat_L
 
 ## Setup
 
+Go versio: 1.16
+
 ```bash
 # install sqlboiler
-$ GO111MODULE=on go get -u -t github.com/volatiletech/sqlboiler@v3.6.0
-$ GO111MODULE=on go get -u -t github.com/volatiletech/sqlboiler/drivers/sqlboiler-mysql@v3.6.0
+$ go install -v github.com/volatiletech/sqlboiler@v3.6.0
+$ go install -v github.com/volatiletech/sqlboiler/drivers/sqlboiler-mysql@v3.6.0
 $ git clone ...
 # start mysql and create `pluto` database
 $ make migrate-binary-build

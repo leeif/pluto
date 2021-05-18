@@ -33,7 +33,7 @@ type User struct {
 	Avatar        null.String `boil:"avatar" json:"avatar,omitempty" toml:"avatar" yaml:"avatar,omitempty"`
 	UserID        string      `boil:"user_id" json:"user_id" toml:"user_id" yaml:"user_id"`
 	UserIDUpdated bool        `boil:"user_id_updated" json:"user_id_updated" toml:"user_id_updated" yaml:"user_id_updated"`
-	AppID         uint        `boil:"app_id" json:"app_id" toml:"app_id" yaml:"app_id"`
+	AppID         string      `boil:"app_id" json:"app_id" toml:"app_id" yaml:"app_id"`
 
 	R *userR `boil:"-" json:"-" toml:"-" yaml:"-"`
 	L userL  `boil:"-" json:"-" toml:"-" yaml:"-"`
@@ -50,6 +50,7 @@ var UserColumns = struct {
 	Avatar        string
 	UserID        string
 	UserIDUpdated string
+	AppID         string
 }{
 	ID:            "id",
 	CreatedAt:     "created_at",
@@ -61,6 +62,7 @@ var UserColumns = struct {
 	Avatar:        "avatar",
 	UserID:        "user_id",
 	UserIDUpdated: "user_id_updated",
+	AppID:         "app_id",
 }
 
 // Generated where
@@ -85,6 +87,7 @@ var UserWhere = struct {
 	Avatar        whereHelpernull_String
 	UserID        whereHelperstring
 	UserIDUpdated whereHelperbool
+	AppID         whereHelperstring
 }{
 	ID:            whereHelperuint{field: "`users`.`id`"},
 	CreatedAt:     whereHelpernull_Time{field: "`users`.`created_at`"},
@@ -96,14 +99,19 @@ var UserWhere = struct {
 	Avatar:        whereHelpernull_String{field: "`users`.`avatar`"},
 	UserID:        whereHelperstring{field: "`users`.`user_id`"},
 	UserIDUpdated: whereHelperbool{field: "`users`.`user_id_updated`"},
+	AppID:         whereHelperstring{field: "`users`.`app_id`"},
 }
 
 // UserRels is where relationship names are stored.
 var UserRels = struct {
-}{}
+	App string
+}{
+	App: "App",
+}
 
 // userR is where relationships are stored.
 type userR struct {
+	App *Application
 }
 
 // NewStruct creates a new relationship struct
@@ -115,8 +123,8 @@ func (*userR) NewStruct() *userR {
 type userL struct{}
 
 var (
-	userAllColumns            = []string{"id", "created_at", "updated_at", "deleted_at", "name", "password", "verified", "avatar", "user_id", "user_id_updated"}
-	userColumnsWithoutDefault = []string{"created_at", "updated_at", "deleted_at", "name", "password", "verified", "avatar", "user_id"}
+	userAllColumns            = []string{"id", "created_at", "updated_at", "deleted_at", "name", "password", "verified", "avatar", "user_id", "user_id_updated", "app_id"}
+	userColumnsWithoutDefault = []string{"created_at", "updated_at", "deleted_at", "name", "password", "verified", "avatar", "user_id", "app_id"}
 	userColumnsWithDefault    = []string{"id", "user_id_updated"}
 	userPrimaryKeyColumns     = []string{"id"}
 )
@@ -358,6 +366,167 @@ func (q userQuery) Exists(exec boil.Executor) (bool, error) {
 	}
 
 	return count > 0, nil
+}
+
+// App pointed to by the foreign key.
+func (o *User) App(mods ...qm.QueryMod) applicationQuery {
+	queryMods := []qm.QueryMod{
+		qm.Where("`name` = ?", o.AppID),
+	}
+
+	queryMods = append(queryMods, mods...)
+
+	query := Applications(queryMods...)
+	queries.SetFrom(query.Query, "`applications`")
+
+	return query
+}
+
+// LoadApp allows an eager lookup of values, cached into the
+// loaded structs of the objects. This is for an N-1 relationship.
+func (userL) LoadApp(e boil.Executor, singular bool, maybeUser interface{}, mods queries.Applicator) error {
+	var slice []*User
+	var object *User
+
+	if singular {
+		object = maybeUser.(*User)
+	} else {
+		slice = *maybeUser.(*[]*User)
+	}
+
+	args := make([]interface{}, 0, 1)
+	if singular {
+		if object.R == nil {
+			object.R = &userR{}
+		}
+		args = append(args, object.AppID)
+
+	} else {
+	Outer:
+		for _, obj := range slice {
+			if obj.R == nil {
+				obj.R = &userR{}
+			}
+
+			for _, a := range args {
+				if a == obj.AppID {
+					continue Outer
+				}
+			}
+
+			args = append(args, obj.AppID)
+
+		}
+	}
+
+	if len(args) == 0 {
+		return nil
+	}
+
+	query := NewQuery(qm.From(`applications`), qm.WhereIn(`applications.name in ?`, args...))
+	if mods != nil {
+		mods.Apply(query)
+	}
+
+	results, err := query.Query(e)
+	if err != nil {
+		return errors.Wrap(err, "failed to eager load Application")
+	}
+
+	var resultSlice []*Application
+	if err = queries.Bind(results, &resultSlice); err != nil {
+		return errors.Wrap(err, "failed to bind eager loaded slice Application")
+	}
+
+	if err = results.Close(); err != nil {
+		return errors.Wrap(err, "failed to close results of eager load for applications")
+	}
+	if err = results.Err(); err != nil {
+		return errors.Wrap(err, "error occurred during iteration of eager loaded relations for applications")
+	}
+
+	if len(userAfterSelectHooks) != 0 {
+		for _, obj := range resultSlice {
+			if err := obj.doAfterSelectHooks(e); err != nil {
+				return err
+			}
+		}
+	}
+
+	if len(resultSlice) == 0 {
+		return nil
+	}
+
+	if singular {
+		foreign := resultSlice[0]
+		object.R.App = foreign
+		if foreign.R == nil {
+			foreign.R = &applicationR{}
+		}
+		foreign.R.AppUsers = append(foreign.R.AppUsers, object)
+		return nil
+	}
+
+	for _, local := range slice {
+		for _, foreign := range resultSlice {
+			if local.AppID == foreign.Name {
+				local.R.App = foreign
+				if foreign.R == nil {
+					foreign.R = &applicationR{}
+				}
+				foreign.R.AppUsers = append(foreign.R.AppUsers, local)
+				break
+			}
+		}
+	}
+
+	return nil
+}
+
+// SetApp of the user to the related item.
+// Sets o.R.App to related.
+// Adds o to related.R.AppUsers.
+func (o *User) SetApp(exec boil.Executor, insert bool, related *Application) error {
+	var err error
+	if insert {
+		if err = related.Insert(exec, boil.Infer()); err != nil {
+			return errors.Wrap(err, "failed to insert into foreign table")
+		}
+	}
+
+	updateQuery := fmt.Sprintf(
+		"UPDATE `users` SET %s WHERE %s",
+		strmangle.SetParamNames("`", "`", 0, []string{"app_id"}),
+		strmangle.WhereClause("`", "`", 0, userPrimaryKeyColumns),
+	)
+	values := []interface{}{related.Name, o.ID}
+
+	if boil.DebugMode {
+		fmt.Fprintln(boil.DebugWriter, updateQuery)
+		fmt.Fprintln(boil.DebugWriter, values)
+	}
+	if _, err = exec.Exec(updateQuery, values...); err != nil {
+		return errors.Wrap(err, "failed to update local table")
+	}
+
+	o.AppID = related.Name
+	if o.R == nil {
+		o.R = &userR{
+			App: related,
+		}
+	} else {
+		o.R.App = related
+	}
+
+	if related.R == nil {
+		related.R = &applicationR{
+			AppUsers: UserSlice{o},
+		}
+	} else {
+		related.R.AppUsers = append(related.R.AppUsers, o)
+	}
+
+	return nil
 }
 
 // Users retrieves all the records using an executor.

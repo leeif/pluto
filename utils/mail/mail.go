@@ -5,9 +5,10 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"net/http"
+
 	"github.com/MuShare/pluto/utils/view"
 	"github.com/nicksnyder/go-i18n/v2/i18n"
-	"net/http"
 
 	"github.com/MuShare/pluto/config"
 	"github.com/MuShare/pluto/utils/jwt"
@@ -110,7 +111,7 @@ func (m *Mail) SendRegisterVerify(userID uint, address string, baseURL string, l
 }
 
 func (m *Mail) SendResetPassword(address string, baseURL string, userLanguage string, appName string) *perror.PlutoError {
-	prp := jwt.NewPasswordResetPayload(address, m.config.Token.ResetPasswordTokenExpire)
+	prp := jwt.NewPasswordResetPayload(appName, address, m.config.Token.ResetPasswordTokenExpire)
 	token, perr := jwt.GenerateRSA256JWT(prp)
 	if perr != nil {
 		return perr.Wrapper(errors.New("JWT token generate failed"))

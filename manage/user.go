@@ -88,7 +88,7 @@ func (m *Manager) MailPasswordLogin(login request.PasswordLogin) (*GrantResult, 
 	}()
 
 	identifyToken := b64.RawStdEncoding.EncodeToString([]byte(login.Account))
-	mailBinding, err := models.Bindings(qm.Where("login_type = ? and identify_token = ?", MAILLOGIN, identifyToken)).One(tx)
+	mailBinding, err := models.Bindings(qm.Where("app_id = ? and login_type = ? and identify_token = ?", login.AppID, MAILLOGIN, identifyToken)).One(tx)
 	if err != nil && err == sql.ErrNoRows {
 		return nil, perror.MailNotExist
 	} else if err != nil {
@@ -290,6 +290,11 @@ func (m *Manager) GoogleLoginMobile(login request.GoogleMobileLogin) (*GrantResu
 
 	var user *models.User
 	if googleBinding == nil {
+		_, perr := m.getApplication(tx, login.AppID)
+		if perr != nil {
+			return nil, perr
+		}
+
 		user, perr = m.newUser(tx, name, info.Picture, encodedPassword, nil, true, login.AppID)
 		if perr != nil {
 			return nil, perr
@@ -422,6 +427,11 @@ func (m *Manager) WechatLoginWeb(appID, code string) (*GrantResult, *perror.Plut
 
 	var user *models.User
 	if wechatBinding == nil {
+		_, perr := m.getApplication(tx, appID)
+		if perr != nil {
+			return nil, perr
+		}
+
 		user, perr = m.newUser(tx, name, avatarURL, encodedPassword, nil, true, appID)
 		if perr != nil {
 			return nil, perr
@@ -511,6 +521,11 @@ func (m *Manager) WechatLoginMobile(login request.WechatMobileLogin) (*GrantResu
 
 	var user *models.User
 	if wechatBinding == nil {
+		_, perr := m.getApplication(tx, login.AppID)
+		if perr != nil {
+			return nil, perr
+		}
+
 		user, perr = m.newUser(tx, name, info.HeadimgURL, encodedPassword, nil, true, login.AppID)
 		if perr != nil {
 			return nil, perr
@@ -779,6 +794,11 @@ func (m *Manager) AppleLoginMobile(login request.AppleMobileLogin) (*GrantResult
 
 	var user *models.User
 	if appleBinding == nil {
+		_, perr := m.getApplication(tx, login.AppID)
+		if perr != nil {
+			return nil, perr
+		}
+
 		user, perr = m.newUser(tx, name, avatarURL, encodedPassword, nil, true, login.AppID)
 		if perr != nil {
 			return nil, perr
@@ -865,7 +885,7 @@ func parseAppleIDToken(idToken string) (*appleIdTokenInfo, *perror.PlutoError) {
 func (m *Manager) ResetPasswordMail(rpm request.ResetPasswordMail) *perror.PlutoError {
 
 	identifyToken := b64.RawStdEncoding.EncodeToString([]byte(rpm.Mail))
-	_, err := models.Bindings(qm.Where("login_type = ? and identify_token = ?", MAILLOGIN, identifyToken)).One(m.db)
+	_, err := models.Bindings(qm.Where("app_id = ? and login_type = ? and identify_token = ?", rpm.AppName, MAILLOGIN, identifyToken)).One(m.db)
 	if err != nil && err == sql.ErrNoRows {
 		return perror.MailNotExist
 	} else if err != nil {
@@ -898,7 +918,7 @@ func (m *Manager) ResetPasswordPage(token string) *perror.PlutoError {
 	}
 
 	identifyToken := b64.RawStdEncoding.EncodeToString([]byte(prp.Mail))
-	binding, err := models.Bindings(qm.Where("login_type = ? and identify_token = ?", MAILLOGIN, identifyToken)).One(m.db)
+	binding, err := models.Bindings(qm.Where("app_id = ? and login_type = ? and identify_token = ?", prp.AppID, MAILLOGIN, identifyToken)).One(m.db)
 	if err != nil && err == sql.ErrNoRows {
 		return perror.ServerError.Wrapper(errors.New("mail not found"))
 	} else if err != nil {
@@ -951,7 +971,7 @@ func (m *Manager) ResetPassword(token string, rp request.ResetPasswordWeb) *perr
 	}()
 
 	identifyToken := b64.RawStdEncoding.EncodeToString([]byte(prp.Mail))
-	binding, err := models.Bindings(qm.Where("login_type = ? and identify_token = ?", MAILLOGIN, identifyToken)).One(tx)
+	binding, err := models.Bindings(qm.Where("app_id =? and login_type = ? and identify_token = ?", prp.AppID, MAILLOGIN, identifyToken)).One(tx)
 	if err != nil && err == sql.ErrNoRows {
 		return perror.ServerError.Wrapper(errors.New("mail not found"))
 	} else if err != nil {
@@ -1143,8 +1163,13 @@ func (m *Manager) RegisterWithEmail(register request.MailRegister, admin bool) (
 		tx.Rollback()
 	}()
 
+	_, perr := m.getApplication(tx, register.AppName)
+	if perr != nil {
+		return nil, perr
+	}
+
 	identifyToken := b64.RawStdEncoding.EncodeToString([]byte(register.Mail))
-	mailBinding, err := models.Bindings(qm.Where("login_type = ? and identify_token = ?", MAILLOGIN, identifyToken)).One(tx)
+	mailBinding, err := models.Bindings(qm.Where("app_id = ? and login_type = ? and identify_token = ?", register.AppName, MAILLOGIN, identifyToken)).One(tx)
 	if err != nil && err != sql.ErrNoRows {
 		return nil, perror.ServerError.Wrapper(err)
 	}
@@ -1216,7 +1241,7 @@ func (m *Manager) RegisterVerifyMail(rvm request.RegisterVerifyMail) (*models.Bi
 	if rvm.Mail != "" {
 		userMail = rvm.Mail
 		identifyToken := b64.RawStdEncoding.EncodeToString([]byte(userMail))
-		binding, queryErr = models.Bindings(qm.Where("login_type = ? and identify_token = ?", MAILLOGIN, identifyToken)).One(m.db)
+		binding, queryErr = models.Bindings(qm.Where("app_id = ? and login_type = ? and identify_token = ?", rvm.AppName, MAILLOGIN, identifyToken)).One(m.db)
 		if queryErr != nil && queryErr == sql.ErrNoRows {
 			return nil, perror.MailNotExist
 		} else if queryErr != nil {
@@ -1346,7 +1371,12 @@ func (m *Manager) BindMail(binding *request.Binding, accessPayload *jwt.AccessPa
 		return perror.BindAlreadyExists
 	}
 
-	_, perr := m.newBinding(tx, accessPayload.UserID, binding.Mail, MAILLOGIN, identifyToken, false, accessPayload.AppID)
+	_, perr := m.getApplication(tx, accessPayload.AppID)
+	if perr != nil {
+		return perr
+	}
+
+	_, perr = m.newBinding(tx, accessPayload.UserID, binding.Mail, MAILLOGIN, identifyToken, false, accessPayload.AppID)
 	if perr != nil {
 		return perr
 	}
@@ -1391,6 +1421,11 @@ func (m *Manager) BindGoogle(binding *request.Binding, accessPayload *jwt.Access
 
 	if exists {
 		return perror.BindAlreadyExists
+	}
+
+	_, perr = m.getApplication(tx, accessPayload.AppID)
+	if perr != nil {
+		return perr
 	}
 
 	_, perr = m.newBinding(tx, accessPayload.UserID, info.Email, GOOGLELOGIN, identifyToken, true, accessPayload.AppID)
@@ -1443,6 +1478,11 @@ func (m *Manager) BindApple(binding *request.Binding, accessPayload *jwt.AccessP
 
 	if exists {
 		return perror.BindAlreadyExists
+	}
+
+	_, perr = m.getApplication(tx, accessPayload.AppID)
+	if perr != nil {
+		return perr
 	}
 
 	_, perr = m.newBinding(tx, accessPayload.UserID, info.Email, APPLELOGIN, identifyToken, true, accessPayload.AppID)
@@ -1502,6 +1542,10 @@ func (m *Manager) BindWechat(binding *request.Binding, accessPayload *jwt.Access
 		return perror.BindAlreadyExists
 	}
 
+	_, perr = m.getApplication(tx, accessPayload.AppID)
+	if perr != nil {
+		return perr
+	}
 	_, perr = m.newBinding(tx, accessPayload.UserID, info.Nickname, WECHATLOGIN, identifyToken, true, accessPayload.AppID)
 	if perr != nil {
 		return perr

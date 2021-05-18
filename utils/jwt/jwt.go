@@ -117,12 +117,14 @@ func NewRegisterVerifyPayload(userID uint, expire int64) *RegisterVerifyPayload 
 
 type PasswordResetPayload struct {
 	Payload
-	Mail string `json:"mail"`
+	Mail  string `json:"mail"`
+	AppID string `json:"app_id"`
 }
 
-func NewPasswordResetPayload(mail string, expire int64) *PasswordResetPayload {
+func NewPasswordResetPayload(appID string, mail string, expire int64) *PasswordResetPayload {
 	rrp := &PasswordResetPayload{}
 	rrp.Mail = mail
+	rrp.AppID = appID
 
 	rrp.Payload.Type = PASSWORDRESET
 	rrp.Payload.Create = time.Now().Unix()

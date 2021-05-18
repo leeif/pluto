@@ -133,8 +133,8 @@ type bindingL struct{}
 
 var (
 	bindingAllColumns            = []string{"id", "created_at", "updated_at", "deleted_at", "login_type", "identify_token", "mail", "verified", "user_id", "app_id"}
-	bindingColumnsWithoutDefault = []string{"created_at", "updated_at", "deleted_at", "login_type", "identify_token", "mail", "verified", "user_id", "app_id"}
-	bindingColumnsWithDefault    = []string{"id"}
+	bindingColumnsWithoutDefault = []string{"created_at", "updated_at", "deleted_at", "login_type", "identify_token", "mail", "verified", "user_id"}
+	bindingColumnsWithDefault    = []string{"id", "app_id"}
 	bindingPrimaryKeyColumns     = []string{"id"}
 )
 

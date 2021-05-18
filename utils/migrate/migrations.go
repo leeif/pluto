@@ -414,7 +414,7 @@ func addLoginConfigToApplication(db *sql.DB, name string) error {
 func addAppIDToBindingAndUser(db *sql.DB, name string) error {
 	sql := `
 	ALTER TABLE bindings
-		add column app_id varchar(100) not null,
+		add column app_id varchar(100) not null default 'org.mushare.easyjapanese',
 		add foreign key (app_id) references applications(name) on delete no action,
 		drop index login_type_identify_token,
 		add unique index login_type_identify_token (app_id, login_type, identify_token);
@@ -426,7 +426,7 @@ func addAppIDToBindingAndUser(db *sql.DB, name string) error {
 
 	sql = `
 	ALTER TABLE users
-		add column app_id varchar(100) not null,
+		add column app_id varchar(100) not null default 'org.mushare.easyjapanese',
 		add foreign key (app_id) references applications(name) on delete no action;
 	`
 	_, err = db.Exec(sql)

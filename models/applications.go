@@ -189,10 +189,17 @@ var ApplicationWhere = struct {
 
 // ApplicationRels is where relationship names are stored.
 var ApplicationRels = struct {
-}{}
+	AppBindings string
+	AppUsers    string
+}{
+	AppBindings: "AppBindings",
+	AppUsers:    "AppUsers",
+}
 
 // applicationR is where relationships are stored.
 type applicationR struct {
+	AppBindings BindingSlice
+	AppUsers    UserSlice
 }
 
 // NewStruct creates a new relationship struct
@@ -447,6 +454,342 @@ func (q applicationQuery) Exists(exec boil.Executor) (bool, error) {
 	}
 
 	return count > 0, nil
+}
+
+// AppBindings retrieves all the binding's Bindings with an executor via app_id column.
+func (o *Application) AppBindings(mods ...qm.QueryMod) bindingQuery {
+	var queryMods []qm.QueryMod
+	if len(mods) != 0 {
+		queryMods = append(queryMods, mods...)
+	}
+
+	queryMods = append(queryMods,
+		qm.Where("`bindings`.`app_id`=?", o.Name),
+	)
+
+	query := Bindings(queryMods...)
+	queries.SetFrom(query.Query, "`bindings`")
+
+	if len(queries.GetSelect(query.Query)) == 0 {
+		queries.SetSelect(query.Query, []string{"`bindings`.*"})
+	}
+
+	return query
+}
+
+// AppUsers retrieves all the user's Users with an executor via app_id column.
+func (o *Application) AppUsers(mods ...qm.QueryMod) userQuery {
+	var queryMods []qm.QueryMod
+	if len(mods) != 0 {
+		queryMods = append(queryMods, mods...)
+	}
+
+	queryMods = append(queryMods,
+		qm.Where("`users`.`app_id`=?", o.Name),
+	)
+
+	query := Users(queryMods...)
+	queries.SetFrom(query.Query, "`users`")
+
+	if len(queries.GetSelect(query.Query)) == 0 {
+		queries.SetSelect(query.Query, []string{"`users`.*"})
+	}
+
+	return query
+}
+
+// LoadAppBindings allows an eager lookup of values, cached into the
+// loaded structs of the objects. This is for a 1-M or N-M relationship.
+func (applicationL) LoadAppBindings(e boil.Executor, singular bool, maybeApplication interface{}, mods queries.Applicator) error {
+	var slice []*Application
+	var object *Application
+
+	if singular {
+		object = maybeApplication.(*Application)
+	} else {
+		slice = *maybeApplication.(*[]*Application)
+	}
+
+	args := make([]interface{}, 0, 1)
+	if singular {
+		if object.R == nil {
+			object.R = &applicationR{}
+		}
+		args = append(args, object.Name)
+	} else {
+	Outer:
+		for _, obj := range slice {
+			if obj.R == nil {
+				obj.R = &applicationR{}
+			}
+
+			for _, a := range args {
+				if a == obj.Name {
+					continue Outer
+				}
+			}
+
+			args = append(args, obj.Name)
+		}
+	}
+
+	if len(args) == 0 {
+		return nil
+	}
+
+	query := NewQuery(qm.From(`bindings`), qm.WhereIn(`bindings.app_id in ?`, args...))
+	if mods != nil {
+		mods.Apply(query)
+	}
+
+	results, err := query.Query(e)
+	if err != nil {
+		return errors.Wrap(err, "failed to eager load bindings")
+	}
+
+	var resultSlice []*Binding
+	if err = queries.Bind(results, &resultSlice); err != nil {
+		return errors.Wrap(err, "failed to bind eager loaded slice bindings")
+	}
+
+	if err = results.Close(); err != nil {
+		return errors.Wrap(err, "failed to close results in eager load on bindings")
+	}
+	if err = results.Err(); err != nil {
+		return errors.Wrap(err, "error occurred during iteration of eager loaded relations for bindings")
+	}
+
+	if len(bindingAfterSelectHooks) != 0 {
+		for _, obj := range resultSlice {
+			if err := obj.doAfterSelectHooks(e); err != nil {
+				return err
+			}
+		}
+	}
+	if singular {
+		object.R.AppBindings = resultSlice
+		for _, foreign := range resultSlice {
+			if foreign.R == nil {
+				foreign.R = &bindingR{}
+			}
+			foreign.R.App = object
+		}
+		return nil
+	}
+
+	for _, foreign := range resultSlice {
+		for _, local := range slice {
+			if local.Name == foreign.AppID {
+				local.R.AppBindings = append(local.R.AppBindings, foreign)
+				if foreign.R == nil {
+					foreign.R = &bindingR{}
+				}
+				foreign.R.App = local
+				break
+			}
+		}
+	}
+
+	return nil
+}
+
+// LoadAppUsers allows an eager lookup of values, cached into the
+// loaded structs of the objects. This is for a 1-M or N-M relationship.
+func (applicationL) LoadAppUsers(e boil.Executor, singular bool, maybeApplication interface{}, mods queries.Applicator) error {
+	var slice []*Application
+	var object *Application
+
+	if singular {
+		object = maybeApplication.(*Application)
+	} else {
+		slice = *maybeApplication.(*[]*Application)
+	}
+
+	args := make([]interface{}, 0, 1)
+	if singular {
+		if object.R == nil {
+			object.R = &applicationR{}
+		}
+		args = append(args, object.Name)
+	} else {
+	Outer:
+		for _, obj := range slice {
+			if obj.R == nil {
+				obj.R = &applicationR{}
+			}
+
+			for _, a := range args {
+				if a == obj.Name {
+					continue Outer
+				}
+			}
+
+			args = append(args, obj.Name)
+		}
+	}
+
+	if len(args) == 0 {
+		return nil
+	}
+
+	query := NewQuery(qm.From(`users`), qm.WhereIn(`users.app_id in ?`, args...))
+	if mods != nil {
+		mods.Apply(query)
+	}
+
+	results, err := query.Query(e)
+	if err != nil {
+		return errors.Wrap(err, "failed to eager load users")
+	}
+
+	var resultSlice []*User
+	if err = queries.Bind(results, &resultSlice); err != nil {
+		return errors.Wrap(err, "failed to bind eager loaded slice users")
+	}
+
+	if err = results.Close(); err != nil {
+		return errors.Wrap(err, "failed to close results in eager load on users")
+	}
+	if err = results.Err(); err != nil {
+		return errors.Wrap(err, "error occurred during iteration of eager loaded relations for users")
+	}
+
+	if len(userAfterSelectHooks) != 0 {
+		for _, obj := range resultSlice {
+			if err := obj.doAfterSelectHooks(e); err != nil {
+				return err
+			}
+		}
+	}
+	if singular {
+		object.R.AppUsers = resultSlice
+		for _, foreign := range resultSlice {
+			if foreign.R == nil {
+				foreign.R = &userR{}
+			}
+			foreign.R.App = object
+		}
+		return nil
+	}
+
+	for _, foreign := range resultSlice {
+		for _, local := range slice {
+			if local.Name == foreign.AppID {
+				local.R.AppUsers = append(local.R.AppUsers, foreign)
+				if foreign.R == nil {
+					foreign.R = &userR{}
+				}
+				foreign.R.App = local
+				break
+			}
+		}
+	}
+
+	return nil
+}
+
+// AddAppBindings adds the given related objects to the existing relationships
+// of the application, optionally inserting them as new records.
+// Appends related to o.R.AppBindings.
+// Sets related.R.App appropriately.
+func (o *Application) AddAppBindings(exec boil.Executor, insert bool, related ...*Binding) error {
+	var err error
+	for _, rel := range related {
+		if insert {
+			rel.AppID = o.Name
+			if err = rel.Insert(exec, boil.Infer()); err != nil {
+				return errors.Wrap(err, "failed to insert into foreign table")
+			}
+		} else {
+			updateQuery := fmt.Sprintf(
+				"UPDATE `bindings` SET %s WHERE %s",
+				strmangle.SetParamNames("`", "`", 0, []string{"app_id"}),
+				strmangle.WhereClause("`", "`", 0, bindingPrimaryKeyColumns),
+			)
+			values := []interface{}{o.Name, rel.ID}
+
+			if boil.DebugMode {
+				fmt.Fprintln(boil.DebugWriter, updateQuery)
+				fmt.Fprintln(boil.DebugWriter, values)
+			}
+			if _, err = exec.Exec(updateQuery, values...); err != nil {
+				return errors.Wrap(err, "failed to update foreign table")
+			}
+
+			rel.AppID = o.Name
+		}
+	}
+
+	if o.R == nil {
+		o.R = &applicationR{
+			AppBindings: related,
+		}
+	} else {
+		o.R.AppBindings = append(o.R.AppBindings, related...)
+	}
+
+	for _, rel := range related {
+		if rel.R == nil {
+			rel.R = &bindingR{
+				App: o,
+			}
+		} else {
+			rel.R.App = o
+		}
+	}
+	return nil
+}
+
+// AddAppUsers adds the given related objects to the existing relationships
+// of the application, optionally inserting them as new records.
+// Appends related to o.R.AppUsers.
+// Sets related.R.App appropriately.
+func (o *Application) AddAppUsers(exec boil.Executor, insert bool, related ...*User) error {
+	var err error
+	for _, rel := range related {
+		if insert {
+			rel.AppID = o.Name
+			if err = rel.Insert(exec, boil.Infer()); err != nil {
+				return errors.Wrap(err, "failed to insert into foreign table")
+			}
+		} else {
+			updateQuery := fmt.Sprintf(
+				"UPDATE `users` SET %s WHERE %s",
+				strmangle.SetParamNames("`", "`", 0, []string{"app_id"}),
+				strmangle.WhereClause("`", "`", 0, userPrimaryKeyColumns),
+			)
+			values := []interface{}{o.Name, rel.ID}
+
+			if boil.DebugMode {
+				fmt.Fprintln(boil.DebugWriter, updateQuery)
+				fmt.Fprintln(boil.DebugWriter, values)
+			}
+			if _, err = exec.Exec(updateQuery, values...); err != nil {
+				return errors.Wrap(err, "failed to update foreign table")
+			}
+
+			rel.AppID = o.Name
+		}
+	}
+
+	if o.R == nil {
+		o.R = &applicationR{
+			AppUsers: related,
+		}
+	} else {
+		o.R.AppUsers = append(o.R.AppUsers, related...)
+	}
+
+	for _, rel := range related {
+		if rel.R == nil {
+			rel.R = &userR{
+				App: o,
+			}
+		} else {
+			rel.R.App = o
+		}
+	}
+	return nil
 }
 
 // Applications retrieves all the records using an executor.

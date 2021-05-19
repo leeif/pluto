@@ -32,6 +32,7 @@ type Binding struct {
 	Mail          string    `boil:"mail" json:"mail" toml:"mail" yaml:"mail"`
 	Verified      null.Bool `boil:"verified" json:"verified,omitempty" toml:"verified" yaml:"verified,omitempty"`
 	UserID        uint      `boil:"user_id" json:"user_id" toml:"user_id" yaml:"user_id"`
+	AppID         string    `boil:"app_id" json:"app_id" toml:"app_id" yaml:"app_id"`
 
 	R *bindingR `boil:"-" json:"-" toml:"-" yaml:"-"`
 	L bindingL  `boil:"-" json:"-" toml:"-" yaml:"-"`
@@ -47,6 +48,7 @@ var BindingColumns = struct {
 	Mail          string
 	Verified      string
 	UserID        string
+	AppID         string
 }{
 	ID:            "id",
 	CreatedAt:     "created_at",
@@ -57,6 +59,7 @@ var BindingColumns = struct {
 	Mail:          "mail",
 	Verified:      "verified",
 	UserID:        "user_id",
+	AppID:         "app_id",
 }
 
 // Generated where
@@ -94,6 +97,7 @@ var BindingWhere = struct {
 	Mail          whereHelperstring
 	Verified      whereHelpernull_Bool
 	UserID        whereHelperuint
+	AppID         whereHelperstring
 }{
 	ID:            whereHelperuint{field: "`bindings`.`id`"},
 	CreatedAt:     whereHelpernull_Time{field: "`bindings`.`created_at`"},
@@ -104,14 +108,19 @@ var BindingWhere = struct {
 	Mail:          whereHelperstring{field: "`bindings`.`mail`"},
 	Verified:      whereHelpernull_Bool{field: "`bindings`.`verified`"},
 	UserID:        whereHelperuint{field: "`bindings`.`user_id`"},
+	AppID:         whereHelperstring{field: "`bindings`.`app_id`"},
 }
 
 // BindingRels is where relationship names are stored.
 var BindingRels = struct {
-}{}
+	App string
+}{
+	App: "App",
+}
 
 // bindingR is where relationships are stored.
 type bindingR struct {
+	App *Application
 }
 
 // NewStruct creates a new relationship struct
@@ -123,9 +132,9 @@ func (*bindingR) NewStruct() *bindingR {
 type bindingL struct{}
 
 var (
-	bindingAllColumns            = []string{"id", "created_at", "updated_at", "deleted_at", "login_type", "identify_token", "mail", "verified", "user_id"}
+	bindingAllColumns            = []string{"id", "created_at", "updated_at", "deleted_at", "login_type", "identify_token", "mail", "verified", "user_id", "app_id"}
 	bindingColumnsWithoutDefault = []string{"created_at", "updated_at", "deleted_at", "login_type", "identify_token", "mail", "verified", "user_id"}
-	bindingColumnsWithDefault    = []string{"id"}
+	bindingColumnsWithDefault    = []string{"id", "app_id"}
 	bindingPrimaryKeyColumns     = []string{"id"}
 )
 
@@ -366,6 +375,167 @@ func (q bindingQuery) Exists(exec boil.Executor) (bool, error) {
 	}
 
 	return count > 0, nil
+}
+
+// App pointed to by the foreign key.
+func (o *Binding) App(mods ...qm.QueryMod) applicationQuery {
+	queryMods := []qm.QueryMod{
+		qm.Where("`name` = ?", o.AppID),
+	}
+
+	queryMods = append(queryMods, mods...)
+
+	query := Applications(queryMods...)
+	queries.SetFrom(query.Query, "`applications`")
+
+	return query
+}
+
+// LoadApp allows an eager lookup of values, cached into the
+// loaded structs of the objects. This is for an N-1 relationship.
+func (bindingL) LoadApp(e boil.Executor, singular bool, maybeBinding interface{}, mods queries.Applicator) error {
+	var slice []*Binding
+	var object *Binding
+
+	if singular {
+		object = maybeBinding.(*Binding)
+	} else {
+		slice = *maybeBinding.(*[]*Binding)
+	}
+
+	args := make([]interface{}, 0, 1)
+	if singular {
+		if object.R == nil {
+			object.R = &bindingR{}
+		}
+		args = append(args, object.AppID)
+
+	} else {
+	Outer:
+		for _, obj := range slice {
+			if obj.R == nil {
+				obj.R = &bindingR{}
+			}
+
+			for _, a := range args {
+				if a == obj.AppID {
+					continue Outer
+				}
+			}
+
+			args = append(args, obj.AppID)
+
+		}
+	}
+
+	if len(args) == 0 {
+		return nil
+	}
+
+	query := NewQuery(qm.From(`applications`), qm.WhereIn(`applications.name in ?`, args...))
+	if mods != nil {
+		mods.Apply(query)
+	}
+
+	results, err := query.Query(e)
+	if err != nil {
+		return errors.Wrap(err, "failed to eager load Application")
+	}
+
+	var resultSlice []*Application
+	if err = queries.Bind(results, &resultSlice); err != nil {
+		return errors.Wrap(err, "failed to bind eager loaded slice Application")
+	}
+
+	if err = results.Close(); err != nil {
+		return errors.Wrap(err, "failed to close results of eager load for applications")
+	}
+	if err = results.Err(); err != nil {
+		return errors.Wrap(err, "error occurred during iteration of eager loaded relations for applications")
+	}
+
+	if len(bindingAfterSelectHooks) != 0 {
+		for _, obj := range resultSlice {
+			if err := obj.doAfterSelectHooks(e); err != nil {
+				return err
+			}
+		}
+	}
+
+	if len(resultSlice) == 0 {
+		return nil
+	}
+
+	if singular {
+		foreign := resultSlice[0]
+		object.R.App = foreign
+		if foreign.R == nil {
+			foreign.R = &applicationR{}
+		}
+		foreign.R.AppBindings = append(foreign.R.AppBindings, object)
+		return nil
+	}
+
+	for _, local := range slice {
+		for _, foreign := range resultSlice {
+			if local.AppID == foreign.Name {
+				local.R.App = foreign
+				if foreign.R == nil {
+					foreign.R = &applicationR{}
+				}
+				foreign.R.AppBindings = append(foreign.R.AppBindings, local)
+				break
+			}
+		}
+	}
+
+	return nil
+}
+
+// SetApp of the binding to the related item.
+// Sets o.R.App to related.
+// Adds o to related.R.AppBindings.
+func (o *Binding) SetApp(exec boil.Executor, insert bool, related *Application) error {
+	var err error
+	if insert {
+		if err = related.Insert(exec, boil.Infer()); err != nil {
+			return errors.Wrap(err, "failed to insert into foreign table")
+		}
+	}
+
+	updateQuery := fmt.Sprintf(
+		"UPDATE `bindings` SET %s WHERE %s",
+		strmangle.SetParamNames("`", "`", 0, []string{"app_id"}),
+		strmangle.WhereClause("`", "`", 0, bindingPrimaryKeyColumns),
+	)
+	values := []interface{}{related.Name, o.ID}
+
+	if boil.DebugMode {
+		fmt.Fprintln(boil.DebugWriter, updateQuery)
+		fmt.Fprintln(boil.DebugWriter, values)
+	}
+	if _, err = exec.Exec(updateQuery, values...); err != nil {
+		return errors.Wrap(err, "failed to update local table")
+	}
+
+	o.AppID = related.Name
+	if o.R == nil {
+		o.R = &bindingR{
+			App: related,
+		}
+	} else {
+		o.R.App = related
+	}
+
+	if related.R == nil {
+		related.R = &applicationR{
+			AppBindings: BindingSlice{o},
+		}
+	} else {
+		related.R.AppBindings = append(related.R.AppBindings, o)
+	}
+
+	return nil
 }
 
 // Bindings retrieves all the records using an executor.

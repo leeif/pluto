@@ -255,7 +255,10 @@ func PlutoLog(logger *log.PlutoLog, pe *perror.PlutoError, r *http.Request) {
 	url := r.URL.String()
 	if pe.LogError != nil {
 		logger.Error(fmt.Sprintf("[(%s)%s]:%s", r.Method, url, pe.LogError.Error()))
-		fmt.Println(string(debug.Stack()))
+
+		if pe.HTTPCode == 500 {
+			fmt.Println(string(debug.Stack()))
+		}
 	}
 	if pe.HTTPError != nil {
 		logger.Debug(fmt.Sprintf("[(%s)%s]:%s", r.Method, url, pe.HTTPError.Error()))

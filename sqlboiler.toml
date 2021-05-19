@@ -1,0 +1,13 @@
+output = "models"
+wipe = true
+no-tests = true
+no-context = true
+
+[mysql]
+dbname = "pluto"
+host = "localhost"
+user = "root"
+sslmode = "false"
+
+#[imports.all]
+  #third_party = ['"github.com/volatiletech/null"']

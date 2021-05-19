@@ -79,6 +79,10 @@ var migrations = []Migrations{
 		name:     "add_login_config_to_application",
 		function: addLoginConfigToApplication,
 	},
+	{
+		name:     "add_app_id_to_binding_and_user",
+		function: addAppIDToBindingAndUser,
+	},
 }
 
 func createUsersTable(db *sql.DB, name string) error {
@@ -404,5 +408,31 @@ func addLoginConfigToApplication(db *sql.DB, name string) error {
 	if err != nil {
 		return err
 	}
+	return nil
+}
+
+func addAppIDToBindingAndUser(db *sql.DB, name string) error {
+	sql := `
+	ALTER TABLE bindings
+		add column app_id varchar(100) not null default 'org.mushare.easyjapanese',
+		add foreign key (app_id) references applications(name) on delete no action,
+		drop index login_type_identify_token,
+		add unique index login_type_identify_token (app_id, login_type, identify_token);
+	`
+	_, err := db.Exec(sql)
+	if err != nil {
+		return err
+	}
+
+	sql = `
+	ALTER TABLE users
+		add column app_id varchar(100) not null default 'org.mushare.easyjapanese',
+		add foreign key (app_id) references applications(name) on delete no action;
+	`
+	_, err = db.Exec(sql)
+	if err != nil {
+		return err
+	}
+
 	return nil
 }

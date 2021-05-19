@@ -144,6 +144,19 @@ func (m *Manager) UpdateApplicationI18nNames(uai request.UpdateApplicationI18Nam
 	}
 }
 
+func (m *Manager) GetApplication(appName string) (*models.Application, *perror.PlutoError) {
+	tx, err := m.db.Begin()
+	if err != nil {
+		return nil, perror.ServerError.Wrapper(err)
+	}
+	app, err := models.Applications(qm.Where("name = ?", appName)).One(tx)
+	if app == nil || err != nil {
+		m.logger.Warn(fmt.Sprintf("No app found with name %s", appName))
+		return nil, perror.ServerError.Wrapper(err)
+	}
+	return app, nil
+}
+
 func (m *Manager) ApplicationI18nName(appName string, userLanguage string) (string, *perror.PlutoError) {
 	tx, err := m.db.Begin()
 	if err != nil {

@@ -1,0 +1,6 @@
+# used for local dev
+misc:
+  env: "dev"
+
+server:
+  skip_register_verify_mail: true

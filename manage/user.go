@@ -883,9 +883,8 @@ func parseAppleIDToken(idToken string) (*appleIdTokenInfo, *perror.PlutoError) {
 }
 
 func (m *Manager) ResetPasswordMail(rpm request.ResetPasswordMail) *perror.PlutoError {
-
 	identifyToken := b64.RawStdEncoding.EncodeToString([]byte(rpm.Mail))
-	_, err := models.Bindings(qm.Where("app_id = ? and login_type = ? and identify_token = ?", rpm.AppName, MAILLOGIN, identifyToken)).One(m.db)
+	_, err := models.Bindings(qm.Where("app_id = ? and login_type = ? and identify_token = ?", rpm.AppID, MAILLOGIN, identifyToken)).One(m.db)
 	if err != nil && err == sql.ErrNoRows {
 		return perror.MailNotExist
 	} else if err != nil {

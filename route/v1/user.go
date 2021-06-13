@@ -237,12 +237,12 @@ func (router *Router) PasswordResetMail(w http.ResponseWriter, r *http.Request) 
 		return err
 	}
 	language := r.Header.Get("Accept-Language")
-	appI18nName, err := router.manager.ApplicationI18nName(rpm.AppName, language)
+	appI18nName, err := router.manager.ApplicationI18nName(rpm.AppID, language)
 	if err != nil {
 		router.logger.Error(err.LogError.Error())
 		return err
 	}
-	if err := ml.SendResetPassword(rpm.Mail, routeUtils.GetBaseURL(r), language, appI18nName); err != nil {
+	if err := ml.SendResetPassword(rpm.AppID, rpm.Mail, routeUtils.GetBaseURL(r), language, appI18nName); err != nil {
 		router.logger.Error(err.LogError.Error())
 		return perror.SendMailFailure
 	}

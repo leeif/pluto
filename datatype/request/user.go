@@ -144,8 +144,8 @@ func (rvm *RegisterVerifyMail) Validation() bool {
 }
 
 type ResetPasswordMail struct {
-	Mail    string `json:"mail"`
-	AppName string `json:"app_id"`
+	Mail  string `json:"mail"`
+	AppID string `json:"app_id"`
 }
 
 func (rpm *ResetPasswordMail) Validation() bool {

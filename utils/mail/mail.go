@@ -110,8 +110,9 @@ func (m *Mail) SendRegisterVerify(userID uint, address string, baseURL string, l
 	return nil
 }
 
-func (m *Mail) SendResetPassword(address string, baseURL string, userLanguage string, appName string) *perror.PlutoError {
-	prp := jwt.NewPasswordResetPayload(appName, address, m.config.Token.ResetPasswordTokenExpire)
+// appName 是字符串名称，用于邮件模板
+func (m *Mail) SendResetPassword(appID, address string, baseURL string, userLanguage string, appName string) *perror.PlutoError {
+	prp := jwt.NewPasswordResetPayload(appID, address, m.config.Token.ResetPasswordTokenExpire)
 	token, perr := jwt.GenerateRSA256JWT(prp)
 	if perr != nil {
 		return perr.Wrapper(errors.New("JWT token generate failed"))

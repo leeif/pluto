@@ -89,10 +89,11 @@ func (m *Mail) SendRegisterVerify(userID uint, address string, baseURL string, l
 	}
 	var buffer bytes.Buffer
 	type Data struct {
+		AppName string
 		BaseURL string
 		Token   string
 	}
-	t.Execute(&buffer, Data{Token: token.B64String(), BaseURL: baseURL})
+	t.Execute(&buffer, Data{AppName: appName, Token: token.B64String(), BaseURL: baseURL})
 	localizer := i18n.NewLocalizer(m.bundle, language)
 	subject, err := localizer.Localize(&i18n.LocalizeConfig{
 		MessageID: "VerifyMailSubject",
@@ -130,10 +131,11 @@ func (m *Mail) SendResetPassword(appID, address string, baseURL string, userLang
 
 	var buffer bytes.Buffer
 	type Data struct {
+		AppName string
 		BaseURL string
 		Token   string
 	}
-	t.Execute(&buffer, Data{Token: token.B64String(), BaseURL: baseURL})
+	t.Execute(&buffer, Data{AppName: appName, Token: token.B64String(), BaseURL: baseURL})
 	localizer := i18n.NewLocalizer(m.bundle, userLanguage)
 	subject, err := localizer.Localize(&i18n.LocalizeConfig{
 		MessageID: "ResetPasswordMailSubject",

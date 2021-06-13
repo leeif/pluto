@@ -194,7 +194,7 @@ func (m *Manager) NamePasswordLogin(login request.PasswordLogin) (*GrantResult, 
 	return grantResult, nil
 }
 
-//check userID unique before this method!!
+//check (appID, userID) tuple unique before this method!!
 func (m *Manager) newUser(exec boil.Executor, name, avatar, password string, userID *string, verified bool, appID string) (*models.User, *perror.PlutoError) {
 	user := &models.User{}
 	user.Avatar.SetValid(avatar)
@@ -203,7 +203,7 @@ func (m *Manager) newUser(exec boil.Executor, name, avatar, password string, use
 	user.Verified.SetValid(verified)
 	user.AppID = appID
 	if userID != nil {
-		userIDExists, err := models.Users(qm.Where("user_id = ?", *userID)).Exists(exec)
+		userIDExists, err := models.Users(qm.Where("user_id = ? and app_id = ?", *userID, appID)).Exists(exec)
 		if err != nil {
 			return nil, perror.ServerError.Wrapper(err)
 		}
@@ -1103,7 +1103,7 @@ func (m *Manager) UpdateUserInfo(accessPayload *jwt.AccessPayload, uui request.U
 	}
 
 	if uui.UserID != "" {
-		exists, err := models.Users(qm.Where("user_id = ? and id != ?", uui.UserID, user.ID)).Exists(tx)
+		exists, err := models.Users(qm.Where("user_id = ? and id != ? and app_id = ?", uui.UserID, user.ID, user.AppID)).Exists(tx)
 		if err != nil {
 			return perror.ServerError.Wrapper(err)
 		}
@@ -1183,7 +1183,7 @@ func (m *Manager) RegisterWithEmail(register request.MailRegister, admin bool) (
 
 	var userID *string = nil
 	if register.UserID != "" {
-		userIDExists, err := models.Users(qm.Where("user_id = ?", register.UserID)).Exists(tx)
+		userIDExists, err := models.Users(qm.Where("user_id = ? and app_id = ?", register.UserID, register.AppName)).Exists(tx)
 		if err != nil {
 			return nil, perror.ServerError.Wrapper(err)
 		}

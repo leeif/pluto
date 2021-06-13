@@ -83,6 +83,10 @@ var migrations = []Migrations{
 		name:     "add_app_id_to_binding_and_user",
 		function: addAppIDToBindingAndUser,
 	},
+	{
+		name:     "modify_app_id_constrain_for_user_table",
+		function: modifyAppIDConstrainForUserTable,
+	},
 }
 
 func createUsersTable(db *sql.DB, name string) error {
@@ -430,6 +434,20 @@ func addAppIDToBindingAndUser(db *sql.DB, name string) error {
 		add foreign key (app_id) references applications(name) on delete no action;
 	`
 	_, err = db.Exec(sql)
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func modifyAppIDConstrainForUserTable(db *sql.DB, name string) error {
+	sql := `
+	ALTER TABLE users
+		drop index user_id_UNIQUE,
+		add unique index app_id_user_id_unique (app_id, user_id);
+	`
+	_, err := db.Exec(sql)
 	if err != nil {
 		return err
 	}

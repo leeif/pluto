@@ -111,7 +111,14 @@ func (r *Router) registerUserV1Routes(prefix string) {
 			description: "Get user public info like avatar, name",
 			method:      "GET",
 			middle:      middleware.NoAuthMiddleware,
-			handler:     r.v1.PublicUserInfo,
+			handler:     r.v1.PublicUsersInfo,
+		},
+		{
+			path:        "/info/{userId}/public",
+			description: "Get user public info like avatar, name by userId",
+			method:      "GET",
+			middle:      middleware.NoAuthMiddleware,
+			handler:     r.v1.PublicUserInfoByUserId,
 		},
 	}
 	r.registerRoutes(routes, path.Join(prefix, "/user"), false)

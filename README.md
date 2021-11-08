@@ -6,17 +6,6 @@
 
 Pluto is a JWT based authorization/authentication service. Besides providing a basic user registration and login feature, Pluto also provides a RBAC management to control the user's permission. Pluto implements the OAuth2 specified APIs for authorization.
 
-## 微信扫码登陆
-
-https://developers.weixin.qq.com/doc/oplatform/Website_App/WeChat_Login/Wechat_Login.html
-
-1. Pluto 收到微信请求，带有参数 code 和 state
-2. state 是 base64 编码的 JSON 字符串，
-  - app: 对应 pluto app 的 name, e.g. org.mushare.easyjapanese
-  - redirect_url: 跳转 URL，pluto 登录成功以后跳转的 URL
-3. 根据 code 进行微信登陆
-4. 302 跳转到 redirectURL + "?token=...."
-
 ## Setup
 
 Go versio: 1.16
@@ -59,6 +48,7 @@ Here are some helpful documents for reading.
 * [Configuration](https://github.com/MuShare/pluto/blob/master/docs/configuration.md)
 * [Replace Views](https://github.com/MuShare/pluto/blob/master/docs/view.md) is a guide for replacing the default html pages with your own custom files
 * [JWT Token](https://github.com/MuShare/pluto/blob/master/docs/jwt.md) gives an introduction of the JWT design in Pluto.
+* [WeChat Login](https://github.com/MuShare/pluto/blob/master/docs/wechat.md) gives an introduction of signing in with WeChat QRCode.
 
 ## Docker image
 

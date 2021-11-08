@@ -4,6 +4,7 @@ import (
 	"encoding/base64"
 	"encoding/json"
 	"fmt"
+	"github.com/gorilla/mux"
 	"net/http"
 	"net/url"
 
@@ -364,7 +365,7 @@ func (router *Router) VerifyMail(w http.ResponseWriter, r *http.Request) *perror
 	return nil
 }
 
-func (router *Router) PublicUserInfo(w http.ResponseWriter, r *http.Request) *perror.PlutoError {
+func (router *Router) PublicUsersInfo(w http.ResponseWriter, r *http.Request) *perror.PlutoError {
 
 	pui := request.PublicUserInfos{}
 
@@ -374,7 +375,7 @@ func (router *Router) PublicUserInfo(w http.ResponseWriter, r *http.Request) *pe
 
 	res := make(map[string]map[string]interface{})
 	for _, id := range pui.IDs {
-		info, perr := router.manager.PublicUserInfo(id)
+		info, perr := router.manager.PublicUsersInfo(id)
 
 		if perr != nil {
 			continue
@@ -384,6 +385,20 @@ func (router *Router) PublicUserInfo(w http.ResponseWriter, r *http.Request) *pe
 	}
 
 	routeUtils.ResponseOK(res, w)
+
+	return nil
+}
+
+func (router *Router) PublicUserInfoByUserId(w http.ResponseWriter, r *http.Request) *perror.PlutoError {
+	vars := mux.Vars(r)
+	userId := vars["userId"]
+	res, perr := router.manager.PublicUserInfoByUserId(userId)
+
+	if perr != nil {
+		return perr
+	}
+
+	routeUtils.ResponseOK(res.PublicInfo(), w)
 
 	return nil
 }

@@ -1590,9 +1590,9 @@ func (m *Manager) Unbind(ub *request.UnBinding, accessPayload *jwt.AccessPayload
 	return nil
 }
 
-func (m *Manager) PublicUserInfo(userID string) (map[string]interface{}, *perror.PlutoError) {
+func (m *Manager) PublicUsersInfo(plutoId string) (map[string]interface{}, *perror.PlutoError) {
 
-	id, err := strconv.Atoi(userID)
+	id, err := strconv.Atoi(plutoId)
 	if err != nil {
 		return nil, perror.Forbidden
 	}
@@ -1616,4 +1616,26 @@ func (m *Manager) PublicUserInfo(userID string) (map[string]interface{}, *perror
 	}
 
 	return userExt.PublicInfo(), nil
+}
+
+func (m *Manager) PublicUserInfoByUserId(userId string) (*modelexts.User, *perror.PlutoError) {
+	user, err := models.Users(qm.Where("user_id = ?", userId)).One(m.db)
+	if err != nil && err == sql.ErrNoRows {
+		return nil, perror.UserNotExist
+	} else if err != nil {
+		return nil, perror.ServerError.Wrapper(err)
+	}
+
+	bindings, err := models.Bindings(qm.Where("user_id = ?", userId)).All(m.db)
+
+	if err != nil {
+		return nil, perror.ServerError.Wrapper(err)
+	}
+
+	userExt := &modelexts.User{
+		User:     user,
+		Bindings: bindings,
+	}
+
+	return userExt, nil
 }

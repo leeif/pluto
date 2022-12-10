@@ -194,7 +194,7 @@ func (m *Manager) NamePasswordLogin(login request.PasswordLogin) (*GrantResult, 
 	return grantResult, nil
 }
 
-//check (appID, userID) tuple unique before this method!!
+// check (appID, userID) tuple unique before this method!!
 func (m *Manager) newUser(exec boil.Executor, name, avatar, password string, userID *string, verified bool, appID string) (*models.User, *perror.PlutoError) {
 	user := &models.User{}
 	user.Avatar.SetValid(avatar)
@@ -1230,6 +1230,44 @@ func (m *Manager) RegisterWithEmail(register request.MailRegister, admin bool) (
 	tx.Commit()
 
 	return user, nil
+}
+
+func (m *Manager) DeleteUser(accessPayload *jwt.AccessPayload) *perror.PlutoError {
+	tx, err := m.db.Begin()
+	if err != nil {
+		return perror.ServerError.Wrapper(err)
+	}
+	defer func() {
+		tx.Rollback()
+	}()
+
+	userId := accessPayload.UserID
+	user, err := models.Users(qm.Where("id = ?", userId)).One(m.db)
+	if err != nil && err == sql.ErrNoRows {
+		return perror.ServerError.Wrapper(fmt.Errorf("user not found id: %d", userId))
+	} else if err != nil {
+		return perror.ServerError.Wrapper(err)
+	}
+
+	bindings, err := models.Bindings(qm.Where("user_id = ?", userId)).All(m.db)
+	if err != nil {
+		return perror.ServerError.Wrapper(err)
+	}
+
+	for i := 0; i < len(bindings); i++ {
+		bindings[i].Delete(tx)
+	}
+
+	effect, err := user.Delete(tx)
+	if err != nil {
+		return perror.ServerError.Wrapper(err)
+	}
+	if effect == 0 {
+		return perror.UserDeleted
+	}
+
+	tx.Commit()
+	return nil
 }
 
 func (m *Manager) RegisterVerifyMail(rvm request.RegisterVerifyMail) (*models.Binding, *perror.PlutoError) {

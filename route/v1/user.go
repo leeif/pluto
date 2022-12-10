@@ -4,9 +4,10 @@ import (
 	"encoding/base64"
 	"encoding/json"
 	"fmt"
-	"github.com/gorilla/mux"
 	"net/http"
 	"net/url"
+
+	"github.com/gorilla/mux"
 
 	perror "github.com/MuShare/pluto/datatype/pluto_error"
 	"github.com/MuShare/pluto/datatype/request"
@@ -308,6 +309,7 @@ func (router *Router) Register(w http.ResponseWriter, r *http.Request) *perror.P
 
 	if router.config.Server.SkipRegisterVerifyMail {
 		router.logger.Info("skip sending register mail")
+		routeUtils.ResponseOK(respBody, w)
 		return nil
 	}
 	ml, err := mail.NewMail(router.config, router.bundle)
@@ -399,6 +401,23 @@ func (router *Router) PublicUserInfoByUserId(w http.ResponseWriter, r *http.Requ
 	}
 
 	routeUtils.ResponseOK(res.PublicInfo(), w)
+
+	return nil
+}
+
+func (router *Router) DeleteUser(w http.ResponseWriter, r *http.Request) *perror.PlutoError {
+	payload, perr := routeUtils.GetAccessPayload(r)
+	if perr != nil {
+		return perr
+	}
+
+	perr = router.manager.DeleteUser(payload)
+
+	if perr != nil {
+		return perr
+	}
+
+	routeUtils.ResponseOK(nil, w)
 
 	return nil
 }

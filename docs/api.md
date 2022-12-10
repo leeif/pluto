@@ -1,38 +1,48 @@
 # API Document
 Pluto provides a set of HTTP resetful APIs.
 
-* [`/v1/user/register`](#v1userregister)
-* [`/v1/user/register/verify/mail`](#v1userregisterverifymail)
-* [`/v1/user/login/account`](#v1userloginaccount)
-* [`/v1/user/login/google/mobile`](#v1userlogingooglemobile)
-* [`/v1/user/login/apple/mobile`](#v1userloginapplemobile)
-* [`/v1/user/login/wechat/mobile`](#v1userloginwechatmobile)
-* [`/v1/user/password/reset/mail`](#v1userpasswordresetmail)
-* [`/v1/user/binding`](#v1userbinding)
-* [`/v1/user/unbinding`](#v1userunbinding)
-* [`/v1/user/search`](#v1usersearch)
-* [`/v1/user/summary`](#v1usersummary)
-* [`/v1/user/info:GET`](#v1userinfo:GET)
-* [`/v1/user/info:PUT`](#v1userinfo:PUT)
-* [`/v1/healthcheck`](#v1healthcheck)
-* [`/v1/rbac/role/create`](#v1rbacrolecreate)
-* [`/v1/rbac/scope/create`](#v1rbacscopecreate)
-* [`/v1/rbac/role/scope`](#v1rbacrolescope)
-* [`/v1/rbac/role/scope/default`](#v1rbacrolescopedefault)
-* [`/v1/rbac/application/create`](#v1rbacapplicationcreate)
-* [`/v1/rbac/application/role/default`](#v1rbacapplicationroledefault)
-* [`/v1/rbac/application/list`](#v1rbacapplicationlist)
-* [`/v1/rbac/application/update-i18n-name`](#v1updateI18nName)
-* [`/v1/rbac/application/i18n-name`](#v1getI18nName)
-* [`/v1/rbac/role/list`](#v1rbacrolelist)
-* [`/v1/rbac/scope/list`](#v1rbacscopelist)
-* [`/v1/rbac/user/application/role`](#v1rbacuserapplicationrole)
-* [`/v1/token/refresh`](#v1tokenrefresh)
-* [`/v1/token/publickey`](#v1tokenpublickey)
-* [`/v1/token/access/verify`](#v1tokenaccessverify)
-* [`/v1/oauth/tokens`](#v1oauthtokens)
-* [`/v1/oauth/client`](#v1oauthclient)
-* [`/v1/oauth/client/status`](#v1oauthclientstatus)
+- [API Document](#api-document)
+  - [account api](#account-api)
+    - [/v1/user/register](#v1userregister)
+    - [/v1/user/register/verify/mail](#v1userregisterverifymail)
+    - [/v1/user/login/account](#v1userloginaccount)
+    - [/v1/user/login/google/mobile](#v1userlogingooglemobile)
+    - [/v1/user/login/apple/mobile](#v1userloginapplemobile)
+    - [/v1/user/login/wechat/mobile](#v1userloginwechatmobile)
+    - [/v1/user/password/reset/mail](#v1userpasswordresetmail)
+    - [/v1/user/binding](#v1userbinding)
+    - [/v1/user/unbinding](#v1userunbinding)
+    - [/v1/user/summary](#v1usersummary)
+    - [/v1/user/count](#v1usercount)
+    - [/v1/user/info:GET](#v1userinfoget)
+    - [/v1/user/info:PUT](#v1userinfoput)
+    - [/v1/user/delete](#v1userdelete)
+  - [health check api](#health-check-api)
+    - [/v1/healthcheck](#v1healthcheck)
+  - [rbac api](#rbac-api)
+    - [/v1/rbac/role/create](#v1rbacrolecreate)
+    - [/v1/rbac/scope/create](#v1rbacscopecreate)
+    - [/v1/rbac/role/scope](#v1rbacrolescope)
+    - [/v1/rbac/role/scope/default](#v1rbacrolescopedefault)
+    - [/v1/rbac/application/create](#v1rbacapplicationcreate)
+    - [/v1/rbac/application/role/default](#v1rbacapplicationroledefault)
+    - [/v1/rbac/application/list](#v1rbacapplicationlist)
+    - [/v1/rbac/application/update-i18n-name](#v1rbacapplicationupdate-i18n-name)
+    - [/v1/rbac/application/i18n-name](#v1rbacapplicationi18n-name)
+    - [/v1/rbac/role/list](#v1rbacrolelist)
+    - [/v1/rbac/scope/list](#v1rbacscopelist)
+    - [/v1/rbac/user/application/role](#v1rbacuserapplicationrole)
+  - [token api](#token-api)
+    - [/v1/token/refresh](#v1tokenrefresh)
+    - [/v1/token/publickey](#v1tokenpublickey)
+    - [/v1/token/access/verify](#v1tokenaccessverify)
+  - [oauth api](#oauth-api)
+    - [/v1/oauth/tokens](#v1oauthtokens)
+    - [/v1/oauth/client](#v1oauthclient)
+    - [/v1/oauth/client/status](#v1oauthclientstatus)
+  - [Api authorization](#api-authorization)
+  - [Error Response](#error-response)
+
 
 ## account api
 
@@ -303,6 +313,23 @@ Update user info
 ```
 {"name":<string>, "gender":<string>, "avatar":<string>, "user_id":<string>}
 ```
+
+* response example:
+
+```
+{
+  "status": "ok",
+  "body": nil
+}
+```
+
+### /v1/user/delete
+
+Delete user
+
+* Access token needs
+
+* method: POST
 
 * response example:
 

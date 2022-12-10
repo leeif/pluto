@@ -8,8 +8,8 @@ import (
 
 	"github.com/MuShare/pluto/database"
 
-	_ "github.com/go-sql-driver/mysql"
 	"github.com/MuShare/pluto/utils/migrate"
+	_ "github.com/go-sql-driver/mysql"
 )
 
 func main() {

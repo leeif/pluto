@@ -3,8 +3,9 @@ package admin
 import (
 	"database/sql"
 	"fmt"
-	"github.com/nicksnyder/go-i18n/v2/i18n"
 	"log"
+
+	"github.com/nicksnyder/go-i18n/v2/i18n"
 
 	"github.com/MuShare/pluto/utils/general"
 	"github.com/MuShare/pluto/utils/mail"

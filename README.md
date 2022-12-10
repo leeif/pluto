@@ -8,7 +8,23 @@ Pluto is a JWT based authorization/authentication service. Besides providing a b
 
 ## Setup
 
-Go versio: 1.16
+### Environments
+- Go: >1.13, <=1.16
+- Database: MySQL 5.7 or later
+
+
+#### Go version
+
+Error occoured while go version is later than 1.16.
+```shell
+panic: qtls.ClientHelloInfo doesn't match
+
+goroutine 1 [running]:
+github.com/marten-seemann/qtls-go1-15.init.0()
+        /go/pkg/mod/github.com/marten-seemann/qtls-go1-15@v0.1.1/unsafe.go:20 +0x132
+```
+
+### Deployment
 
 ```bash
 # install sqlboiler
@@ -20,7 +36,7 @@ $ make migrate-binary-build
 # run migrations
 $ ./bin/pluto-migrate
 # build server
-$ make server-binary-install
+$ make server-binary-build
 # start server
 $ pluto-server
 ```

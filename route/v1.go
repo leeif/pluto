@@ -120,6 +120,13 @@ func (r *Router) registerUserV1Routes(prefix string) {
 			middle:      middleware.NoAuthMiddleware,
 			handler:     r.v1.PublicUserInfoByUserId,
 		},
+		{
+			path:        "/delete",
+			description: "Delete user",
+			method:      "POST",
+			middle:      middleware.AccessTokenAuthMiddleware,
+			handler:     r.v1.DeleteUser,
+		},
 	}
 	r.registerRoutes(routes, path.Join(prefix, "/user"), false)
 }

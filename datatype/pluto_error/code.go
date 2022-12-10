@@ -44,6 +44,7 @@ var (
 	NotPlutoAdmin       = NewPlutoError(http.StatusForbidden, 4008, "Not the pluto admin", nil)
 	UserNotExist        = NewPlutoError(http.StatusForbidden, 4009, "User is not exist", nil)
 	NotPlutoUser        = NewPlutoError(http.StatusForbidden, 4010, "Not the pluto user", nil)
+	UserDeleted         = NewPlutoError(http.StatusForbidden, 4011, "User already deleted", nil)
 
 	OAuthInvalidGrantType          = NewPlutoError(http.StatusForbidden, 5001, "Invalid grant type", nil)
 	OAuthAuthorizationCodeNotFound = NewPlutoError(http.StatusForbidden, 5002, "Authorization code not found", nil)

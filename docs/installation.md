@@ -15,7 +15,7 @@ make migrate-binary-build
 
 ## Installation from source
 
-Requirement: Go (> 1.13)
+Requirement: Go (> 1.13, <= 1.16)
 
 Download the source file.
 ```
